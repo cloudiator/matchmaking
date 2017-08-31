@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.eclipse.e4.ui.swt</groupId>
+  <artifactId>gtk</artifactId>
+  <versioning>
+    <release>1.0.100.v20160301-1001</release>
+    <versions>
+      <version>1.0.100.v20160301-1001</version>
+    </versions>
+    <lastUpdated>20170823140046</lastUpdated>
+  </versioning>
+</metadata>

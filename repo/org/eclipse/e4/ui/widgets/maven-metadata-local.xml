@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.eclipse.e4.ui</groupId>
+  <artifactId>widgets</artifactId>
+  <versioning>
+    <release>1.1.100.v20160506-0759</release>
+    <versions>
+      <version>1.1.100.v20160506-0759</version>
+    </versions>
+    <lastUpdated>20170823140053</lastUpdated>
+  </versioning>
+</metadata>
