@@ -1,5 +1,7 @@
 package org.cloudiator.ocl;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import cloudiator.Cloud;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorModel;
@@ -33,11 +35,10 @@ public class DefaultNodeGenerator implements NodeGenerator {
     price += hardware.getCores().doubleValue();
     price += hardware.getRam().doubleValue() / 1000;
 
-
-    double locationPriceFactor = 1+random.nextDouble();
+    double locationPriceFactor = 1 + random.nextDouble();
     price = price * locationPriceFactor;
 
-    double cloudPriceFactor = 1+random.nextDouble();
+    double cloudPriceFactor = 1 + random.nextDouble();
 
     Price modelPrice = cloudiatorFactory.createPrice();
     modelPrice.setHardware(hardware);
@@ -59,8 +60,11 @@ public class DefaultNodeGenerator implements NodeGenerator {
       for (Image image : cloud.getImages()) {
         for (Hardware hardware : cloud.getHardwareList()) {
           for (Location location : cloud.getLocations()) {
-            generatePrice(cloud, hardware, image, location);
-            nodeCandidates.add(nodeCandidateFactory.of(cloud, hardware, image, location));
+            //check if valid combination
+            if (isValidCombination(image, hardware, location)) {
+              generatePrice(cloud, hardware, image, location);
+              nodeCandidates.add(nodeCandidateFactory.of(cloud, hardware, image, location));
+            }
           }
         }
       }
@@ -69,4 +73,20 @@ public class DefaultNodeGenerator implements NodeGenerator {
         .println(String.format("%s generated all possible nodes: %s", this, nodeCandidates.size()));
     return nodeCandidates;
   }
+
+  private static boolean isValidCombination(Image image, Hardware hardware, Location location) {
+    checkNotNull(location, "location is null");
+    String imageLocationId = null;
+    if (image.getLocation() != null) {
+      imageLocationId = image.getLocation().getId();
+    }
+
+    String hardwareLocationId = null;
+    if (hardware.getLocation() != null) {
+      hardwareLocationId = hardware.getLocation().getId();
+    }
+
+    return location.getId().equals(imageLocationId) && location.getId().equals(hardwareLocationId);
+  }
+
 }

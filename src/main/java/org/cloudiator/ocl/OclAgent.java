@@ -6,12 +6,12 @@ import org.cloudiator.messaging.kafka.KafkaMessagingModule;
 import org.cloudiator.messaging.services.MessageServiceModule;
 import org.eclipse.ocl.pivot.utilities.ParserException;
 
-public class Ocl {
+public class OclAgent {
 
   private final static Injector injector = Guice
       .createInjector(new MessageServiceModule(), new OclModule(), new KafkaMessagingModule());
 
-  public Ocl() {
+  public OclAgent() {
 
   }
 

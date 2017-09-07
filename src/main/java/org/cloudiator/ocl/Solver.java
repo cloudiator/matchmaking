@@ -3,6 +3,7 @@ package org.cloudiator.ocl;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorPackage;
 import com.google.inject.Inject;
+import javax.annotation.Nullable;
 import org.cloudiator.ocl.NodeCandidate.NodeCandidateFactory;
 import org.eclipse.ocl.pivot.utilities.ParserException;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ public class Solver {
     this.modelGenerator = modelGenerator;
   }
 
+  @Nullable
   Solution solve(ConstraintSatisfactionProblem csp, String userId) throws ParserException {
     ConstraintChecker cc = new ConstraintChecker(csp);
 

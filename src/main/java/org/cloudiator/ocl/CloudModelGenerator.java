@@ -50,11 +50,13 @@ public class CloudModelGenerator {
             cloud.setType(CloudType.PRIVATE);
             break;
           case UNRECOGNIZED:
-            throw new AssertionError("Unknown cloud type "+c.getCloudType());
+            throw new AssertionError("Unknown cloud type " + c.getCloudType());
         }
 
-        cloud.getHardwareList().addAll(hardwareSupplierFactory.newInstance(cloud, userId).get());
+        //add locations first as hardware and images need to related to locations
         cloud.getLocations().addAll(locationSupplierFactory.newInstance(cloud, userId).get());
+        
+        cloud.getHardwareList().addAll(hardwareSupplierFactory.newInstance(cloud, userId).get());
         cloud.getImages().addAll(imageSupplierFactory.newInstance(cloud, userId).get());
 
         return cloud;

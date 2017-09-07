@@ -4,9 +4,11 @@ import cloudiator.Cloud;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorPackage;
 import cloudiator.Image;
+import cloudiator.Location;
 import cloudiator.OSArchitecture;
 import cloudiator.OSFamily;
 import cloudiator.OperatingSystem;
+import com.google.common.collect.MoreCollectors;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -40,6 +42,10 @@ public class ImageSupplier implements Supplier<Set<Image>> {
         image.setId(i.getId());
         image.setName(i.getName());
         image.setProviderId(i.getProviderId());
+
+        if (i.hasLocation()) {
+          image.setLocation(getLocation(i.getLocation().getId()));
+        }
 
         OperatingSystem os = cloudiatorFactory.createOperatingSystem();
 
@@ -81,5 +87,10 @@ public class ImageSupplier implements Supplier<Set<Image>> {
       throw new IllegalStateException(
           String.format("Could not retrieve images due to error %s", e.getMessage()), e);
     }
+  }
+
+  private Location getLocation(String id) {
+    return cloud.getLocations().stream()
+        .filter(search -> search.getId().equals(id)).collect(MoreCollectors.onlyElement());
   }
 }

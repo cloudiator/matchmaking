@@ -4,6 +4,8 @@ import cloudiator.Cloud;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorPackage;
 import cloudiator.Hardware;
+import cloudiator.Location;
+import com.google.common.collect.MoreCollectors;
 import java.math.BigInteger;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -11,8 +13,6 @@ import java.util.stream.Collectors;
 import org.cloudiator.messages.Hardware.HardwareQueryRequest;
 import org.cloudiator.messaging.ResponseException;
 import org.cloudiator.messaging.services.HardwareService;
-import org.cloudiator.messaging.services.HardwareServiceImpl;
-import org.cloudiator.messaging.services.LocationServiceImpl;
 
 public class HardwareSupplier implements Supplier<Set<Hardware>> {
 
@@ -45,11 +45,21 @@ public class HardwareSupplier implements Supplier<Set<Hardware>> {
             hardware.setId(hardwareFlavor.getId());
             hardware.setName(hardwareFlavor.getName());
             hardware.setProviderId(hardwareFlavor.getProviderId());
+
+            if (hardwareFlavor.hasLocation()) {
+              hardware.setLocation(getLocation(hardwareFlavor.getLocation().getId()));
+            }
+
             return hardware;
           }).collect(Collectors.toSet());
     } catch (ResponseException e) {
       throw new IllegalStateException(String
           .format("Could not retrieve hardware due to communication error: %s", e.getMessage()), e);
     }
+  }
+
+  private Location getLocation(String id) {
+    return cloud.getLocations().stream()
+        .filter(search -> search.getId().equals(id)).collect(MoreCollectors.onlyElement());
   }
 }
