@@ -1,0 +1,596 @@
+package choco;
+
+import static com.google.common.base.Preconditions.checkState;
+
+import cloudiator.CloudiatorFactory;
+import cloudiator.CloudiatorPackage;
+import experiment.ExperimentModelGenerator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.chocosolver.solver.Model;
+import org.chocosolver.solver.Solver;
+import org.chocosolver.solver.constraints.Constraint;
+import org.chocosolver.solver.search.strategy.Search;
+import org.chocosolver.solver.variables.IntVar;
+import org.cloudiator.ocl.CachedModelGenerator;
+import org.cloudiator.ocl.ConsistentNodeGenerator;
+import org.cloudiator.ocl.ConstraintChecker;
+import org.cloudiator.ocl.ConstraintSatisfactionProblem;
+import org.cloudiator.ocl.DefaultNodeGenerator;
+import org.cloudiator.ocl.ModelGenerator;
+import org.cloudiator.ocl.NodeCandidate;
+import org.cloudiator.ocl.NodeCandidate.NodeCandidateFactory;
+import org.cloudiator.ocl.NodeGenerator;
+import org.cloudiator.ocl.Solution;
+import org.eclipse.ocl.pivot.utilities.ParserException;
+
+public class ChocoSolver {
+
+  private final ConstraintSatisfactionProblem csp;
+  private final NodeGenerator nodeGenerator;
+  private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorPackage.eINSTANCE
+      .getCloudiatorFactory();
+  private static final NodeCandidateFactory NODE_CANDIDATE_FACTORY = new NodeCandidateFactory();
+  private static final ModelGenerator MODEL_GENERATOR = new CachedModelGenerator(
+      new ExperimentModelGenerator());
+
+  public ChocoSolver(ConstraintSatisfactionProblem csp) {
+    this.csp = csp;
+    try {
+      this.nodeGenerator =
+          new ConsistentNodeGenerator(
+              new DefaultNodeGenerator(NODE_CANDIDATE_FACTORY,
+                  MODEL_GENERATOR.generateModel("blub")),
+              new ConstraintChecker(csp));
+    } catch (ParserException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  public Solution solve(int numberOfNodes) {
+
+    Model model = new Model("Selection CSP");
+
+    Set<NodeCandidate> possibleNodes = nodeGenerator.getPossibleNodes().stream()
+        .filter(nc -> !nc.getPrice().equals(Double.MAX_VALUE)).collect(
+            Collectors.toSet());
+
+    System.out
+        .println(String.format("%s nodes with valid pricing information", possibleNodes.size()));
+
+    Set<Integer> coreDomain = new HashSet<>();
+    Set<Integer> ramDomain = new HashSet<>();
+    Set<Integer> countryDomain = new HashSet<>();
+    Set<Integer> priceDomain = new HashSet<>();
+
+    IntVar[] coreVariables = new IntVar[numberOfNodes];
+    IntVar[] ramVariables = new IntVar[numberOfNodes];
+    IntVar[] countryVariables = new IntVar[numberOfNodes];
+    IntVar[] hardwareOidVariables = new IntVar[numberOfNodes];
+    IntVar[] locationOidVariables = new IntVar[numberOfNodes];
+    IntVar[] imageOidVariables = new IntVar[numberOfNodes];
+    IntVar[] cloudOidVariables = new IntVar[numberOfNodes];
+    IntVar[] priceVariables = new IntVar[numberOfNodes];
+
+    ObjectMapper<String> hardwareMapper = new StringMapper();
+    ObjectMapper<String> countryMapper = new StringMapper();
+    ObjectMapper<String> locationMapper = new StringMapper();
+    ObjectMapper<String> cloudMapper = new StringMapper();
+    ObjectMapper<String> imageMapper = new StringMapper();
+    ObjectMapper<Double> priceMapper = new DoubleMapper();
+
+    //cores to oid map
+    Map<Integer, Set<Integer>> coresToOid = new HashMap<>();
+    //ram to oid map
+    Map<Integer, Set<Integer>> ramToOid = new HashMap<>();
+    //all oid constraints
+    Map<Integer, Integer> hardwareOidsToCores = new HashMap<>();
+    Map<Integer, Integer> hardwareOidsToRam = new HashMap<>();
+    //country to oid mao
+    Map<Integer, Set<Integer>> countryToOid = new HashMap<>();
+    //oid to country
+    Map<Integer, Integer> locationOidsToCountry = new HashMap<>();
+
+    //relationship between location and cloud
+    Map<Integer, Set<Integer>> locationOidsToCloudOids = new HashMap<>();
+    Map<Integer, Set<Integer>> cloudOidsToLocationOids = new HashMap<>();
+
+    //relationship between hardware and cloud
+    Map<Integer, Set<Integer>> hardwareOidsToCloudOids = new HashMap<>();
+    Map<Integer, Set<Integer>> cloudOidsToHardwareOids = new HashMap<>();
+
+    //relationship between image and cloud
+    Map<Integer, Set<Integer>> imageOidsToCloudOids = new HashMap<>();
+    Map<Integer, Set<Integer>> cloudOidsToImageOids = new HashMap<>();
+
+    //relationship between image and location
+    Map<Integer, Set<Integer>> imageOidsToLocationOids = new HashMap<>();
+    Map<Integer, Set<Integer>> locationOidsToImageOids = new HashMap<>();
+
+    //relationship between hardware and location
+    Map<Integer, Set<Integer>> hardwareOidsToLocationOids = new HashMap<>();
+    Map<Integer, Set<Integer>> locationOidsToHardwareOids = new HashMap<>();
+
+    //relationship between hardware and price
+    Map<Integer, Set<Integer>> hardwareOidsToPrice = new HashMap<>();
+
+    //relationship between image and price
+    Map<Integer, Set<Integer>> imageOidsToPrice = new HashMap<>();
+
+    //relationship between location and price
+    Map<Integer, Set<Integer>> locationOidsToPrice = new HashMap<>();
+
+    for (NodeCandidate nc : possibleNodes) {
+      //hardware stuff
+      int cores = nc.getHardware().getCores().intValue();
+      int ram = nc.getHardware().getRam().intValue();
+      String hardwareOid = nc.getCloud().getId() + nc.getHardware().getId();
+      int mappedHardwareOid = hardwareMapper.applyAsInt(hardwareOid);
+
+      //location stuff
+      int country = countryMapper.applyAsInt(nc.getLocation().getCountry());
+      String locationOid = nc.getCloud().getId() + nc.getLocation().getId();
+      int mappedLocationOid = locationMapper.applyAsInt(locationOid);
+
+      //image stuff
+      String imageOid = nc.getImage().getId();
+      int mappedImageOid = imageMapper.applyAsInt(imageOid);
+
+      //cloud stuff
+      String cloudOid = nc.getCloud().getId();
+      int mappedCloudOid = cloudMapper.applyAsInt(cloudOid);
+
+      //price stuff
+      Double price = nc.getPrice();
+      int mappedPrice = priceMapper.applyAsInt(price);
+
+      coreDomain.add(cores);
+      ramDomain.add(ram);
+      countryDomain.add(country);
+      priceDomain.add(mappedPrice);
+
+      //hardware map creation
+      if (!coresToOid.containsKey(cores)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedHardwareOid);
+        coresToOid.put(cores, ids);
+      } else {
+        coresToOid.get(cores)
+            .add(mappedHardwareOid);
+      }
+
+      if (!ramToOid.containsKey(ram)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedHardwareOid);
+        ramToOid.put(ram, ids);
+      } else {
+        ramToOid.get(ram)
+            .add(mappedHardwareOid);
+      }
+
+      hardwareOidsToCores.put(mappedHardwareOid, cores);
+      hardwareOidsToRam.put(mappedHardwareOid, ram);
+
+      //location map creation
+      if (!countryToOid.containsKey(country)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedLocationOid);
+        countryToOid.put(country, ids);
+      } else {
+        countryToOid.get(country).add(mappedLocationOid);
+      }
+
+      locationOidsToCountry.put(mappedLocationOid, country);
+
+      //location -> cloud map creation
+      if (!locationOidsToCloudOids.containsKey(mappedLocationOid)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedCloudOid);
+        locationOidsToCloudOids.put(mappedLocationOid, ids);
+      } else {
+        locationOidsToCloudOids.get(mappedLocationOid).add(mappedCloudOid);
+      }
+
+      if (!cloudOidsToLocationOids.containsKey(mappedCloudOid)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedLocationOid);
+        cloudOidsToLocationOids.put(mappedCloudOid, ids);
+      } else {
+        cloudOidsToLocationOids.get(mappedCloudOid).add(mappedLocationOid);
+      }
+
+      //hardware -> cloud map creation
+      if (!hardwareOidsToCloudOids.containsKey(mappedHardwareOid)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedCloudOid);
+        hardwareOidsToCloudOids.put(mappedHardwareOid, ids);
+      } else {
+        hardwareOidsToCloudOids.get(mappedHardwareOid).add(mappedCloudOid);
+      }
+
+      if (!cloudOidsToHardwareOids.containsKey(mappedCloudOid)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedHardwareOid);
+        cloudOidsToHardwareOids.put(mappedCloudOid, ids);
+      } else {
+        cloudOidsToHardwareOids.get(mappedCloudOid).add(mappedHardwareOid);
+      }
+
+      //image -> cloud map creation
+      if (!imageOidsToCloudOids.containsKey(mappedImageOid)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedCloudOid);
+        imageOidsToCloudOids.put(mappedImageOid, ids);
+      } else {
+        imageOidsToCloudOids.get(mappedImageOid).add(mappedCloudOid);
+      }
+
+      if (!cloudOidsToImageOids.containsKey(mappedCloudOid)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedImageOid);
+        cloudOidsToImageOids.put(mappedCloudOid, ids);
+      } else {
+        cloudOidsToImageOids.get(mappedCloudOid).add(mappedImageOid);
+      }
+
+      //image -> location map creation
+      if (!imageOidsToLocationOids.containsKey(mappedImageOid)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedLocationOid);
+        imageOidsToLocationOids.put(mappedImageOid, ids);
+      } else {
+        imageOidsToLocationOids.get(mappedImageOid).add(mappedLocationOid);
+      }
+
+      if (!locationOidsToImageOids.containsKey(mappedLocationOid)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedImageOid);
+        locationOidsToImageOids.put(mappedLocationOid, ids);
+      } else {
+        locationOidsToImageOids.get(mappedLocationOid).add(mappedImageOid);
+      }
+
+      //hardware -> location map creation
+      if (!hardwareOidsToLocationOids.containsKey(mappedHardwareOid)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedLocationOid);
+        hardwareOidsToLocationOids.put(mappedHardwareOid, ids);
+      } else {
+        hardwareOidsToLocationOids.get(mappedHardwareOid).add(mappedLocationOid);
+      }
+
+      if (!locationOidsToHardwareOids.containsKey(mappedLocationOid)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedHardwareOid);
+        locationOidsToHardwareOids.put(mappedLocationOid, ids);
+      } else {
+        locationOidsToHardwareOids.get(mappedLocationOid).add(mappedHardwareOid);
+      }
+
+      //price stuff
+
+      //location and price
+      if (!locationOidsToPrice.containsKey(mappedLocationOid)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedPrice);
+        locationOidsToPrice.put(mappedLocationOid, ids);
+      } else {
+        locationOidsToPrice.get(mappedLocationOid).add(mappedPrice);
+      }
+
+      //hardware and price
+      if (!hardwareOidsToPrice.containsKey(mappedHardwareOid)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedPrice);
+        hardwareOidsToPrice.put(mappedHardwareOid, ids);
+      } else {
+        hardwareOidsToPrice.get(mappedHardwareOid).add(mappedPrice);
+      }
+
+      //image and price
+      if (!imageOidsToPrice.containsKey(mappedImageOid)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedPrice);
+        imageOidsToPrice.put(mappedImageOid, ids);
+      } else {
+        imageOidsToPrice.get(mappedImageOid).add(mappedPrice);
+      }
+
+    }
+
+    //some checking that the maps are correct
+    checkState(hardwareOidsToCores.size() == hardwareOidsToRam.size());
+    checkState(cloudOidsToHardwareOids.size() == cloudOidsToImageOids.size()
+        && cloudOidsToHardwareOids.size() == cloudOidsToLocationOids.size());
+    checkState(locationOidsToCloudOids.size() == locationOidsToImageOids.size()
+        && locationOidsToCloudOids.size() == locationOidsToHardwareOids.size());
+
+    //generate the node size variable
+    IntVar nodes = model.intVar(numberOfNodes);
+
+    int maxPrice = priceDomain.stream().mapToInt(Number::intValue).max().getAsInt();
+    int minPrice = priceDomain.stream().mapToInt(Number::intValue).min().getAsInt();
+    IntVar objectiveFunction = model
+        .intVar("objective", minPrice * numberOfNodes, maxPrice * numberOfNodes);
+
+    //generate variables
+    for (int i = 0; i < numberOfNodes; i++) {
+      //hardware variables
+      IntVar cores = model
+          .intVar("Cores Node " + i, coreDomain.stream().mapToInt(Number::intValue).toArray());
+      coreVariables[i] = cores;
+      IntVar ram = model
+          .intVar("RAM Node " + i, ramDomain.stream().mapToInt(Number::intValue).toArray());
+      ramVariables[i] = ram;
+      IntVar hardwareOid = model.intVar("HARDWARE OID " + i,
+          hardwareOidsToCores.keySet().stream().mapToInt(Number::intValue).toArray());
+      hardwareOidVariables[i] = hardwareOid;
+
+      //location variables
+      IntVar country = model
+          .intVar("COUNTRY Node " + i, countryDomain.stream().mapToInt(Number::intValue).toArray());
+      countryVariables[i] = country;
+      IntVar locationOid = model.intVar("LOCATION OID" + i,
+          locationOidsToCountry.keySet().stream().mapToInt(Number::intValue).toArray());
+      locationOidVariables[i] = locationOid;
+
+      //image variables
+      IntVar imageOid = model.intVar("IMAGE OID " + i,
+          imageOidsToCloudOids.keySet().stream().mapToInt(Number::intValue).toArray());
+      imageOidVariables[i] = imageOid;
+
+      //cloud variables
+      IntVar cloudOid = model.intVar("CLOUD OID " + i,
+          cloudOidsToHardwareOids.keySet().stream().mapToInt(Number::intValue).toArray());
+      cloudOidVariables[i] = cloudOid;
+
+      //price variables
+      IntVar price = model
+          .intVar("PRICE " + i, priceDomain.stream().mapToInt(Number::intValue).toArray());
+      priceVariables[i] = price;
+    }
+
+    //generate constraints for hardware objects
+    for (int i = 0; i < numberOfNodes; i++) {
+      IntVar coreVariable = coreVariables[i];
+      IntVar ramVariable = ramVariables[i];
+      IntVar oidVariable = hardwareOidVariables[i];
+
+      for (Integer oid : hardwareOidsToCores.keySet()) {
+        model.ifThen(model.arithm(oidVariable, "=", oid),
+            model.arithm(coreVariable, "=", hardwareOidsToCores.get(oid)));
+        model.ifThen(model.arithm(oidVariable, "=", oid),
+            model.arithm(ramVariable, "=", hardwareOidsToRam.get(oid)));
+      }
+
+      for (Map.Entry<Integer, Set<Integer>> entry : coresToOid.entrySet()) {
+        model.ifThen(model.arithm(coreVariable, "=", entry.getKey()), model
+            .member(oidVariable, entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+
+      for (Map.Entry<Integer, Set<Integer>> entry : ramToOid.entrySet()) {
+        model.ifThen(model.arithm(ramVariable, "=", entry.getKey()), model
+            .member(oidVariable, entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+    }
+
+    //generate constraints for location objects
+    for (int i = 0; i < numberOfNodes; i++) {
+      IntVar countryVariable = countryVariables[i];
+      IntVar oidVariable = locationOidVariables[i];
+
+      for (Integer oid : locationOidsToCountry.keySet()) {
+        model.ifThen(model.arithm(oidVariable, "=", oid),
+            model.arithm(countryVariable, "=", locationOidsToCountry.get(oid)));
+      }
+
+      for (Map.Entry<Integer, Set<Integer>> entry : countryToOid.entrySet()) {
+        model.ifThen(model.arithm(countryVariable, "=", entry.getKey()), model
+            .member(oidVariable, entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+    }
+
+    //generate reference between location and cloud
+    for (int i = 0; i < numberOfNodes; i++) {
+      IntVar locationOidVariable = locationOidVariables[i];
+      IntVar cloudOidVariable = cloudOidVariables[i];
+
+      for (Map.Entry<Integer, Set<Integer>> entry : locationOidsToCloudOids.entrySet()) {
+        model.ifThen(model.arithm(locationOidVariable, "=", entry.getKey()), model
+            .member(cloudOidVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+
+      for (Map.Entry<Integer, Set<Integer>> entry : cloudOidsToLocationOids.entrySet()) {
+        model.ifThen(model.arithm(cloudOidVariable, "=", entry.getKey()), model
+            .member(locationOidVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+    }
+
+    //generate reference between image and cloud
+    for (int i = 0; i < numberOfNodes; i++) {
+      IntVar imageOidVariable = imageOidVariables[i];
+      IntVar cloudOidVariable = cloudOidVariables[i];
+
+      for (Map.Entry<Integer, Set<Integer>> entry : imageOidsToCloudOids.entrySet()) {
+        model.ifThen(model.arithm(imageOidVariable, "=", entry.getKey()), model
+            .member(cloudOidVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+
+      for (Map.Entry<Integer, Set<Integer>> entry : cloudOidsToImageOids.entrySet()) {
+        model.ifThen(model.arithm(cloudOidVariable, "=", entry.getKey()), model
+            .member(imageOidVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+    }
+
+    //generate reference between image and location
+    for (int i = 0; i < numberOfNodes; i++) {
+      IntVar imageOidVariable = imageOidVariables[i];
+      IntVar locationOidVariable = locationOidVariables[i];
+
+      for (Map.Entry<Integer, Set<Integer>> entry : imageOidsToLocationOids.entrySet()) {
+        model.ifThen(model.arithm(locationOidVariable, "=", entry.getKey()), model
+            .member(locationOidVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+
+      for (Map.Entry<Integer, Set<Integer>> entry : locationOidsToImageOids.entrySet()) {
+        model.ifThen(model.arithm(locationOidVariable, "=", entry.getKey()), model
+            .member(imageOidVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+    }
+
+    //generate reference between hardware and cloud
+    for (int i = 0; i < numberOfNodes; i++) {
+      IntVar hardwareOidVariable = hardwareOidVariables[i];
+      IntVar cloudOidVariable = cloudOidVariables[i];
+
+      for (Map.Entry<Integer, Set<Integer>> entry : imageOidsToCloudOids.entrySet()) {
+        model.ifThen(model.arithm(hardwareOidVariable, "=", entry.getKey()), model
+            .member(cloudOidVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+
+      for (Map.Entry<Integer, Set<Integer>> entry : cloudOidsToHardwareOids.entrySet()) {
+        model.ifThen(model.arithm(cloudOidVariable, "=", entry.getKey()), model
+            .member(hardwareOidVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+    }
+
+    //generate reference between hardware and location
+    for (int i = 0; i < numberOfNodes; i++) {
+      IntVar hardwareOidVariable = hardwareOidVariables[i];
+      IntVar locationOidVariable = locationOidVariables[i];
+
+      for (Map.Entry<Integer, Set<Integer>> entry : imageOidsToLocationOids.entrySet()) {
+        model.ifThen(model.arithm(hardwareOidVariable, "=", entry.getKey()), model
+            .member(locationOidVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+
+      for (Map.Entry<Integer, Set<Integer>> entry : locationOidsToHardwareOids.entrySet()) {
+        model.ifThen(model.arithm(locationOidVariable, "=", entry.getKey()), model
+            .member(hardwareOidVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+    }
+
+    //generate price
+    for (int i = 0; i < numberOfNodes; i++) {
+      IntVar hardwareOidVariable = hardwareOidVariables[i];
+      IntVar locationOidVariable = locationOidVariables[i];
+      IntVar imageOidVariable = imageOidVariables[i];
+      IntVar priceVariable = priceVariables[i];
+
+      for (Map.Entry<Integer, Set<Integer>> entry : imageOidsToPrice.entrySet()) {
+        model.ifThen(model.arithm(imageOidVariable, "=", entry.getKey()), model
+            .member(priceVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+
+      for (Map.Entry<Integer, Set<Integer>> entry : hardwareOidsToPrice.entrySet()) {
+        model.ifThen(model.arithm(hardwareOidVariable, "=", entry.getKey()), model
+            .member(priceVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+
+      for (Map.Entry<Integer, Set<Integer>> entry : locationOidsToPrice.entrySet()) {
+        model.ifThen(model.arithm(locationOidVariable, "=", entry.getKey()), model
+            .member(priceVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+
+    }
+
+    //generate the constraints
+    //constraints.add("nodes.hardware.cores->sum() >= 15");
+    model.sum(coreVariables, ">=", 15).post();
+
+    //constraints.add("nodes->isUnique(n | n.location.country)");
+    model.allDifferent(countryVariables).post();
+
+    //constraints.add("nodes->exists(location.country = 'DE')");
+    Set<Constraint> countryConstraints = new HashSet<>();
+    for (IntVar countryVariable : countryVariables) {
+      countryConstraints.add(countryVariable.eq(countryMapper.applyAsInt("DE")).decompose());
+    }
+    model.or(countryConstraints.toArray(new Constraint[countryConstraints.size()])).post();
+
+    //constraints.add("nodes->select(n | n.hardware.cores > 4)->size() >= 2");
+
+    IntVar limit = model.intVar(0, numberOfNodes);
+    model.arithm(limit, ">=", 2).post();
+    IntVar value = model.intVar(coreDomain.stream().mapToInt(Number::intValue).toArray());
+    model.arithm(value, ">", 4).post();
+    model.count(value, coreVariables, limit).post();
+
+    model.sum(priceVariables, "<=", objectiveFunction).post();
+    model.setObjective(Model.MINIMIZE, objectiveFunction);
+
+    Solver solver = model.getSolver();
+    solver.setSearch(Search.defaultSearch(model));
+
+    while (solver.solve()) {
+
+      System.out.println("==========");
+      for (int i = 0; i < numberOfNodes; i++) {
+        IntVar coreVariable = coreVariables[i];
+        IntVar ramVariable = ramVariables[i];
+        IntVar countryVariable = countryVariables[i];
+        IntVar hardwareOidVariable = hardwareOidVariables[i];
+        IntVar imageOidVariable = imageOidVariables[i];
+        IntVar locationOidVariable = locationOidVariables[i];
+        IntVar cloudOidVariable = cloudOidVariables[i];
+        IntVar priceVariable = priceVariables[i];
+
+        System.out.println("Node " + i);
+        System.out.println("Cores: " + coreVariable.getValue());
+        System.out.println("RAM: " + ramVariable.getValue());
+        System.out.println("Country " + countryMapper.applyBack(countryVariable.getValue()));
+        System.out.println("Cloud " + cloudMapper.applyBack(cloudOidVariable.getValue()));
+        System.out.println("Hardware " + hardwareMapper.applyBack(hardwareOidVariable.getValue()));
+        System.out.println("Image " + imageMapper.applyBack(imageOidVariable.getValue()));
+        System.out.println("Location " + locationMapper.applyBack(locationOidVariable.getValue()));
+        System.out.println("Price " + priceMapper.applyBack(priceVariable.getValue()));
+        System.out.println("==========");
+      }
+
+    }
+
+    System.out.println("FINALLY FOUND BEST SOLUTION");
+
+    return null;
+  }
+
+
+  public static void main(String[] args) {
+
+    Set<String> constraints = new HashSet<>();
+    constraints.add("nodes->exists(location.country = 'DE')");
+    constraints.add("nodes->forAll(n | n.hardware.cores >= 2)");
+    constraints.add("nodes->isUnique(n | n.location.country)");
+    constraints.add("nodes->forAll(n | n.hardware.ram >= 1024)");
+    constraints.add("nodes->forAll(n | n.hardware.cores >= 4 implies n.hardware.ram >= 4096)");
+    constraints.add("nodes->forAll(n | n.image.operatingSystem.family = OSFamily::UBUNTU)");
+    //constraints.add("nodes->forAll(n | n.image.operatingSystem.version = '1')");
+    //constraints
+    //    .add("nodes->forAll(n | n.image.operatingSystem.architecture = OSArchitecture::AMD64)");
+    constraints.add("nodes->select(n | n.hardware.cores > 4)->size() >= 2");
+    constraints.add("nodes.hardware.cores->sum() >= 15");
+
+    ConstraintSatisfactionProblem csp = new ConstraintSatisfactionProblem(constraints);
+
+    new ChocoSolver(csp).solve(2);
+    System.exit(0);
+
+  }
+
+}

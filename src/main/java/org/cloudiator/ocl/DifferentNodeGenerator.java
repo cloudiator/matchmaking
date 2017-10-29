@@ -11,6 +11,7 @@ public class DifferentNodeGenerator implements NodeGenerator {
 
   private final NodeGenerator nodeGenerator;
   private final ConstraintSatisfactionProblem constraintSatisfactionProblem;
+  private final static boolean ENABLED = true;
 
   public DifferentNodeGenerator(NodeGenerator delegate,
       ConstraintSatisfactionProblem constraintSatisfactionProblem) {
@@ -21,28 +22,34 @@ public class DifferentNodeGenerator implements NodeGenerator {
   @Override
   public Set<NodeCandidate> getPossibleNodes() {
 
-    Set<NodeCandidate> candidates = nodeGenerator.getPossibleNodes();
-    Set<NodeCandidate> cheapestCanidates = new HashSet<>();
+    if (!ENABLED) {
+      return nodeGenerator.getPossibleNodes();
+    } else {
 
-    for (NodeCandidate one : new HashSet<>(candidates)) {
-      boolean cheapest = true;
-      for (NodeCandidate two : candidates) {
-        if (effectivelyEqual(one, two)) {
-          if (one.getPrice() > two.getPrice()) {
-            cheapest = false;
+      Set<NodeCandidate> candidates = nodeGenerator.getPossibleNodes();
+      Set<NodeCandidate> cheapestCandidates = new HashSet<>();
+
+      for (NodeCandidate one : new HashSet<>(candidates)) {
+        boolean cheapest = true;
+        for (NodeCandidate two : candidates) {
+          if (effectivelyEqual(one, two)) {
+            if (one.getPrice() > two.getPrice()) {
+              cheapest = false;
+            }
           }
         }
+        if (!cheapest) {
+          candidates.remove(one);
+        }
+        if (cheapest) {
+          cheapestCandidates.add(one);
+        }
       }
-      if (!cheapest) {
-        candidates.remove(one);
-      }
-      if (cheapest) {
-        cheapestCanidates.add(one);
-      }
+      System.out
+          .println(
+              String.format("%s generated %s different nodes", this, cheapestCandidates.size()));
+      return cheapestCandidates;
     }
-    System.out
-        .println(String.format("%s generated %s different nodes", this, cheapestCanidates.size()));
-    return cheapestCanidates;
   }
 
   private boolean effectivelyEqual(NodeCandidate one, NodeCandidate two) {
@@ -53,19 +60,19 @@ public class DifferentNodeGenerator implements NodeGenerator {
   }
 
   private boolean equalWithRespectToImage(Image one, Image two) {
-    return false;
+    return one.getOperatingSystem().getFamily().equals(two.getOperatingSystem().getFamily());
   }
 
   private boolean equalWithRespectToHardware(Hardware one, Hardware two) {
-    return false;
+    return one.getCores().equals(two.getCores()) && one.getRam().equals(two.getRam());
   }
 
   private boolean equalWithRespectToLocation(Location one, Location two) {
-    return false;
+    return one.getCountry().equals(two.getCountry());
   }
 
   private boolean equalWithRespectToCloud(Cloud one, Cloud two) {
-    return false;
+    return true;
   }
 
 }

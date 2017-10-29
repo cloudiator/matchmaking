@@ -9,7 +9,6 @@ public class BestFit {
   private final ConstraintChecker constraintChecker;
   private int limit;
   private int targetNodeSize;
-  public static final int DYNAMIC_LIMIT = -1;
 
   public BestFit(SolutionGenerator solutionGenerator, ConstraintChecker constraintChecker,
       int limit, int targetNodeSize) {

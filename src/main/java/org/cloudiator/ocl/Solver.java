@@ -13,8 +13,7 @@ public class Solver {
 
   private static final CloudiatorFactory cloudiatorFactory = CloudiatorPackage.eINSTANCE
       .getCloudiatorFactory();
-  private static final NodeCandidateFactory nodeCandidateFactory = new NodeCandidateFactory(
-      cloudiatorFactory);
+  private static final NodeCandidateFactory nodeCandidateFactory = new NodeCandidateFactory();
   private static final Logger LOGGER = LoggerFactory.getLogger(Solver.class);
 
   private final ModelGenerator modelGenerator;
@@ -25,7 +24,7 @@ public class Solver {
   }
 
   @Nullable
-  Solution solve(ConstraintSatisfactionProblem csp, String userId) throws ParserException {
+  public Solution solve(ConstraintSatisfactionProblem csp, String userId) throws ParserException {
     ConstraintChecker cc = new ConstraintChecker(csp);
 
     LOGGER.debug(String.format("%s is solving CSP %s for user %s", this, csp, userId));
@@ -44,7 +43,7 @@ public class Solver {
     System.out.println(
         String.format("Possible Solution Generation for CSP %s took %s", csp, generationTime));
 
-    BestFit bestFit = new BestFit(solutionGenerator, cc, 10000,
+    BestFit bestFit = new BestFit(solutionGenerator, cc, 100,
         1);
 
     long startSolving = System.currentTimeMillis();

@@ -9,7 +9,7 @@ import org.eclipse.ocl.pivot.utilities.ParserException;
 public class OclAgent {
 
   private final static Injector injector = Guice
-      .createInjector(new MessageServiceModule(), new OclModule(), new KafkaMessagingModule());
+      .createInjector(new MessageServiceModule(), new OclServiceModule(), new KafkaMessagingModule());
 
   public OclAgent() {
 

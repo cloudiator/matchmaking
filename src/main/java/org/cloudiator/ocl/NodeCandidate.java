@@ -7,6 +7,7 @@ import cloudiator.Image;
 import cloudiator.Location;
 import cloudiator.Node;
 import com.google.common.base.MoreObjects;
+import javax.annotation.Nullable;
 
 public class NodeCandidate implements Comparable<NodeCandidate> {
 
@@ -14,21 +15,21 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
   private final Image image;
   private final Location location;
   private final Cloud cloud;
-  private final CloudiatorFactory cloudiatorFactory;
+  private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorFactory.eINSTANCE;
+  @Nullable
   private Double price = null;
-  public int fitness = 0;
 
-  public NodeCandidate(CloudiatorFactory cloudiatorFactory, Cloud cloud, Hardware hardware,
-      Image image, Location location) {
+  public NodeCandidate(Cloud cloud, Hardware hardware,
+      Image image, Location location, @Nullable Double price) {
     this.cloud = cloud;
     this.hardware = hardware;
     this.image = image;
     this.location = location;
-    this.cloudiatorFactory = cloudiatorFactory;
+    this.price = price;
   }
 
   private Node toNode() {
-    Node node = cloudiatorFactory.createNode();
+    Node node = CLOUDIATOR_FACTORY.createNode();
     node.setImage(image);
     node.setHardware(hardware);
     node.setLocation(location);
@@ -108,14 +109,12 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
 
   public static class NodeCandidateFactory {
 
-    private final CloudiatorFactory cloudiatorFactory;
-
-    public NodeCandidateFactory(CloudiatorFactory cloudiatorFactory) {
-      this.cloudiatorFactory = cloudiatorFactory;
+    public NodeCandidateFactory() {
     }
 
-    public NodeCandidate of(Cloud cloud, Hardware hardware, Image image, Location location) {
-      return new NodeCandidate(cloudiatorFactory, cloud, hardware, image, location);
+    public NodeCandidate of(Cloud cloud, Hardware hardware, Image image, Location location,
+        @Nullable Double price) {
+      return new NodeCandidate(cloud, hardware, image, location, price);
     }
   }
 
