@@ -205,7 +205,7 @@ public class CloudHarmony implements ModelGenerator {
 
           Location location = CLOUDIATOR_FACTORY.createLocation();
           location.setCity(serviceRegion.getCity());
-          location.setCountry(serviceRegion.getCountry().getValue());
+          location.setCountry(serviceRegion.getCountry().toString());
           location.setLatitude(serviceRegion.getLocationLat().doubleValue());
           location.setLongitude(serviceRegion.getLocationLong().doubleValue());
           location.setId(serviceRegion.getProviderCode());
