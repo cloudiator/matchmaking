@@ -1,6 +1,5 @@
 package org.cloudiator.ocl;
 
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.cloudiator.messages.General.Error;
@@ -10,7 +9,6 @@ import org.cloudiator.messages.entities.Solution.OclSolutionRequest;
 import org.cloudiator.messages.entities.Solution.OclSolutionResponse;
 import org.cloudiator.messages.entities.SolutionEntities.OclSolution;
 import org.cloudiator.messages.entities.SolutionEntities.OclSolution.Builder;
-import org.cloudiator.messaging.MessageCallback;
 import org.cloudiator.messaging.MessageInterface;
 import org.cloudiator.messaging.Subscription;
 import org.slf4j.Logger;
@@ -33,59 +31,52 @@ public class OclProblemListener implements Runnable {
   public void run() {
     Subscription subscribe = messageInterface
         .subscribe(OclSolutionRequest.class, OclSolutionRequest.parser(),
-            new MessageCallback<OclSolutionRequest>() {
-              @Override
-              public void accept(String id, OclSolutionRequest solutionRequest) {
+            (id, solutionRequest) -> {
 
-                String userId = solutionRequest.getUserId();
+              String userId = solutionRequest.getUserId();
 
-                ConstraintSatisfactionProblem csp = new ConstraintSatisfactionProblem(
-                    solutionRequest.getProblem().getRequirementsList().stream().map(
-                        OclRequirement::getConstraint).collect(
-                        Collectors.toSet()));
+              ConstraintSatisfactionProblem csp = new ConstraintSatisfactionProblem(
+                  solutionRequest.getProblem().getRequirementsList().stream().map(
+                      OclRequirement::getConstraint).collect(
+                      Collectors.toSet()));
 
-                try {
-                  Solution solution = solver.solve(csp, userId);
+              try {
+                Solution solution = solver.solve(csp, userId);
 
-                  if (solution == null) {
-                    messageInterface.reply(OclSolutionResponse.class, id,
-                        Error.newBuilder().setCode(400)
-                            .setMessage(
-                                String.format("Could not find a solution for the problem %s.", csp))
-                            .build());
-                    return;
-                  }
-
-                  Builder oclSolutionBuilder = OclSolution.newBuilder();
-
-                  solution.getList().forEach(new Consumer<NodeCandidate>() {
-                    @Override
-                    public void accept(NodeCandidate nodeCandidate) {
-                      oclSolutionBuilder.addNodes(VirtualMachineRequest.newBuilder()
-                          .setHardware(nodeCandidate.getHardware().getId())
-                          .setImage(nodeCandidate.getImage().getId())
-                          .setLocation(nodeCandidate.getLocation().getId()).build());
-                    }
-                  });
-
-                  OclSolutionResponse solutionResponse = OclSolutionResponse.newBuilder()
-                      .setSolution(oclSolutionBuilder.build())
-                      .build();
-
-                  messageInterface.reply(id, solutionResponse);
-
-                } catch (Exception e) {
-                  LOGGER.error(String.format("Error while solving the problem %s.", csp), e);
+                if (solution == null) {
                   messageInterface.reply(OclSolutionResponse.class, id,
-                      Error.newBuilder().setCode(500)
+                      Error.newBuilder().setCode(400)
                           .setMessage(
-                              String
-                                  .format("An error occurred while solving the problem %s: %s", csp,
-                                      e.getMessage()))
+                              String.format("Could not find a solution for the problem %s.", csp))
                           .build());
+                  return;
                 }
 
+                Builder oclSolutionBuilder = OclSolution.newBuilder();
+
+                solution.getList().forEach(
+                    nodeCandidate -> oclSolutionBuilder.addNodes(VirtualMachineRequest.newBuilder()
+                        .setHardware(nodeCandidate.getHardware().getId())
+                        .setImage(nodeCandidate.getImage().getId())
+                        .setLocation(nodeCandidate.getLocation().getId()).build()));
+
+                OclSolutionResponse solutionResponse = OclSolutionResponse.newBuilder()
+                    .setSolution(oclSolutionBuilder.build())
+                    .build();
+
+                messageInterface.reply(id, solutionResponse);
+
+              } catch (Exception e) {
+                LOGGER.error(String.format("Error while solving the problem %s.", csp), e);
+                messageInterface.reply(OclSolutionResponse.class, id,
+                    Error.newBuilder().setCode(500)
+                        .setMessage(
+                            String
+                                .format("An error occurred while solving the problem %s: %s", csp,
+                                    e.getMessage()))
+                        .build());
               }
+
             });
   }
 }

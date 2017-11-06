@@ -35,16 +35,16 @@ public class DefaultNodeGenerator implements NodeGenerator {
     price += hardware.getCores().doubleValue();
     price += hardware.getRam().doubleValue() / 1000;
 
-    double locationPriceFactor = 1 + random.nextDouble();
-    price = price * locationPriceFactor;
+    //double locationPriceFactor = 1 + random.nextDouble();
+    //price = price * locationPriceFactor;
 
-    double cloudPriceFactor = 1 + random.nextDouble();
+   // double cloudPriceFactor = 1 + random.nextDouble();
 
     Price modelPrice = cloudiatorFactory.createPrice();
     modelPrice.setHardware(hardware);
     modelPrice.setImage(image);
     modelPrice.setLocation(location);
-    modelPrice.setPrice(price * cloudPriceFactor);
+    modelPrice.setPrice(price);
     return modelPrice;
   }
 
