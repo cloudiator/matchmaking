@@ -4,14 +4,18 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import java.util.NoSuchElementException;
 
-public class StringMapper implements ObjectMapper<String> {
+public class ObjectMapperImpl<T> implements ObjectMapper<T> {
 
-  private BiMap<Integer, String> map = HashBiMap.create();
+  private BiMap<Integer, T> map = HashBiMap.create();
   private int counter = 1;
 
+  public ObjectMapperImpl() {
+
+  }
+
   @Override
-  public String applyBack(int i) {
-    String value = map.get(i);
+  public T applyBack(int i) {
+    T value = map.get(i);
     if (value == null) {
       throw new NoSuchElementException();
     }
@@ -19,7 +23,7 @@ public class StringMapper implements ObjectMapper<String> {
   }
 
   @Override
-  public synchronized int applyAsInt(String value) {
+  public synchronized int applyAsInt(T value) {
 
     Integer integer = map.inverse().get(value);
 

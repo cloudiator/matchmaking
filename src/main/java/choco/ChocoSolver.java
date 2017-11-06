@@ -5,8 +5,11 @@ import static com.google.common.base.Preconditions.checkState;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorPackage;
 import experiment.ExperimentModelGenerator;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -14,6 +17,7 @@ import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.search.strategy.Search;
+import org.chocosolver.solver.search.strategy.selectors.variables.VariableSelector;
 import org.chocosolver.solver.variables.IntVar;
 import org.cloudiator.ocl.CachedModelGenerator;
 import org.cloudiator.ocl.ConsistentNodeGenerator;
@@ -75,11 +79,11 @@ public class ChocoSolver {
     IntVar[] cloudOidVariables = new IntVar[numberOfNodes];
     IntVar[] priceVariables = new IntVar[numberOfNodes];
 
-    ObjectMapper<String> hardwareMapper = new StringMapper();
-    ObjectMapper<String> countryMapper = new StringMapper();
-    ObjectMapper<String> locationMapper = new StringMapper();
-    ObjectMapper<String> cloudMapper = new StringMapper();
-    ObjectMapper<String> imageMapper = new StringMapper();
+    ObjectMapper<String> hardwareMapper = new ObjectMapperImpl<>();
+    ObjectMapper<String> countryMapper = new ObjectMapperImpl<>();
+    ObjectMapper<String> locationMapper = new ObjectMapperImpl<>();
+    ObjectMapper<String> cloudMapper = new ObjectMapperImpl<>();
+    ObjectMapper<String> imageMapper = new ObjectMapperImpl<>();
     ObjectMapper<Double> priceMapper = new DoubleMapper();
 
     //cores to oid map
@@ -116,12 +120,15 @@ public class ChocoSolver {
 
     //relationship between hardware and price
     Map<Integer, Set<Integer>> hardwareOidsToPrice = new HashMap<>();
+    Map<Integer, Set<Integer>> priceToHardwareOids = new HashMap<>();
 
     //relationship between image and price
     Map<Integer, Set<Integer>> imageOidsToPrice = new HashMap<>();
+    Map<Integer, Set<Integer>> priceToImageOids = new HashMap<>();
 
     //relationship between location and price
     Map<Integer, Set<Integer>> locationOidsToPrice = new HashMap<>();
+    Map<Integer, Set<Integer>> priceToLocationOids = new HashMap<>();
 
     for (NodeCandidate nc : possibleNodes) {
       //hardware stuff
@@ -281,6 +288,14 @@ public class ChocoSolver {
         locationOidsToPrice.get(mappedLocationOid).add(mappedPrice);
       }
 
+      if (!priceToLocationOids.containsKey(mappedPrice)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedLocationOid);
+        priceToLocationOids.put(mappedPrice, ids);
+      } else {
+        priceToLocationOids.get(mappedPrice).add(mappedLocationOid);
+      }
+
       //hardware and price
       if (!hardwareOidsToPrice.containsKey(mappedHardwareOid)) {
         HashSet<Integer> ids = new HashSet<>();
@@ -290,6 +305,14 @@ public class ChocoSolver {
         hardwareOidsToPrice.get(mappedHardwareOid).add(mappedPrice);
       }
 
+      if (!priceToHardwareOids.containsKey(mappedPrice)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedHardwareOid);
+        priceToHardwareOids.put(mappedPrice, ids);
+      } else {
+        priceToHardwareOids.get(mappedPrice).add(mappedHardwareOid);
+      }
+
       //image and price
       if (!imageOidsToPrice.containsKey(mappedImageOid)) {
         HashSet<Integer> ids = new HashSet<>();
@@ -297,6 +320,14 @@ public class ChocoSolver {
         imageOidsToPrice.put(mappedImageOid, ids);
       } else {
         imageOidsToPrice.get(mappedImageOid).add(mappedPrice);
+      }
+
+      if (!priceToImageOids.containsKey(mappedPrice)) {
+        HashSet<Integer> ids = new HashSet<>();
+        ids.add(mappedImageOid);
+        priceToImageOids.put(mappedPrice, ids);
+      } else {
+        priceToImageOids.get(mappedPrice).add(mappedImageOid);
       }
 
     }
@@ -496,15 +527,33 @@ public class ChocoSolver {
                 entry.getValue().stream().mapToInt(Number::intValue).toArray()));
       }
 
+      for (Map.Entry<Integer, Set<Integer>> entry : priceToImageOids.entrySet()) {
+        model.ifThen(model.arithm(priceVariable, "=", entry.getKey()), model
+            .member(imageOidVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+
       for (Map.Entry<Integer, Set<Integer>> entry : hardwareOidsToPrice.entrySet()) {
         model.ifThen(model.arithm(hardwareOidVariable, "=", entry.getKey()), model
             .member(priceVariable,
                 entry.getValue().stream().mapToInt(Number::intValue).toArray()));
       }
 
+      for (Map.Entry<Integer, Set<Integer>> entry : priceToHardwareOids.entrySet()) {
+        model.ifThen(model.arithm(priceVariable, "=", entry.getKey()), model
+            .member(hardwareOidVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+
       for (Map.Entry<Integer, Set<Integer>> entry : locationOidsToPrice.entrySet()) {
         model.ifThen(model.arithm(locationOidVariable, "=", entry.getKey()), model
             .member(priceVariable,
+                entry.getValue().stream().mapToInt(Number::intValue).toArray()));
+      }
+
+      for (Map.Entry<Integer, Set<Integer>> entry : priceToLocationOids.entrySet()) {
+        model.ifThen(model.arithm(priceVariable, "=", entry.getKey()), model
+            .member(locationOidVariable,
                 entry.getValue().stream().mapToInt(Number::intValue).toArray()));
       }
 
@@ -536,7 +585,27 @@ public class ChocoSolver {
     model.setObjective(Model.MINIMIZE, objectiveFunction);
 
     Solver solver = model.getSolver();
-    solver.setSearch(Search.defaultSearch(model));
+
+    solver.setSearch(Search.intVarSearch(new VariableSelector<IntVar>() {
+      @Override
+      public IntVar getVariable(IntVar[] variables) {
+
+        List<IntVar> uninstantiatedVariables = Arrays.stream(variables)
+            .filter(v -> !v.isInstantiated())
+            .collect(Collectors.toList());
+
+        if (uninstantiatedVariables.isEmpty()) {
+          return null;
+        }
+
+        return uninstantiatedVariables.stream().min(
+            Comparator.comparingInt(IntVar::getValue)).get();
+      }
+    }, (IntVar integers) -> {
+      return integers.getLB();
+    }, priceVariables));
+
+    System.out.println("Generated CSP.");
 
     while (solver.solve()) {
 
@@ -562,6 +631,8 @@ public class ChocoSolver {
         System.out.println("Price " + priceMapper.applyBack(priceVariable.getValue()));
         System.out.println("==========");
       }
+
+      solver.printStatistics();
 
     }
 

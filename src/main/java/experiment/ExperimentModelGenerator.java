@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import org.cloudiator.ocl.HardwareBasedPriceFunction;
 import org.cloudiator.ocl.ModelGenerator;
 import org.cloudiator.ocl.PriceFunction;
 
@@ -27,9 +26,9 @@ public class ExperimentModelGenerator implements ModelGenerator {
   private static final CloudiatorModel CLOUDIATOR_MODEL = CloudiatorFactory.eINSTANCE
       .createCloudiatorModel();
   private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorFactory.eINSTANCE;
-  private static final PriceFunction PRICE_FUNCTION = new HardwareBasedPriceFunction();
+  private static final PriceFunction PRICE_FUNCTION = new ExperimentModelPriceFunction();
 
-  private static final int NR = 5;
+  private static final int NR = 9;
 
 
   @Override
@@ -69,17 +68,26 @@ public class ExperimentModelGenerator implements ModelGenerator {
     return CLOUDIATOR_MODEL;
   }
 
-  private static class LocationGenerator implements Supplier<List<Location>> {
+  public static class LocationGenerator implements Supplier<List<Location>> {
 
     private final Cloud cloud;
 
-    private static final Set<String> OPTIONS = new HashSet<String>() {{
-      add("DE");
-      add("US");
-      add("CH");
-      add("AU");
-      add("IE");
-      add("JP");
+    public static final Map<String, Double> OPTIONS = new HashMap<String, Double>() {{
+      put("DE", 1.00);
+      put("US", 1.01);
+      put("CH", 1.02);
+      put("AU", 1.03);
+      put("IE", 1.04);
+      put("JP", 1.05);
+      put("BE", 1.06);
+      put("SG", 1.07);
+      put("GB", 1.08);
+      put("ZA", 1.09);
+      put("PL", 1.10);
+      put("NO", 1.11);
+      put("KR", 1.12);
+      put("CA", 1.13);
+      put("IN", 1.14);
     }};
 
     private LocationGenerator(Cloud cloud) {
@@ -91,7 +99,7 @@ public class ExperimentModelGenerator implements ModelGenerator {
 
       List<Location> locations = new ArrayList<>();
 
-      for (String country : OPTIONS) {
+      for (String country : OPTIONS.keySet()) {
         Location location = CLOUDIATOR_FACTORY.createLocation();
         location.setName(country);
         location.setProviderId(country);
