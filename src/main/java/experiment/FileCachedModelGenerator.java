@@ -13,21 +13,17 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 
-public class CachedCloudHarmony implements ModelGenerator {
+public class FileCachedModelGenerator implements ModelGenerator {
 
   private static final String FILE_ENDING = "cloudiator";
   private static final String FILE_DESC = "discovery";
   private static final String FILE_NAME = FILE_DESC + "." + FILE_ENDING;
 
   private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorFactory.eINSTANCE;
-  private final CloudHarmony cloudHarmony;
+  private final ModelGenerator delegate;
 
-  public CachedCloudHarmony() {
-    cloudHarmony = new CloudHarmony();
-  }
-
-  public static void main(String[] args) {
-    new CachedCloudHarmony().generateModel("blub");
+  public FileCachedModelGenerator(ModelGenerator delegate) {
+    this.delegate = delegate;
   }
 
   public CloudiatorModel load() {
@@ -71,7 +67,7 @@ public class CachedCloudHarmony implements ModelGenerator {
       return load();
     } catch (Exception e) {
       e.printStackTrace();
-      CloudiatorModel cloudiatorModel = cloudHarmony.generateModel(userId);
+      CloudiatorModel cloudiatorModel = delegate.generateModel(userId);
       try {
         saveModel(cloudiatorModel);
       } catch (IOException io) {

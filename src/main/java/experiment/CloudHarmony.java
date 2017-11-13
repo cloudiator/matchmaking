@@ -68,7 +68,7 @@ public class CloudHarmony implements ModelGenerator {
       Location location) {
     Image unique = CLOUDIATOR_FACTORY.createImage();
     unique.setId(image.getId() + "-" + cloud.getId() + "-" + location.getId());
-    unique.setProviderId(unique.getId());
+    unique.setProviderId(image.getId());
     unique.setName(unique.getId());
     unique.setLocation(location);
     if (image.getOperatingSystem() != null) {
@@ -199,6 +199,8 @@ public class CloudHarmony implements ModelGenerator {
 
         for (ServiceRegion serviceRegion : cloudService.getRegions()) {
 
+          Map<String, Image> locationImages = new HashMap<>();
+
           System.out.println(
               "Analyzing service region " + serviceRegion.getProviderCode() + " of " + cloudService
                   .getRegions().size() + " service regions.");
@@ -208,12 +210,12 @@ public class CloudHarmony implements ModelGenerator {
           location.setCountry(serviceRegion.getCountry().toString());
           location.setLatitude(serviceRegion.getLocationLat().doubleValue());
           location.setLongitude(serviceRegion.getLocationLong().doubleValue());
-          location.setId(serviceRegion.getProviderCode());
+          location.setId(cloud.getId() + serviceRegion.getProviderCode());
           location.setProviderId(serviceRegion.getProviderCode());
           cloud.getLocations().add(location);
 
           ComputeProperties computeProperties = computePropertiesForCloudServiceAndRegion(
-              cloud.getId(), location.getId());
+              cloud.getId(), location.getProviderId());
 
           if (computeProperties != null) {
             System.out.println("Analyzing compute properties: " + computeProperties.getName());
@@ -224,12 +226,12 @@ public class CloudHarmony implements ModelGenerator {
                       .getInstanceTypes().size() + " instance types.");
 
               ComputeInstanceType computeInstanceType = computeInstanceType(cloud.getId(),
-                  instanceType, location.getId());
+                  instanceType, location.getProviderId());
 
               if (computeInstanceType != null) {
 
                 Hardware hardware = CLOUDIATOR_FACTORY.createHardware();
-                hardware.setId(instanceType);
+                hardware.setId(location.getId() + instanceType);
                 hardware.setProviderId(instanceType);
                 hardware.setCores(computeInstanceType.getCpuCores().toBigInteger());
                 if (computeInstanceType.getLocalStorage() != null) {
@@ -247,9 +249,12 @@ public class CloudHarmony implements ModelGenerator {
 
                     Image cloudUniqueImage = generateCloudAndLocationUniqueImage(image, cloud,
                         location);
-
-                    cloud.getImages()
-                        .add(cloudUniqueImage);
+                    if (!locationImages.containsKey(cloudUniqueImage.getId())) {
+                      locationImages.put(cloudUniqueImage.getId(), cloudUniqueImage);
+                      cloud.getImages().add(cloudUniqueImage);
+                    } else {
+                      cloudUniqueImage = locationImages.get(cloudUniqueImage.getId());
+                    }
 
                     //set the price
                     double pricing = selectPrice(
@@ -285,17 +290,14 @@ public class CloudHarmony implements ModelGenerator {
     TreeSet<ComputeInstanceTypePrice> prices = new TreeSet<>(
         Comparator.comparing(ComputeInstanceTypePrice::getNormalizedPrice));
 
+    //if (BillIntervalEnum.HOUR.equals(computeInstanceTypePrice.getBillInterval())
+    //    || PriceIntervalEnum.HOUR.equals(computeInstanceTypePrice.getPriceInterval())) {
+    //  return true;
+    //}
+    //return false;
     computeInstanceType.getPricing().stream().filter(
         computeInstanceTypePrice -> computeInstanceTypePrice.getOperatingSystems()
-            .contains(image)).filter(computeInstanceTypePrice -> {
-
-      return true;
-      //if (BillIntervalEnum.HOUR.equals(computeInstanceTypePrice.getBillInterval())
-      //    || PriceIntervalEnum.HOUR.equals(computeInstanceTypePrice.getPriceInterval())) {
-      //  return true;
-      //}
-      //return false;
-    }).forEach(prices::add);
+            .contains(image)).forEach(prices::add);
 
     if (prices.isEmpty()) {
       return Double.MAX_VALUE;

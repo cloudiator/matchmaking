@@ -44,13 +44,15 @@ public class ExperimentModelGenerator implements ModelGenerator {
       for (Location location : locationGenerator.get()) {
         ImageGenerator imageGenerator = new ImageGenerator(cloud, location);
         HardwareGenerator hardwareGenerator = new HardwareGenerator(cloud, location);
+        final List<Image> images = imageGenerator.get();
+        final List<Hardware> hardwares = hardwareGenerator.get();
 
-        for (Image image : imageGenerator.get()) {
-          for (Hardware hardware : hardwareGenerator.get()) {
-            cloud.getLocations().add(location);
-            cloud.getHardwareList().add(hardware);
-            cloud.getImages().add(image);
+        cloud.getLocations().add(location);
+        cloud.getHardwareList().addAll(hardwares);
+        cloud.getImages().addAll(images);
 
+        for (Image image : images) {
+          for (Hardware hardware : hardwares) {
             Price price = CLOUDIATOR_FACTORY.createPrice();
             price.setHardware(hardware);
             price.setImage(image);
@@ -188,8 +190,16 @@ public class ExperimentModelGenerator implements ModelGenerator {
         image.setName(entry.getKey());
         image.setId(cloud.getId() + ":" + location.getProviderId() + ":" + image.getProviderId());
         image.setLocation(location);
-        OperatingSystem os = CLOUDIATOR_FACTORY.createOperatingSystem();
-        os.setFamily(entry.getValue());
+
+        OperatingSystem os = CLOUDIATOR_MODEL.getOperatingsystem().stream()
+            .filter(operatingSystem -> operatingSystem.getFamily().equals(entry.getValue()))
+            .findAny().orElseGet(
+                () -> {
+                  OperatingSystem newOs = CLOUDIATOR_FACTORY.createOperatingSystem();
+                  newOs.setFamily(entry.getValue());
+                  CLOUDIATOR_MODEL.getOperatingsystem().add(newOs);
+                  return newOs;
+                });
         image.setOperatingSystem(os);
         images.add(image);
       }
