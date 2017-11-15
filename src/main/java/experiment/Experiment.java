@@ -7,22 +7,44 @@ import java.util.ArrayList;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import org.cloudiator.ocl.ConsistentNodeGenerator;
+import org.cloudiator.ocl.ConstraintChecker;
+import org.cloudiator.ocl.DefaultNodeGenerator;
+import org.cloudiator.ocl.NodeCandidate;
 import org.cloudiator.ocl.Solution;
+import org.eclipse.ocl.pivot.utilities.ParserException;
 
 public class Experiment {
 
+
   public enum CloudiatorModelType {
+
+    SMALL(new SmallExperimentModelGenerator().generateModel("test")),
     EXPERIMENT(new ExperimentModelGenerator().generateModel("test")),
     CLOUD_HARMONY(new FileCachedModelGenerator(new CloudHarmony()).generateModel("test"));
 
     private final CloudiatorModel cloudiatorModel;
+    private final Set<NodeCandidate> candidates;
 
     CloudiatorModelType(CloudiatorModel cloudiatorModel) {
       this.cloudiatorModel = cloudiatorModel;
+      try {
+        this.candidates = new ConsistentNodeGenerator(
+            new DefaultNodeGenerator(ExperimentCSP.NODE_CANDIDATE_FACTORY,
+                cloudiatorModel),
+            new ConstraintChecker(ExperimentCSP.CSP)).getPossibleNodes();
+      } catch (ParserException e) {
+        throw new ExceptionInInitializerError(e);
+      }
     }
 
     public CloudiatorModel getCloudiatorModel() {
       return cloudiatorModel;
+    }
+
+    public Set<NodeCandidate> getCandidates() {
+      return candidates;
     }
   }
 
@@ -65,6 +87,10 @@ public class Experiment {
 
   public Optional<Solution> optimal() {
     return solutions.stream().filter(Solution::isOptimal).findAny();
+  }
+
+  public boolean hasSolution() {
+    return solutions.size() > 0;
   }
 
 

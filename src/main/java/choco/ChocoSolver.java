@@ -4,10 +4,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import cloudiator.CloudiatorFactory;
-import cloudiator.CloudiatorModel;
 import cloudiator.CloudiatorPackage;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,49 +18,33 @@ import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.search.strategy.Search;
 import org.chocosolver.solver.variables.IntVar;
-import org.cloudiator.ocl.ConsistentNodeGenerator;
-import org.cloudiator.ocl.ConstraintChecker;
-import org.cloudiator.ocl.ConstraintSatisfactionProblem;
-import org.cloudiator.ocl.DefaultNodeGenerator;
 import org.cloudiator.ocl.NodeCandidate;
-import org.cloudiator.ocl.NodeCandidate.NodeCandidateFactory;
-import org.cloudiator.ocl.NodeGenerator;
 import org.cloudiator.ocl.Solution;
-import org.eclipse.ocl.pivot.utilities.ParserException;
 
 public class ChocoSolver {
 
-  private final ConstraintSatisfactionProblem csp;
-  private final NodeGenerator nodeGenerator;
+
   private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorPackage.eINSTANCE
       .getCloudiatorFactory();
-  private static final NodeCandidateFactory NODE_CANDIDATE_FACTORY = new NodeCandidateFactory();
-  private final CloudiatorModel model;
+  private final Set<NodeCandidate> possibleNodes;
 
-  public ChocoSolver(ConstraintSatisfactionProblem csp, CloudiatorModel model) {
-    this.csp = csp;
-    try {
-      this.nodeGenerator =
-          new ConsistentNodeGenerator(
-              new DefaultNodeGenerator(NODE_CANDIDATE_FACTORY,
-                  model),
-              new ConstraintChecker(csp));
-      this.model = model;
 
-    } catch (ParserException e) {
-      throw new IllegalStateException(e);
-    }
+  public ChocoSolver(Set<NodeCandidate> possibleNodes) {
+    this.possibleNodes = possibleNodes;
   }
 
-  public Solution solveOptimal(int numberOfNodes, TimeLimit timeLimit) {
+  public Solution solveDirect(int numberOfNodes, TimeLimit timeLimit) {
     return solve(numberOfNodes, timeLimit, Solution.EMPTY_SOLUTION);
   }
 
   public Solution solveIteratively(int numberOfNodes, TimeLimit timeLimit) {
+    float time = 0;
     Solution solution = Solution.EMPTY_SOLUTION;
     for (int i = 2; i <= numberOfNodes; i++) {
       solution = solve(i, timeLimit, solution);
+      time = time + solution.getTime();
     }
+    solution.setTime(time);
     return solution;
   }
 
@@ -73,12 +56,12 @@ public class ChocoSolver {
 
     Model model = new Model("Selection CSP");
 
-    Set<NodeCandidate> possibleNodes = nodeGenerator.getPossibleNodes().stream()
+    Set<NodeCandidate> nodesToConsider = this.possibleNodes.stream()
         .filter(nc -> !nc.getPrice().equals(Double.MAX_VALUE)).collect(
             Collectors.toSet());
 
     System.out
-        .println(String.format("%s nodes with valid pricing information", possibleNodes.size()));
+        .println(String.format("%s nodes with valid pricing information", nodesToConsider.size()));
 
     //calculate average prices
 
@@ -100,7 +83,7 @@ public class ChocoSolver {
     Map<String, Double> countryAverage = new HashMap<>();
     Map<String, Double> imageAverage = new HashMap<>();
 
-    for (NodeCandidate nc : possibleNodes) {
+    for (NodeCandidate nc : nodesToConsider) {
       hardwarePrices.compute(nc.getHardware().getId(),
           (k, v) -> v == null ? nc.getPrice() : v + nc.getPrice());
       hardwareCounts.compute(nc.getHardware().getId(),
@@ -144,15 +127,18 @@ public class ChocoSolver {
     //IntVar[] cloudOidVariables = new IntVar[numberOfNodes];
     IntVar[] priceVariables = new IntVar[numberOfNodes];
 
-    ObjectMapper<String> hardwareMapper = new SortedObjectMapper<>(hardwareAverage.keySet(),
-        Comparator.comparing(hardwareAverage::get));
-    ObjectMapper<String> countryMapper = new SortedObjectMapper<>(countryAverage.keySet(),
-        Comparator.comparing(countryAverage::get));
-    ObjectMapper<String> locationMapper = new SortedObjectMapper<>(locationAverage.keySet(),
-        Comparator.comparing(locationAverage::get));
+    ObjectMapper<String> hardwareMapper = new ObjectMapperImpl<>();//new SortedObjectMapper<>(hardwareAverage.keySet(),
+    //Comparator.comparing(hardwareAverage::get));
+    ObjectMapper<String> countryMapper = new ObjectMapperImpl<>();
+    //new SortedObjectMapper<>(countryAverage.keySet(),
+    //Comparator.comparing(countryAverage::get));
+    ObjectMapper<String> locationMapper = new ObjectMapperImpl<>();
+    //new SortedObjectMapper<>(locationAverage.keySet(),
+    //Comparator.comparing(locationAverage::get));
     //ObjectMapper<String> cloudMapper = new ObjectMapperImpl<>();
-    ObjectMapper<String> imageMapper = new SortedObjectMapper<>(imageAverage.keySet(),
-        Comparator.comparing(imageAverage::get));
+    ObjectMapper<String> imageMapper = new ObjectMapperImpl<>();
+    //new SortedObjectMapper<>(imageAverage.keySet(),
+    //Comparator.comparing(imageAverage::get));
     ObjectMapper<Double> priceMapper = new DoubleMapper();
 
     //cores to oid map
@@ -199,7 +185,7 @@ public class ChocoSolver {
     Map<Integer, Set<Integer>> locationOidsToPrice = new HashMap<>();
     //Map<Integer, Set<Integer>> priceToLocationOids = new HashMap<>();
 
-    for (NodeCandidate nc : possibleNodes) {
+    for (NodeCandidate nc : nodesToConsider) {
       //hardware stuff
       int cores = nc.getHardware().getCores().intValue();
       int ram = nc.getHardware().getRam().intValue();
@@ -413,8 +399,6 @@ public class ChocoSolver {
 
     int maxPrice = priceDomain.stream().mapToInt(Number::intValue).max().getAsInt();
     int minPrice = priceDomain.stream().mapToInt(Number::intValue).min().getAsInt();
-    IntVar objectiveFunction = model
-        .intVar("objective", minPrice * numberOfNodes, maxPrice * numberOfNodes);
 
     //generate constants for already existing nodes
     int e = 0;
@@ -680,9 +664,11 @@ public class ChocoSolver {
     IntVar limit = model.intVar(0, numberOfNodes);
     model.arithm(limit, ">=", 2).post();
     IntVar value = model.intVar(coreDomain.stream().mapToInt(Number::intValue).toArray());
-    model.arithm(value, ">", 4).post();
+    model.arithm(value, ">=", 4).post();
     model.count(value, coreVariables, limit).post();
 
+    IntVar objectiveFunction = model
+        .intVar("objective", minPrice * numberOfNodes, maxPrice * numberOfNodes);
     model.sum(priceVariables, "<=", objectiveFunction).post();
     model.setObjective(Model.MINIMIZE, objectiveFunction);
 
@@ -718,7 +704,10 @@ public class ChocoSolver {
     }
 
     if (solver.getSolutionCount() == 0) {
-      return Solution.EMPTY_SOLUTION;
+      Solution empty = Solution.of(Collections.emptyList());
+      empty.setTime(solver.getTimeCount());
+      empty.setIsOptimal(false);
+      return empty;
     }
 
     System.out.println("Finished solving");
@@ -729,7 +718,7 @@ public class ChocoSolver {
       String locationId = locationMapper.applyBack(solution.getIntVal(locationOidVariables[i]));
       String imageId = imageMapper.applyBack(solution.getIntVal(imageOidVariables[i]));
 
-      final List<NodeCandidate> collect = possibleNodes.stream()
+      final List<NodeCandidate> collect = nodesToConsider.stream()
           .filter(nodeCandidate -> nodeCandidate.getHardware().getId().equals(hardwareId))
           .filter(nodeCandidate -> nodeCandidate.getImage().getId().equals(imageId))
           .filter(nodeCandidate -> nodeCandidate.getLocation().getId().equals(locationId))
@@ -749,6 +738,8 @@ public class ChocoSolver {
     if (solver.isObjectiveOptimal()) {
       System.out.println("Found optimal solution.");
       mySolution.setIsOptimal(true);
+    } else {
+      mySolution.setIsOptimal(false);
     }
 
     return mySolution;

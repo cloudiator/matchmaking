@@ -24,17 +24,6 @@ public class ExperimentRunner {
       throws FileNotFoundException, UnsupportedEncodingException {
 
     Set<String> constraints = new HashSet<>();
-    constraints.add("nodes->exists(location.country = 'DE')");
-    constraints.add("nodes->forAll(n | n.hardware.cores >= 2)");
-    constraints.add("nodes->isUnique(n | n.location.country)");
-    constraints.add("nodes->forAll(n | n.hardware.ram >= 1024)");
-    constraints.add("nodes->forAll(n | n.hardware.cores >= 4 implies n.hardware.ram >= 4096)");
-    constraints.add("nodes->forAll(n | n.image.operatingSystem.family = OSFamily::UBUNTU)");
-    //constraints.add("nodes->forAll(n | n.image.operatingSystem.version = '1')");
-    //constraints
-    //    .add("nodes->forAll(n | n.image.operatingSystem.architecture = OSArchitecture::AMD64)");
-    constraints.add("nodes->select(n | n.hardware.cores > 4)->size() >= 2");
-    constraints.add("nodes.hardware.cores->sum() >= 15");
 
     ConstraintSatisfactionProblem csp = new ConstraintSatisfactionProblem(constraints);
 
@@ -42,43 +31,88 @@ public class ExperimentRunner {
 
     List<Experiment> experiments = new ArrayList<>();
     for (int i = 2; i <= 15; i++) {
-      //for (CloudiatorModelType cloudiatorModelType : CloudiatorModelType.values()) {
+      for (CloudiatorModelType cloudiatorModelType : CloudiatorModelType.values()) {
         experiments.add(
-            new Experiment(new TimeLimit(TimeUnit.DAYS, 1), i, 1, false, CloudiatorModelType.CLOUD_HARMONY));
-      //}
+            new Experiment(new TimeLimit(TimeUnit.MINUTES, 1), i, 1, false,
+                cloudiatorModelType)
+        );
+        experiments.add(
+            new Experiment(new TimeLimit(TimeUnit.MINUTES, 1), i, 1, true,
+                cloudiatorModelType)
+        );
+        experiments.add(
+            new Experiment(new TimeLimit(TimeUnit.MINUTES, 5), i, 1, false,
+                cloudiatorModelType)
+        );
+        experiments.add(
+            new Experiment(new TimeLimit(TimeUnit.MINUTES, 5), i, 1, true,
+                cloudiatorModelType)
+        );
+        experiments.add(
+            new Experiment(new TimeLimit(TimeUnit.MINUTES, 10), i, 1, false,
+                cloudiatorModelType)
+        );
+        experiments.add(
+            new Experiment(new TimeLimit(TimeUnit.MINUTES, 10), i, 1, true,
+                cloudiatorModelType)
+        );
+      }
     }
 
-    PrintWriter cloudHarmonyWriter = new PrintWriter("optimalSolutionsCloudHarmony", "UTF-8");
-    PrintWriter experimentModelWriter = new PrintWriter("optimalSolutionsExperiment", "UTF-8");
+    PrintWriter cloudHarmonyWriter = new PrintWriter("solutionsCloudHarmony", "UTF-8");
+    PrintWriter experimentModelWriter = new PrintWriter("solutionsLarge", "UTF-8");
+    PrintWriter smallModelWriter = new PrintWriter("solutionsSmall", "UTF-8");
 
     for (Experiment experiment : experiments) {
-      ChocoSolver chocoSolver = new ChocoSolver(csp,
-          experiment.getCloudiatorModelType().getCloudiatorModel());
+      ChocoSolver chocoSolver = new ChocoSolver(
+          experiment.getCloudiatorModelType().getCandidates());
 
       for (int rep = 0; rep < experiment.getRepetitions(); rep++) {
         Solution solution = null;
         if (!experiment.isIterative()) {
-          solution = chocoSolver.solveOptimal(experiment.getNodeSize(), experiment.getLimit());
+          solution = chocoSolver.solveDirect(experiment.getNodeSize(), experiment.getLimit());
         } else {
-          chocoSolver.solveIteratively(experiment.getNodeSize(), experiment.getLimit());
+          solution = chocoSolver.solveIteratively(experiment.getNodeSize(), experiment.getLimit());
         }
-        experiment.addSolution(solution);
+        if (solution != null) {
+          experiment.addSolution(solution);
+        }
       }
-      if (experiment.optimal().isPresent()) {
-        PrintWriter writer = null;
-        if (experiment.getCloudiatorModelType().equals(CloudiatorModelType.CLOUD_HARMONY)) {
+
+      PrintWriter writer = null;
+
+      switch (experiment.getCloudiatorModelType()) {
+        case CLOUD_HARMONY:
           writer = cloudHarmonyWriter;
-        } else {
+          break;
+        case EXPERIMENT:
           writer = experimentModelWriter;
-        }
-        Solution solution = experiment.optimal().get();
-        System.out.println(solution);
-        writer.println(solution.nodeSize() + " " + solution.getCosts() + " "
-            + solution.getTime());
-        writer.flush();
-      } else {
-        System.out.println("No optimal solution found.");
+          break;
+        case SMALL:
+          writer = smallModelWriter;
+          break;
+        default:
+          throw new IllegalArgumentException();
       }
+
+      if (experiment.hasSolution()) {
+
+        writer.println(
+            experiment.isIterative() + " " + experiment.getLimit().toString() + " " + experiment
+                .getCloudiatorModelType().name() + " " + experiment.getNodeSize() + " "
+                + experiment.getCostStatistics().getAverage() + " "
+                + experiment.timeStatistics().getAverage() + " " + experiment.optimal()
+                .isPresent());
+
+
+      } else {
+        writer.println(
+            experiment.isIterative() + " " + experiment.getLimit().toString() + " " + experiment
+                .getCloudiatorModelType().name() + " " + experiment.getNodeSize() + " "
+                + "No Solution");
+      }
+
+      writer.flush();
     }
 
     experimentModelWriter.close();
