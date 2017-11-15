@@ -1,5 +1,7 @@
 package choco;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.concurrent.TimeUnit;
 
 public class TimeLimit {
@@ -24,5 +26,18 @@ public class TimeLimit {
         "timeUnit=" + timeUnit +
         ", duration=" + duration +
         '}';
+  }
+
+  public static TimeLimit from(String string) {
+    TimeUnit parsedUnit = null;
+    for (TimeUnit timeUnit : TimeUnit.values()) {
+      if (string.contains(timeUnit.toString())) {
+        parsedUnit = timeUnit;
+        break;
+      }
+    }
+    checkNotNull(parsedUnit, "Could not parse time unit");
+    long duration = Long.valueOf(string.replaceAll("[^0-9]+", " ").trim());
+    return new TimeLimit(parsedUnit, duration);
   }
 }
