@@ -14,8 +14,8 @@ import java.util.concurrent.TimeUnit;
 public class ExperimentParser {
 
   public static void main(String[] args) throws IOException {
-    File input = new File("solutionsSmall");
-    File output = new File("dataSmall");
+    File input = new File("solutionsLarge");
+    File output = new File("dataLarge");
 
     PrintWriter writer = new PrintWriter(output);
 
@@ -29,9 +29,11 @@ public class ExperimentParser {
       String line = " " + i + " ";
       for (ExperimentLine experimentLine : parse(input)) {
         if (experimentLine.nodeSize == i) {
-          if (experimentLine.iterative && experimentLine.timeLimit
-              .equals(new TimeLimit(TimeUnit.MINUTES, 10))) {
-            iterative = experimentLine;
+          if (experimentLine.iterative) {
+            if (experimentLine.timeLimit
+                .equals(new TimeLimit(TimeUnit.MINUTES, 10))) {
+              iterative = experimentLine;
+            }
           } else {
             line += experimentLine.timeInSeconds + " ";
             line += experimentLine.price + " ";
