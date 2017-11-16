@@ -40,4 +40,28 @@ public class TimeLimit {
     long duration = Long.valueOf(string.replaceAll("[^0-9]+", " ").trim());
     return new TimeLimit(parsedUnit, duration);
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    TimeLimit timeLimit = (TimeLimit) o;
+
+    if (duration != timeLimit.duration) {
+      return false;
+    }
+    return timeUnit == timeLimit.timeUnit;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = timeUnit.hashCode();
+    result = 31 * result + (int) (duration ^ (duration >>> 32));
+    return result;
+  }
 }

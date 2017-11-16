@@ -9,12 +9,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class ExperimentParser {
 
   public static void main(String[] args) throws IOException {
-    File input = new File("solutionsCloudHarmony");
-    File output = new File("dataCloudHarmony");
+    File input = new File("solutionsSmall");
+    File output = new File("dataSmall");
 
     PrintWriter writer = new PrintWriter(output);
 
@@ -24,22 +25,24 @@ public class ExperimentParser {
     List<ExperimentLine> lines = parse(input);
 
     for (int i = 2; i <= 15; i++) {
-      List<ExperimentLine> iterativeLines = new ArrayList<>();
+      ExperimentLine iterative = null;
       String line = " " + i + " ";
       for (ExperimentLine experimentLine : parse(input)) {
         if (experimentLine.nodeSize == i) {
-          if (experimentLine.iterative) {
-            iterativeLines.add(experimentLine);
+          if (experimentLine.iterative && experimentLine.timeLimit
+              .equals(new TimeLimit(TimeUnit.MINUTES, 10))) {
+            iterative = experimentLine;
           } else {
             line += experimentLine.timeInSeconds + " ";
             line += experimentLine.price + " ";
           }
         }
       }
-      line += iterativeLines.stream().mapToDouble(value -> value.timeInSeconds).summaryStatistics()
-          .getAverage() + " ";
-      line += iterativeLines.stream().mapToDouble(value -> value.price).summaryStatistics()
-          .getAverage();
+      if (iterative == null) {
+        throw new IllegalStateException();
+      }
+      line += iterative.timeInSeconds + " ";
+      line += iterative.price;
       writer.println(line);
     }
 
