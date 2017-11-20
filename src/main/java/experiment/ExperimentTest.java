@@ -10,13 +10,13 @@ public class ExperimentTest {
 
   public static void main(String[] args) {
 
-    ChocoSolver chocoSolver = new ChocoSolver(CloudiatorModelType.SMALL.getCandidates());
+    ChocoSolver chocoSolver = new ChocoSolver(CloudiatorModelType.CLOUD_HARMONY.getCandidates());
 
-    final Solution solution = chocoSolver.solveIteratively(5, new TimeLimit(TimeUnit.DAYS, 1));
+    //final Solution solution = chocoSolver.solveIteratively(8, new TimeLimit(TimeUnit.DAYS, 1));
 
-    System.out.println(solution);
+    //System.out.println(solution);
 
-    final Solution solution1 = chocoSolver.solveDirect(5, new TimeLimit(TimeUnit.DAYS, 1));
+    final Solution solution1 = chocoSolver.solveDirect(8, new TimeLimit(TimeUnit.DAYS, 1));
 
     System.out.println(solution1);
 

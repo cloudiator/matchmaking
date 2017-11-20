@@ -694,7 +694,9 @@ public class ChocoSolver {
       return integers.getLB();
     }, priceVariables), Search.defaultSearch(model));*/
 
-    solver.setSearch(Search.defaultSearch(model));
+    //solver.setSearch(Search.defaultSearch(model));
+
+    solver.setSearch(Search.activityBasedSearch(model.retrieveIntVars(true)));
 
     System.out.println("Generated CSP.");
 

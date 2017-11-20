@@ -33,27 +33,19 @@ public class ExperimentRunner {
     for (int i = 2; i <= 15; i++) {
       for (CloudiatorModelType cloudiatorModelType : CloudiatorModelType.values()) {
         experiments.add(
-            new Experiment(new TimeLimit(TimeUnit.MINUTES, 1), i, 1, false,
+            new Experiment(new TimeLimit(TimeUnit.MINUTES, 1), i, 10, false,
                 cloudiatorModelType)
         );
         experiments.add(
-            new Experiment(new TimeLimit(TimeUnit.MINUTES, 1), i, 1, true,
+            new Experiment(new TimeLimit(TimeUnit.MINUTES, 5), i, 10, false,
                 cloudiatorModelType)
         );
         experiments.add(
-            new Experiment(new TimeLimit(TimeUnit.MINUTES, 5), i, 1, false,
+            new Experiment(new TimeLimit(TimeUnit.MINUTES, 10), i, 10, false,
                 cloudiatorModelType)
         );
         experiments.add(
-            new Experiment(new TimeLimit(TimeUnit.MINUTES, 5), i, 1, true,
-                cloudiatorModelType)
-        );
-        experiments.add(
-            new Experiment(new TimeLimit(TimeUnit.MINUTES, 10), i, 1, false,
-                cloudiatorModelType)
-        );
-        experiments.add(
-            new Experiment(new TimeLimit(TimeUnit.MINUTES, 10), i, 1, true,
+            new Experiment(new TimeLimit(TimeUnit.MINUTES, 10), i, 10, true,
                 cloudiatorModelType)
         );
       }

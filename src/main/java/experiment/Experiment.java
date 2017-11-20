@@ -8,6 +8,7 @@ import java.util.DoubleSummaryStatistics;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.DoublePredicate;
 import org.cloudiator.ocl.ConsistentNodeGenerator;
 import org.cloudiator.ocl.ConstraintChecker;
 import org.cloudiator.ocl.DefaultNodeGenerator;
@@ -108,7 +109,13 @@ public class Experiment {
   private void generateStatistics() {
     if (!finished) {
       this.finished = true;
-      costStatistics = solutions.stream().mapToDouble(s -> s.getCosts()).summaryStatistics();
+      costStatistics = solutions.stream().mapToDouble(s -> s.getCosts()).filter(
+          new DoublePredicate() {
+            @Override
+            public boolean test(double v) {
+              return v != 0;
+            }
+          }).summaryStatistics();
       timeStatistics = solutions.stream()
           .mapToDouble(s -> BigDecimal.valueOf(s.getTime()).floatValue()).summaryStatistics();
     }
