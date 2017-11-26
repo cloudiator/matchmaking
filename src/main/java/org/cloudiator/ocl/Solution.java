@@ -71,7 +71,7 @@ public class Solution implements Comparable<Solution> {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("price", getCosts()).add("nodes", nodeCandiates)
+    return MoreObjects.toStringHelper(this).add("time", getTime()).add("price", getCosts()).add("nodes", nodeCandiates)
         .toString();
   }
 

@@ -44,10 +44,10 @@ public class ExperimentRunner {
             new Experiment(new TimeLimit(TimeUnit.MINUTES, 10), i, 10, false,
                 cloudiatorModelType)
         );
-        experiments.add(
-            new Experiment(new TimeLimit(TimeUnit.MINUTES, 10), i, 10, true,
-                cloudiatorModelType)
-        );
+        //experiments.add(
+        //    new Experiment(new TimeLimit(TimeUnit.MINUTES, 10), i, 10, true,
+        //        cloudiatorModelType)
+        //);
       }
     }
 

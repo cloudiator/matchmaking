@@ -6,7 +6,9 @@ import static com.google.common.base.Preconditions.checkState;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorPackage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +19,7 @@ import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.search.strategy.Search;
+import org.chocosolver.solver.search.strategy.selectors.variables.VariableSelector;
 import org.chocosolver.solver.variables.IntVar;
 import org.cloudiator.ocl.NodeCandidate;
 import org.cloudiator.ocl.Solution;
@@ -127,18 +130,15 @@ public class ChocoSolver {
     //IntVar[] cloudOidVariables = new IntVar[numberOfNodes];
     IntVar[] priceVariables = new IntVar[numberOfNodes];
 
-    ObjectMapper<String> hardwareMapper = new ObjectMapperImpl<>();//new SortedObjectMapper<>(hardwareAverage.keySet(),
-    //Comparator.comparing(hardwareAverage::get));
-    ObjectMapper<String> countryMapper = new ObjectMapperImpl<>();
-    //new SortedObjectMapper<>(countryAverage.keySet(),
-    //Comparator.comparing(countryAverage::get));
-    ObjectMapper<String> locationMapper = new ObjectMapperImpl<>();
-    //new SortedObjectMapper<>(locationAverage.keySet(),
-    //Comparator.comparing(locationAverage::get));
+    ObjectMapper<String> hardwareMapper = new SortedObjectMapper<>(hardwareAverage.keySet(),
+        Comparator.comparing(hardwareAverage::get));
+    ObjectMapper<String> countryMapper = new SortedObjectMapper<>(countryAverage.keySet(),
+        Comparator.comparing(countryAverage::get));
+    ObjectMapper<String> locationMapper = new SortedObjectMapper<>(locationAverage.keySet(),
+        Comparator.comparing(locationAverage::get));
     //ObjectMapper<String> cloudMapper = new ObjectMapperImpl<>();
-    ObjectMapper<String> imageMapper = new ObjectMapperImpl<>();
-    //new SortedObjectMapper<>(imageAverage.keySet(),
-    //Comparator.comparing(imageAverage::get));
+    ObjectMapper<String> imageMapper = new SortedObjectMapper<>(imageAverage.keySet(),
+        Comparator.comparing(imageAverage::get));
     ObjectMapper<Double> priceMapper = new DoubleMapper();
 
     //cores to oid map
@@ -675,7 +675,7 @@ public class ChocoSolver {
     Solver solver = model.getSolver();
     solver.limitTime(timeLimit.toMillis());
 
-/*    solver.setSearch(Search.intVarSearch(new VariableSelector<IntVar>() {
+    solver.setSearch(Search.intVarSearch(new VariableSelector<IntVar>() {
       @Override
       public IntVar getVariable(IntVar[] variables) {
 
@@ -692,11 +692,11 @@ public class ChocoSolver {
       }
     }, (IntVar integers) -> {
       return integers.getLB();
-    }, priceVariables), Search.defaultSearch(model));*/
+    }, priceVariables), Search.defaultSearch(model));
 
     //solver.setSearch(Search.defaultSearch(model));
 
-    solver.setSearch(Search.activityBasedSearch(model.retrieveIntVars(true)));
+    //solver.setSearch(Search.activityBasedSearch(model.retrieveIntVars(true)));
 
     System.out.println("Generated CSP.");
 
