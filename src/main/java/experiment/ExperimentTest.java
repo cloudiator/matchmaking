@@ -1,13 +1,16 @@
 package experiment;
 
 import choco.ChocoSolver;
+import choco.TimeLimit;
 import experiment.Experiment.CloudiatorModelType;
 import java.math.BigInteger;
 import java.util.DoubleSummaryStatistics;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import org.cloudiator.ocl.NodeCandidate;
+import org.cloudiator.ocl.Solution;
 
 public class ExperimentTest {
 
@@ -71,9 +74,11 @@ public class ExperimentTest {
 
     ChocoSolver chocoSolver = new ChocoSolver(CloudiatorModelType.SMALL.getCandidates());
 
-    //final Solution solution = chocoSolver.solveIteratively(8, new TimeLimit(TimeUnit.DAYS, 1));
+    final Solution solution5 = chocoSolver.solveDirect(5, new TimeLimit(TimeUnit.MINUTES, 10));
+    final Solution solution6 = chocoSolver.solveDirect(6, new TimeLimit(TimeUnit.MINUTES, 10));
 
-    //System.out.println(solution);
+    System.out.println(solution5);
+    System.out.println(solution6);
 
     //final Solution solution1 = chocoSolver.solveDirect(8, new TimeLimit(TimeUnit.DAYS, 1));
 

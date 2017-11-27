@@ -675,7 +675,7 @@ public class ChocoSolver {
     Solver solver = model.getSolver();
     solver.limitTime(timeLimit.toMillis());
 
-    solver.setSearch(Search.intVarSearch(new VariableSelector<IntVar>() {
+    /* solver.setSearch(Search.intVarSearch(new VariableSelector<IntVar>() {
       @Override
       public IntVar getVariable(IntVar[] variables) {
 
@@ -692,11 +692,11 @@ public class ChocoSolver {
       }
     }, (IntVar integers) -> {
       return integers.getLB();
-    }, priceVariables), Search.defaultSearch(model));
+    }, priceVariables), Search.defaultSearch(model)); */
 
     //solver.setSearch(Search.defaultSearch(model));
 
-    //solver.setSearch(Search.activityBasedSearch(model.retrieveIntVars(true)));
+    solver.setSearch(Search.activityBasedSearch(model.retrieveIntVars(true)));
 
     System.out.println("Generated CSP.");
 

@@ -14,25 +14,25 @@ import java.util.concurrent.TimeUnit;
 public class ExperimentParser {
 
   public static void main(String[] args) throws IOException {
-    File input = new File("solutionsLarge");
-    File output = new File("dataLarge");
+    File input = new File("solutionsCloudHarmony");
+    File output = new File("dataCloudHarmony");
 
     PrintWriter writer = new PrintWriter(output);
 
     writer.println(
-        "# NodeSize Limit1MinTime Limit1MinCosts Limit5MinTime Limit5MinCosts Limit10MinTime Limit10MinCosts IterativeTime IterativeCosts");
+        "# NodeSize BestFitLimit1MinTime BestFitLimit1MinCosts BestFitLimit5MinTime BestFitLimit5MinCosts BestFitLimit10MinTime BestFitLimit10MinCosts");
 
     List<ExperimentLine> lines = parse(input);
 
     for (int i = 2; i <= 15; i++) {
-      ExperimentLine iterative = null;
+      //ExperimentLine iterative = null;
       String line = " " + i + " ";
       for (ExperimentLine experimentLine : parse(input)) {
         if (experimentLine.nodeSize == i) {
           if (experimentLine.iterative) {
             if (experimentLine.timeLimit
                 .equals(new TimeLimit(TimeUnit.MINUTES, 10))) {
-              iterative = experimentLine;
+              //iterative = experimentLine;
             }
           } else {
             line += experimentLine.timeInSeconds + " ";
@@ -40,11 +40,11 @@ public class ExperimentParser {
           }
         }
       }
-      if (iterative == null) {
-        throw new IllegalStateException();
-      }
-      line += iterative.timeInSeconds + " ";
-      line += iterative.price;
+      //if (iterative == null) {
+      //  throw new IllegalStateException();
+      //}
+      //line += iterative.timeInSeconds + " ";
+      //line += iterative.price;
       writer.println(line);
     }
 
