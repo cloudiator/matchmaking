@@ -2,4 +2,4 @@
 target
 .idea
 ocl.iml
-src/main/resources/kafka.properties
+src/main/resources/application.conf

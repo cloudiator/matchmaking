@@ -1,4 +1,4 @@
-package experiment;
+package org.cloudiator.experiment;
 
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorModel;

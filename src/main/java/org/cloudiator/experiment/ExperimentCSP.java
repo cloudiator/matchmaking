@@ -1,4 +1,4 @@
-package experiment;
+package org.cloudiator.experiment;
 
 import java.util.HashSet;
 import org.cloudiator.ocl.ConstraintSatisfactionProblem;

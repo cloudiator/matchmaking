@@ -7,8 +7,9 @@ public class OclServiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(ModelGenerator.class).annotatedWith(Names.named("Base")).to(DiscoveryBasedModelGenerator.class);
+    bind(ModelGenerator.class).annotatedWith(Names.named("Base"))
+        .to(DiscoveryBasedModelGenerator.class);
     bind(ModelGenerator.class).to(CachedModelGenerator.class);
-
+    bind(PriceFunction.class).to(HardwareBasedPriceFunction.class);
   }
 }

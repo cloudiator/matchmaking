@@ -1,4 +1,4 @@
-package choco;
+package org.cloudiator.choco;
 
 import java.math.BigDecimal;
 

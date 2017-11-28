@@ -1,4 +1,4 @@
-package experiment;
+package org.cloudiator.experiment;
 
 import cloudiator.Cloud;
 import cloudiator.CloudType;
@@ -13,22 +13,20 @@ import cloudiator.Price;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Supplier;
 import org.cloudiator.ocl.ModelGenerator;
 import org.cloudiator.ocl.PriceFunction;
 
-public class ExperimentModelGenerator implements ModelGenerator {
+public class SmallExperimentModelGenerator implements ModelGenerator {
 
   private static final CloudiatorModel CLOUDIATOR_MODEL = CloudiatorFactory.eINSTANCE
       .createCloudiatorModel();
   private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorFactory.eINSTANCE;
   private static final PriceFunction PRICE_FUNCTION = new ExperimentModelPriceFunction();
 
-  private static final int NR = 9;
+  private static final int NR = 1;
 
 
   @Override
@@ -115,21 +113,17 @@ public class ExperimentModelGenerator implements ModelGenerator {
 
   private static class HardwareGenerator implements Supplier<List<Hardware>> {
 
-    private static final Set<Integer> CORE_OPTIONS = new HashSet<Integer>() {{
+    private static final List<Integer> CORE_OPTIONS = new ArrayList<Integer>() {{
+      add(1);
       add(2);
       add(4);
       add(8);
-      add(16);
-      add(32);
-      add(64);
     }};
-    private static final Set<Integer> RAM_OPTIONS = new HashSet<Integer>() {{
+    private static final List<Integer> RAM_OPTIONS = new ArrayList<Integer>() {{
       add(512);
       add(1024);
       add(2048);
       add(4096);
-      add(8192);
-      add(16384);
     }};
 
     private final Cloud cloud;
@@ -145,18 +139,18 @@ public class ExperimentModelGenerator implements ModelGenerator {
 
       List<Hardware> hardwareList = new ArrayList<>();
 
-      for (Integer cores : CORE_OPTIONS) {
-        for (Integer ram : RAM_OPTIONS) {
-          Hardware hardware = CLOUDIATOR_FACTORY.createHardware();
-          hardware.setProviderId(String.format("%s cores - %s ram", cores, ram));
-          hardware.setName(hardware.getProviderId());
-          hardware.setId(
-              cloud.getId() + ":" + location.getProviderId() + ":" + hardware.getProviderId());
-          hardware.setCores(BigInteger.valueOf(cores));
-          hardware.setRam(BigInteger.valueOf(ram));
-          hardware.setLocation(location);
-          hardwareList.add(hardware);
-        }
+      for(int i = 0; i < CORE_OPTIONS.size(); i++) {
+        Integer cores = CORE_OPTIONS.get(i);
+        Integer ram = RAM_OPTIONS.get(i);
+        Hardware hardware = CLOUDIATOR_FACTORY.createHardware();
+        hardware.setProviderId(String.format("%s cores - %s ram", cores, ram));
+        hardware.setName(hardware.getProviderId());
+        hardware.setId(
+            cloud.getId() + ":" + location.getProviderId() + ":" + hardware.getProviderId());
+        hardware.setCores(BigInteger.valueOf(cores));
+        hardware.setRam(BigInteger.valueOf(ram));
+        hardware.setLocation(location);
+        hardwareList.add(hardware);
       }
 
       return hardwareList;
@@ -170,8 +164,8 @@ public class ExperimentModelGenerator implements ModelGenerator {
 
     private static final Map<String, OSFamily> OPTIONS = new HashMap<String, OSFamily>() {{
       put("ubuntu", OSFamily.UBUNTU);
-      put("debian", OSFamily.DEBIAN);
-      put("rhel", OSFamily.RHEL);
+      //put("debian", OSFamily.DEBIAN);
+      //put("rhel", OSFamily.RHEL);
     }};
 
     private ImageGenerator(Cloud cloud, Location location) {

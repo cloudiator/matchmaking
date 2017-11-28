@@ -1,8 +1,8 @@
-package experiment;
+package org.cloudiator.experiment;
 
-import choco.ChocoSolver;
-import choco.TimeLimit;
-import experiment.Experiment.CloudiatorModelType;
+import org.cloudiator.choco.ChocoSolver;
+import org.cloudiator.choco.TimeLimit;
+import org.cloudiator.experiment.Experiment.CloudiatorModelType;
 import java.math.BigInteger;
 import java.util.DoubleSummaryStatistics;
 import java.util.HashMap;

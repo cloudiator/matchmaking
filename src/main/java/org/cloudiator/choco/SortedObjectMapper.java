@@ -1,4 +1,4 @@
-package choco;
+package org.cloudiator.choco;
 
 import java.util.Collection;
 import java.util.Comparator;

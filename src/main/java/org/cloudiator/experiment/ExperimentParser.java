@@ -1,7 +1,7 @@
-package experiment;
+package org.cloudiator.experiment;
 
-import choco.TimeLimit;
-import experiment.Experiment.CloudiatorModelType;
+import org.cloudiator.choco.TimeLimit;
+import org.cloudiator.experiment.Experiment.CloudiatorModelType;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;

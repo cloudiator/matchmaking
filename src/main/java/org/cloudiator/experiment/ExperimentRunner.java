@@ -1,10 +1,10 @@
-package experiment;
+package org.cloudiator.experiment;
 
-import choco.ChocoSolver;
-import choco.TimeLimit;
+import org.cloudiator.choco.ChocoSolver;
+import org.cloudiator.choco.TimeLimit;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import experiment.Experiment.CloudiatorModelType;
+import org.cloudiator.experiment.Experiment.CloudiatorModelType;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;

@@ -1,10 +1,10 @@
-package experiment;
+package org.cloudiator.experiment;
 
 import cloudiator.Cloud;
 import cloudiator.Hardware;
 import cloudiator.Image;
 import cloudiator.Location;
-import experiment.ExperimentModelGenerator.LocationGenerator;
+import org.cloudiator.experiment.ExperimentModelGenerator.LocationGenerator;
 import java.math.BigDecimal;
 import org.cloudiator.ocl.HardwareBasedPriceFunction;
 import org.cloudiator.ocl.PriceFunction;

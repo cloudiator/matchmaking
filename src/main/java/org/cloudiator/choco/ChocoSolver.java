@@ -1,4 +1,4 @@
-package choco;
+package org.cloudiator.choco;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -6,7 +6,6 @@ import static com.google.common.base.Preconditions.checkState;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorPackage;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -19,7 +18,6 @@ import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.search.strategy.Search;
-import org.chocosolver.solver.search.strategy.selectors.variables.VariableSelector;
 import org.chocosolver.solver.variables.IntVar;
 import org.cloudiator.ocl.NodeCandidate;
 import org.cloudiator.ocl.Solution;

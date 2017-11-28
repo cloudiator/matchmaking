@@ -1,4 +1,4 @@
-package experiment;
+package org.cloudiator.experiment;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
