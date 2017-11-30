@@ -1,21 +1,18 @@
 package org.cloudiator.ocl;
 
 import cloudiator.Cloud;
-import cloudiator.CloudiatorFactory;
-import cloudiator.CloudiatorPackage;
 import cloudiator.Location;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.cloudiator.converters.LocationConverter;
 import org.cloudiator.messages.Location.LocationQueryRequest;
 import org.cloudiator.messaging.ResponseException;
 import org.cloudiator.messaging.services.LocationService;
-import org.cloudiator.messaging.services.LocationServiceImpl;
 
 public class LocationSupplier implements Supplier<Set<Location>> {
 
-  private final CloudiatorFactory cloudiatorFactory = CloudiatorPackage.eINSTANCE
-      .getCloudiatorFactory();
+  private static final LocationConverter LOCATION_CONVERTER = new LocationConverter();
   private final LocationService locationService;
   private final String userId;
   private final Cloud cloud;
@@ -34,18 +31,7 @@ public class LocationSupplier implements Supplier<Set<Location>> {
   public Set<Location> get() {
     try {
       return locationService.getLocations(buildRequest()).getLocationsList().stream()
-          .map(l -> {
-            Location location = cloudiatorFactory.createLocation();
-            location.setId(l.getId());
-            location.setName(l.getName());
-            location.setProviderId(l.getProviderId());
-            if (l.hasGeoLocation()) {
-              location.setCity(l.getGeoLocation().getCity());
-              location.setCountry(l.getGeoLocation().getCountry());
-              location.setLatitude(l.getGeoLocation().getLatitude());
-            }
-            return location;
-          }).collect(
+          .map(LOCATION_CONVERTER).collect(
               Collectors.toSet());
     } catch (ResponseException e) {
       throw new IllegalStateException(

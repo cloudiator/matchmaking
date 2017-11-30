@@ -23,7 +23,6 @@ public class BreathFirst {
         .collect(Collectors.toList()));
     int minViolations = Integer.MAX_VALUE;
     while (!solutions.isEmpty()) {
-      //System.out.println(String.format("%s has a current queue size of %s", this, solutions.size()));
       Solution solution = solutions.poll();
       int violations = constraintChecker.check(solution.getList());
       if (violations == 0 && solution.nodeSize() >= targetNodeSize) {

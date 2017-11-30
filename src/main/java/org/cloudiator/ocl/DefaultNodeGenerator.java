@@ -3,49 +3,31 @@ package org.cloudiator.ocl;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import cloudiator.Cloud;
-import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorModel;
-import cloudiator.CloudiatorPackage;
 import cloudiator.Hardware;
 import cloudiator.Image;
 import cloudiator.Location;
 import cloudiator.Price;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Random;
+import java.util.Map;
 import java.util.Set;
+import org.cloudiator.ocl.DefaultNodeGenerator.PriceCache.PriceKey;
 import org.cloudiator.ocl.NodeCandidate.NodeCandidateFactory;
 
 public class DefaultNodeGenerator implements NodeGenerator {
 
   private final NodeCandidateFactory nodeCandidateFactory;
   private final CloudiatorModel cloudiatorModel;
-  private final CloudiatorFactory cloudiatorFactory = CloudiatorPackage.eINSTANCE
-      .getCloudiatorFactory();
-  private final Random random = new Random();
+  private static final PriceCache PRICE_CACHE = new PriceCache();
 
   public DefaultNodeGenerator(NodeCandidateFactory nodeCandidateFactory,
       CloudiatorModel cloudiatorModel) {
     this.nodeCandidateFactory = nodeCandidateFactory;
     this.cloudiatorModel = cloudiatorModel;
-  }
-
-  private Price generatePrice(Cloud cloud, Hardware hardware, Image image, Location location) {
-
-    double price = 0;
-    price += hardware.getCores().doubleValue();
-    price += hardware.getRam().doubleValue() / 1000;
-
-    //double locationPriceFactor = 1 + random.nextDouble();
-    //price = price * locationPriceFactor;
-
-   // double cloudPriceFactor = 1 + random.nextDouble();
-
-    Price modelPrice = cloudiatorFactory.createPrice();
-    modelPrice.setHardware(hardware);
-    modelPrice.setImage(image);
-    modelPrice.setLocation(location);
-    modelPrice.setPrice(price);
-    return modelPrice;
+    if (!PRICE_CACHE.exists(cloudiatorModel)) {
+      PRICE_CACHE.load(cloudiatorModel);
+    }
   }
 
   /*
@@ -62,8 +44,12 @@ public class DefaultNodeGenerator implements NodeGenerator {
           for (Location location : cloud.getLocations()) {
             //check if valid combination
             if (isValidCombination(image, hardware, location)) {
-              generatePrice(cloud, hardware, image, location);
-              nodeCandidates.add(nodeCandidateFactory.of(cloud, hardware, image, location));
+              Double price = PRICE_CACHE
+                  .retrieve(cloudiatorModel, PriceKey.of(cloud, image, hardware, location));
+              if (price == null) {
+                price = Double.MAX_VALUE;
+              }
+              nodeCandidates.add(nodeCandidateFactory.of(cloud, hardware, image, location, price));
             }
           }
         }
@@ -87,6 +73,92 @@ public class DefaultNodeGenerator implements NodeGenerator {
     }
 
     return location.getId().equals(imageLocationId) && location.getId().equals(hardwareLocationId);
+  }
+
+  static class PriceCache {
+
+    private Map<CloudiatorModel, Map<PriceKey, Double>> cache = new HashMap<>();
+
+    private boolean exists(CloudiatorModel cloudiatorModel) {
+      return cache.containsKey(cloudiatorModel);
+    }
+
+    private void load(CloudiatorModel cloudiatorModel) {
+      Map<PriceKey, Double> prices = new HashMap<>();
+      for (Cloud cloud : cloudiatorModel.getClouds()) {
+        for (Price price : cloud.getPrices()) {
+          prices.put(PriceKey.of(cloud, price), price.getPrice());
+        }
+      }
+      cache.put(cloudiatorModel, prices);
+    }
+
+    private Double retrieve(CloudiatorModel cloudiatorModel, PriceKey priceKey) {
+      return cache.get(cloudiatorModel).get(priceKey);
+    }
+
+    static class PriceKey {
+
+      private final String cloudId;
+      private final String imageId;
+      private final String hardwareId;
+      private final String location;
+
+      private PriceKey(String cloudId, String imageId, String hardwareId, String location) {
+        this.cloudId = cloudId;
+        this.imageId = imageId;
+        this.hardwareId = hardwareId;
+        this.location = location;
+      }
+
+      static PriceKey of(Cloud cloud, Image image, Hardware hardware, Location location) {
+        checkNotNull(cloud, "cloud is null");
+        checkNotNull(image, "image is null");
+        checkNotNull(hardware, "hardware is null");
+        checkNotNull(location, "location is null");
+        return new PriceKey(cloud.getId(), image.getId(), hardware.getId(), location.getId());
+      }
+
+      static PriceKey of(Cloud cloud, Price price) {
+        checkNotNull(cloud, "cloud is null");
+        checkNotNull(price, "price is null");
+        return PriceKey.of(cloud, price.getImage(), price.getHardware(),
+            price.getLocation());
+      }
+
+      @Override
+      public boolean equals(Object o) {
+        if (this == o) {
+          return true;
+        }
+        if (!(o instanceof PriceKey)) {
+          return false;
+        }
+
+        PriceKey priceKey = (PriceKey) o;
+
+        if (!cloudId.equals(priceKey.cloudId)) {
+          return false;
+        }
+        if (!imageId.equals(priceKey.imageId)) {
+          return false;
+        }
+        if (!hardwareId.equals(priceKey.hardwareId)) {
+          return false;
+        }
+        return location.equals(priceKey.location);
+      }
+
+      @Override
+      public int hashCode() {
+        int result = cloudId.hashCode();
+        result = 31 * result + imageId.hashCode();
+        result = 31 * result + hardwareId.hashCode();
+        result = 31 * result + location.hashCode();
+        return result;
+      }
+    }
+
   }
 
 }

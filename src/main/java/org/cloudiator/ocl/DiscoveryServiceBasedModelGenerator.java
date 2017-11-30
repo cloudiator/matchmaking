@@ -9,7 +9,7 @@ import org.cloudiator.messages.Cloud.CloudQueryRequest;
 import org.cloudiator.messaging.ResponseException;
 import org.cloudiator.messaging.services.CloudService;
 
-public class CloudModelGenerator {
+public class DiscoveryServiceBasedModelGenerator {
 
   private final CloudiatorFactory cloudiatorFactory = CloudiatorPackage.eINSTANCE
       .getCloudiatorFactory();
@@ -19,17 +19,20 @@ public class CloudModelGenerator {
   private final HardwareSupplierFactory hardwareSupplierFactory;
   private final ImageSupplierFactory imageSupplierFactory;
   private final LocationSupplierFactory locationSupplierFactory;
+  private final PriceModelGenerator priceModelGenerator;
 
-  public CloudModelGenerator(CloudiatorModel cloudiatorModel, String userId,
+  public DiscoveryServiceBasedModelGenerator(CloudiatorModel cloudiatorModel, String userId,
       CloudService cloudService, HardwareSupplierFactory hardwareSupplierFactory,
       ImageSupplierFactory imageSupplierFactory,
-      LocationSupplierFactory locationSupplierFactory) {
+      LocationSupplierFactory locationSupplierFactory,
+      PriceModelGenerator priceModelGenerator) {
     this.cloudiatorModel = cloudiatorModel;
     this.userId = userId;
     this.cloudService = cloudService;
     this.hardwareSupplierFactory = hardwareSupplierFactory;
     this.imageSupplierFactory = imageSupplierFactory;
     this.locationSupplierFactory = locationSupplierFactory;
+    this.priceModelGenerator = priceModelGenerator;
   }
 
   private CloudQueryRequest buildQuery() {
@@ -41,6 +44,7 @@ public class CloudModelGenerator {
       cloudService.getClouds(buildQuery()).getCloudsList().stream().map(c -> {
         final Cloud cloud = cloudiatorFactory.createCloud();
         cloud.setId(c.getId());
+
 
         switch (c.getCloudType()) {
           case PUBLIC_CLOUD:
@@ -55,9 +59,10 @@ public class CloudModelGenerator {
 
         //add locations first as hardware and images need to related to locations
         cloud.getLocations().addAll(locationSupplierFactory.newInstance(cloud, userId).get());
-        
         cloud.getHardwareList().addAll(hardwareSupplierFactory.newInstance(cloud, userId).get());
         cloud.getImages().addAll(imageSupplierFactory.newInstance(cloud, userId).get());
+
+        priceModelGenerator.generatePriceModel(cloud);
 
         return cloud;
       }).forEach(cloud -> cloudiatorModel.getClouds().add(cloud));

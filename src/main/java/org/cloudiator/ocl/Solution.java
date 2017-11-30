@@ -3,14 +3,17 @@ package org.cloudiator.ocl;
 import com.google.common.base.MoreObjects;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class Solution implements Comparable<Solution> {
 
-  private List<NodeCandidate> nodeCandiates;
-  private int fitness = -1;
+  public static final Solution EMPTY_SOLUTION = Solution.of(Collections.emptyList());
+
+  private final List<NodeCandidate> nodeCandiates;
   private Double costs = null;
-  private long time = -1;
+  private Float time = null;
+  private Boolean isOptimal = null;
 
   private Solution(Collection<NodeCandidate> candidates) {
     this.nodeCandiates = new ArrayList<>(candidates);
@@ -28,12 +31,27 @@ public class Solution implements Comparable<Solution> {
     return getList().size();
   }
 
-  public void setTime(long time) {
+  public void setIsOptimal(boolean isOptimal) {
+    this.isOptimal = isOptimal;
+  }
+
+  public boolean isOptimal() {
+    if (isOptimal == null) {
+      throw new IllegalStateException("optimal not set");
+    }
+    return isOptimal;
+  }
+
+  public boolean noSolution() {
+    return nodeCandiates.isEmpty();
+  }
+
+  public void setTime(float time) {
     this.time = time;
   }
 
-  public long getTime() {
-    if (time == -1) {
+  public float getTime() {
+    if (time == null) {
       throw new IllegalStateException("time not set");
     }
     return time;
@@ -46,20 +64,6 @@ public class Solution implements Comparable<Solution> {
     return costs;
   }
 
-  public int getFitness() {
-    if (fitness == -1) {
-      throw new IllegalStateException("fitness not set");
-    }
-    return fitness;
-  }
-
-  public void setFitness(int fitness) {
-    if (this.fitness != -1) {
-      throw new IllegalStateException("fitness already set");
-    }
-    this.fitness = fitness;
-  }
-
   @Override
   public int compareTo(Solution o) {
     return this.getCosts().compareTo(o.getCosts());
@@ -67,7 +71,7 @@ public class Solution implements Comparable<Solution> {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("price", getCosts()).add("nodes", nodeCandiates)
+    return MoreObjects.toStringHelper(this).add("time", getTime()).add("price", getCosts()).add("nodes", nodeCandiates)
         .toString();
   }
 
