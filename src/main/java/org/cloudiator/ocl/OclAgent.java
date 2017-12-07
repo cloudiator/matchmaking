@@ -22,7 +22,7 @@ public class OclAgent {
 
   public static void main(String[] args) throws ParserException {
     injector.getInstance(OclProblemListener.class).run();
-    injector.getInstance(OclNodeCandidateListener.class).run();
+    injector.getInstance(NodeCandidateListener.class).run();
   }
 
 }

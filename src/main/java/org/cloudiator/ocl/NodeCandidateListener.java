@@ -3,22 +3,21 @@ package org.cloudiator.ocl;
 import cloudiator.CloudiatorModel;
 import com.google.inject.Inject;
 import java.util.stream.Collectors;
-import javax.inject.Named;
 import org.cloudiator.converters.NodeCandidateConverter;
-import org.cloudiator.messages.NodeCandidate.NodeCandidateRequestMessage;
-import org.cloudiator.messages.NodeCandidate.NodeCandidateRequestResponse;
+import org.cloudiator.messages.entities.Matchmaking.NodeCandidateRequestMessage;
+import org.cloudiator.messages.entities.Matchmaking.NodeCandidateRequestResponse;
 import org.cloudiator.messaging.MessageInterface;
 import org.cloudiator.messaging.Subscription;
 import org.cloudiator.ocl.NodeCandidate.NodeCandidateFactory;
 
-public class OclNodeCandidateListener implements Runnable {
+public class NodeCandidateListener implements Runnable {
 
   private final MessageInterface messageInterface;
   private final ModelGenerator modelGenerator;
   private static final NodeCandidateConverter NODE_CANDIDATE_CONVERTER = new NodeCandidateConverter();
 
   @Inject
-  public OclNodeCandidateListener(MessageInterface messageInterface,
+  public NodeCandidateListener(MessageInterface messageInterface,
       ModelGenerator modelGenerator) {
     this.messageInterface = messageInterface;
     this.modelGenerator = modelGenerator;

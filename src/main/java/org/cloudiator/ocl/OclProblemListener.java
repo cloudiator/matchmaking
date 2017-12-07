@@ -5,10 +5,9 @@ import javax.inject.Inject;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.entities.CommonEntities.OclRequirement;
 import org.cloudiator.messages.entities.IaasEntities.VirtualMachineRequest;
-import org.cloudiator.messages.entities.Solution.OclSolutionRequest;
-import org.cloudiator.messages.entities.Solution.OclSolutionResponse;
-import org.cloudiator.messages.entities.SolutionEntities.OclSolution;
-import org.cloudiator.messages.entities.SolutionEntities.OclSolution.Builder;
+import org.cloudiator.messages.entities.Matchmaking.MatchmakingResponse;
+import org.cloudiator.messages.entities.Matchmaking.MatchmakingResponse.Builder;
+import org.cloudiator.messages.entities.Matchmaking.OclSolutionRequest;
 import org.cloudiator.messaging.MessageInterface;
 import org.cloudiator.messaging.Subscription;
 import org.slf4j.Logger;
@@ -44,7 +43,7 @@ public class OclProblemListener implements Runnable {
                 Solution solution = solver.solve(csp, userId);
 
                 if (solution == null) {
-                  messageInterface.reply(OclSolutionResponse.class, id,
+                  messageInterface.reply(MatchmakingResponse.class, id,
                       Error.newBuilder().setCode(400)
                           .setMessage(
                               String.format("Could not find a solution for the problem %s.", csp))
@@ -52,23 +51,20 @@ public class OclProblemListener implements Runnable {
                   return;
                 }
 
-                Builder oclSolutionBuilder = OclSolution.newBuilder();
+                Builder matchmakingResponseBuilder = MatchmakingResponse.newBuilder();
 
                 solution.getList().forEach(
-                    nodeCandidate -> oclSolutionBuilder.addNodes(VirtualMachineRequest.newBuilder()
-                        .setHardware(nodeCandidate.getHardware().getId())
-                        .setImage(nodeCandidate.getImage().getId())
-                        .setLocation(nodeCandidate.getLocation().getId()).build()));
+                    nodeCandidate -> matchmakingResponseBuilder
+                        .addNodes(VirtualMachineRequest.newBuilder()
+                            .setHardware(nodeCandidate.getHardware().getId())
+                            .setImage(nodeCandidate.getImage().getId())
+                            .setLocation(nodeCandidate.getLocation().getId()).build()));
 
-                OclSolutionResponse solutionResponse = OclSolutionResponse.newBuilder()
-                    .setSolution(oclSolutionBuilder.build())
-                    .build();
-
-                messageInterface.reply(id, solutionResponse);
+                messageInterface.reply(id, matchmakingResponseBuilder.build());
 
               } catch (Exception e) {
                 LOGGER.error(String.format("Error while solving the problem %s.", csp), e);
-                messageInterface.reply(OclSolutionResponse.class, id,
+                messageInterface.reply(MatchmakingResponse.class, id,
                     Error.newBuilder().setCode(500)
                         .setMessage(
                             String

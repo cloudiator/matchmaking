@@ -2,11 +2,11 @@ package org.cloudiator.converters;
 
 import de.uniulm.omi.cloudiator.util.OneWayConverter;
 import javax.annotation.Nullable;
-import org.cloudiator.messages.entities.IaasEntities;
+import org.cloudiator.messages.entities.MatchmakingEntities;
 import org.cloudiator.ocl.NodeCandidate;
 
 public class NodeCandidateConverter implements
-    OneWayConverter<NodeCandidate, IaasEntities.NodeCandidate> {
+    OneWayConverter<NodeCandidate, MatchmakingEntities.NodeCandidate> {
 
   private static final ImageConverter IMAGE_CONVERTER = new ImageConverter();
   private static final HardwareConverter HARDWARE_CONVERTER = new HardwareConverter();
@@ -15,8 +15,8 @@ public class NodeCandidateConverter implements
 
   @Nullable
   @Override
-  public IaasEntities.NodeCandidate apply(@Nullable NodeCandidate nodeCandidate) {
-    return IaasEntities.NodeCandidate.newBuilder()
+  public MatchmakingEntities.NodeCandidate apply(@Nullable NodeCandidate nodeCandidate) {
+    return MatchmakingEntities.NodeCandidate.newBuilder()
         .setCloud(CLOUD_CONVERTER.apply(nodeCandidate.getCloud()))
         .setHardwareFlavor(HARDWARE_CONVERTER.applyBack(nodeCandidate.getHardware()))
         .setImage(IMAGE_CONVERTER.applyBack(nodeCandidate.getImage()))
