@@ -1,10 +1,7 @@
 package org.cloudiator.experiment;
 
-import org.cloudiator.choco.ChocoSolver;
-import org.cloudiator.choco.TimeLimit;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import org.cloudiator.experiment.Experiment.CloudiatorModelType;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -13,7 +10,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import org.cloudiator.ocl.ConstraintSatisfactionProblem;
+import org.cloudiator.choco.ChocoSolver;
+import org.cloudiator.choco.TimeLimit;
+import org.cloudiator.experiment.Experiment.CloudiatorModelType;
+import org.cloudiator.ocl.OclCsp;
 import org.cloudiator.ocl.Solution;
 
 public class ExperimentRunner {
@@ -25,7 +25,7 @@ public class ExperimentRunner {
 
     Set<String> constraints = new HashSet<>();
 
-    ConstraintSatisfactionProblem csp = new ConstraintSatisfactionProblem(constraints);
+    OclCsp csp = OclCsp.ofConstraints(constraints);
 
     final Data data = new Data();
 

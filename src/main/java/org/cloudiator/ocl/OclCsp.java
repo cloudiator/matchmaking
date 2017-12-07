@@ -1,9 +1,13 @@
 package org.cloudiator.ocl;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import java.util.Collection;
 import java.util.Set;
+import org.cloudiator.domain.RepresentableAsOCL;
 
-public class ConstraintSatisfactionProblem {
+public class OclCsp {
 
   //Set<String> constraints = new HashSet<>();
   //constraints.add("nodes->exists(location.name = 'RegionOne')");
@@ -20,8 +24,20 @@ public class ConstraintSatisfactionProblem {
 
   public Set<String> constraints;
 
-  public ConstraintSatisfactionProblem(Set<String> constraints) {
-    this.constraints = constraints;
+  private OclCsp(Collection<String> constraints) {
+    this.constraints = Sets.newHashSet(constraints);
+  }
+
+  public static OclCsp ofConstraints(Collection<String> constraints) {
+    return new OclCsp(constraints);
+  }
+
+  public static OclCsp ofRequirements(Collection<RepresentableAsOCL> requirements) {
+    Collection<String> constraints = Lists.newArrayList();
+    for (RepresentableAsOCL representableAsOCL : requirements) {
+      constraints.addAll(representableAsOCL.getOCLConstraints());
+    }
+    return new OclCsp(constraints);
   }
 
   public Set<String> getConstraints() {

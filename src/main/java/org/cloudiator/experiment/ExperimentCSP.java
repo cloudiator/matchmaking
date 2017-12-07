@@ -1,14 +1,14 @@
 package org.cloudiator.experiment;
 
 import java.util.HashSet;
-import org.cloudiator.ocl.ConstraintSatisfactionProblem;
 import org.cloudiator.ocl.NodeCandidate.NodeCandidateFactory;
+import org.cloudiator.ocl.OclCsp;
 
 public class ExperimentCSP {
 
   public static final NodeCandidateFactory NODE_CANDIDATE_FACTORY = new NodeCandidateFactory();
 
-  public static ConstraintSatisfactionProblem CSP = new ConstraintSatisfactionProblem(
+  public static OclCsp CSP = OclCsp.ofConstraints(
       new HashSet<String>() {{
         add("nodes->exists(location.country = 'DE')");
         add("nodes->forAll(n | n.hardware.cores >= 2)");

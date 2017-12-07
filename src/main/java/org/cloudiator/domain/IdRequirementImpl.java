@@ -16,27 +16,31 @@
 
 package org.cloudiator.domain;
 
-import java.util.Collections;
-import java.util.Set;
+public class IdRequirementImpl implements IdRequirement {
 
-public class OclRequirement implements Requirement, RepresentableAsOCL {
+  private final String hardwareId;
+  private final String locationId;
+  private final String imageId;
 
-  private final String constraint;
-
-  private OclRequirement(String constraint) {
-    this.constraint = constraint;
-  }
-
-  public static OclRequirement of(String constraint) {
-    return new OclRequirement(constraint);
-  }
-
-  public String constraint() {
-    return constraint;
+  protected IdRequirementImpl(String hardwareId, String locationId, String imageId) {
+    this.hardwareId = hardwareId;
+    this.locationId = locationId;
+    this.imageId = imageId;
   }
 
   @Override
-  public Set<String> getOCLConstraints() {
-    return Collections.singleton(constraint);
+  public String hardwareId() {
+    return hardwareId;
   }
+
+  @Override
+  public String locationId() {
+    return locationId;
+  }
+
+  @Override
+  public String imageId() {
+    return imageId;
+  }
+
 }

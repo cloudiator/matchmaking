@@ -4,7 +4,6 @@ import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorPackage;
 import com.google.inject.Inject;
 import javax.annotation.Nullable;
-import javax.inject.Named;
 import org.cloudiator.ocl.NodeCandidate.NodeCandidateFactory;
 import org.eclipse.ocl.pivot.utilities.ParserException;
 import org.slf4j.Logger;
@@ -25,7 +24,7 @@ public class Solver {
   }
 
   @Nullable
-  public Solution solve(ConstraintSatisfactionProblem csp, String userId) throws ParserException {
+  public Solution solve(OclCsp csp, String userId) throws ParserException {
     ConstraintChecker cc = new ConstraintChecker(csp);
 
     LOGGER.debug(String.format("%s is solving CSP %s for user %s", this, csp, userId));

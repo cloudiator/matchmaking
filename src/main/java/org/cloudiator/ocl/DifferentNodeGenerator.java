@@ -10,13 +10,13 @@ import java.util.Set;
 public class DifferentNodeGenerator implements NodeGenerator {
 
   private final NodeGenerator nodeGenerator;
-  private final ConstraintSatisfactionProblem constraintSatisfactionProblem;
+  private final OclCsp oclCsp;
   private final static boolean ENABLED = true;
 
   public DifferentNodeGenerator(NodeGenerator delegate,
-      ConstraintSatisfactionProblem constraintSatisfactionProblem) {
+      OclCsp oclCsp) {
     this.nodeGenerator = delegate;
-    this.constraintSatisfactionProblem = constraintSatisfactionProblem;
+    this.oclCsp = oclCsp;
   }
 
   @Override

@@ -1,5 +1,12 @@
 package org.cloudiator.domain;
 
-public class AttributeRequirement {
+public interface AttributeRequirement extends Requirement {
 
+  String requirementClass();
+
+  String requirementAttribute();
+
+  RequirementOperator requirementOperator();
+
+  String value();
 }

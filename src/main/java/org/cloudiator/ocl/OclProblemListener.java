@@ -34,7 +34,7 @@ public class OclProblemListener implements Runnable {
 
               String userId = solutionRequest.getUserId();
 
-              ConstraintSatisfactionProblem csp = new ConstraintSatisfactionProblem(
+              OclCsp csp = OclCsp.ofConstraints(
                   solutionRequest.getProblem().getRequirementsList().stream().map(
                       OclRequirement::getConstraint).collect(
                       Collectors.toSet()));

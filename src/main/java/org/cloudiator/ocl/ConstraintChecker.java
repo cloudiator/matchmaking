@@ -24,7 +24,7 @@ public class ConstraintChecker {
   private final Set<Query> otherQueries;
   private final Component component;
 
-  public ConstraintChecker(ConstraintSatisfactionProblem csp) throws ParserException {
+  public ConstraintChecker(OclCsp csp) throws ParserException {
     forAllQueries = new HashSet<>();
     otherQueries = new HashSet<>();
 
