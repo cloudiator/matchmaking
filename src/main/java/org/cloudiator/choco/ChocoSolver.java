@@ -10,6 +10,7 @@ import org.cloudiator.ocl.DefaultNodeGenerator;
 import org.cloudiator.ocl.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.ocl.NodeCandidates;
 import org.cloudiator.ocl.OclCsp;
+import org.cloudiator.ocl.Solution;
 import org.eclipse.emf.ecore.EAttribute;
 
 public class ChocoSolver {
@@ -55,7 +56,6 @@ public class ChocoSolver {
       solver.setSearch(Search.defaultSearch(modelGenerationContext.getModel()));
       solver.showContradiction();
 
-
       while (solver.solve()) {
         solution.record();
       }
@@ -64,8 +64,10 @@ public class ChocoSolver {
         System.out.println("Solved optimally.");
       }
 
+      final Solution ret = ChocoSolutionToSolution.create(modelGenerationContext).apply(solution);
+      ret.setTime(solver.getTimeCount());
 
-      System.out.println(solution.toString());
+      System.out.println(ret);
 
     }
 

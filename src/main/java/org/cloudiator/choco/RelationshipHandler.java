@@ -120,25 +120,9 @@ public class RelationshipHandler {
   private int valueOfIdAttribute(EObject eObject) {
     final EAttribute idAttribute = eObject.eClass().getEIDAttribute();
     if (idAttribute != null) {
-      return modelGenerationContext.mapValue(eObject, idAttribute);
+      return modelGenerationContext.mapValue(eObject.eGet(idAttribute), idAttribute);
     }
     return modelGenerationContext.getOidGenerator().generateIdFor(eObject.eClass(), eObject);
-  }
-
-  private Set<Integer> domainOfIdBasedOnClass(EClass eClass) {
-    final EAttribute idAttribute = eClass.getEIDAttribute();
-    if (idAttribute != null) {
-      return emfUtil.getValuesOfAttribute(idAttribute).stream()
-          .map(o -> modelGenerationContext.mapValue(o, idAttribute)).collect(
-              Collectors.toSet());
-    } else {
-      return emfUtil.getAllObjectsOfClass(eClass).stream().map(new Function<EObject, Integer>() {
-        @Override
-        public Integer apply(EObject eObject) {
-          return modelGenerationContext.getOidGenerator().generateIdFor(eClass, eObject);
-        }
-      }).collect(Collectors.toSet());
-    }
   }
 
   public static class RelationModelVisitor implements ModelGenerationContextVisitor {

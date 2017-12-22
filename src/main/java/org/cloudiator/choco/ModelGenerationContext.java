@@ -1,5 +1,7 @@
 package org.cloudiator.choco;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import cloudiator.CloudiatorModel;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
@@ -47,6 +49,13 @@ public class ModelGenerationContext {
     return objectMappers.get(attribute);
   }
 
+  @SuppressWarnings("unchecked")
+  private ObjectMapper<Object> getObjectMapper(String attribute) {
+    final ObjectMapper objectMapper = objectMappers.get(attribute);
+    checkState(objectMapper != null, "Could not find object mapper for attribute " + attribute);
+    return objectMapper;
+  }
+
   public OclCsp getOclCsp() {
     return oclCsp;
   }
@@ -62,11 +71,23 @@ public class ModelGenerationContext {
       return ((Enumerator) o).getValue();
     }
     return this
-        .mapValue(o, eAttribute.getEContainingClass().getName()+"."+eAttribute.getName(), eAttribute.getEAttributeType().getInstanceClass());
+        .mapValue(o, eAttribute.getEContainingClass().getName() + "." + eAttribute.getName(),
+            eAttribute.getEAttributeType().getInstanceClass());
   }
 
   public int mapValue(Object o, String attribute, Class type) {
+    //noinspection unchecked
     return getObjectMapper(attribute, type).applyAsInt(o);
+  }
+
+  public <F> F mapBack(int mappedValue, EAttribute eAttribute, Class<F> clazz) {
+    return mapBack(mappedValue,
+        eAttribute.getEContainingClass().getName() + "." + eAttribute.getName(), clazz);
+  }
+
+  public <F> F mapBack(int mappedValue, String attribute, Class<F> clazz) {
+    //noinspection unchecked
+    return (F) getObjectMapper(attribute).applyBack(mappedValue);
   }
 
   public Model getModel() {
