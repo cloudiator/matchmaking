@@ -18,11 +18,11 @@ import org.slf4j.LoggerFactory;
 
 public class NodeCandidateListener implements Runnable {
 
+  private static final NodeCandidateConverter NODE_CANDIDATE_CONVERTER = new NodeCandidateConverter();
+  private static final RequirementConverter REQUIREMENT_CONVERTER = new RequirementConverter();
   private final Logger LOGGER = LoggerFactory.getLogger(NodeCandidateListener.class);
   private final MessageInterface messageInterface;
   private final ModelGenerator modelGenerator;
-  private static final NodeCandidateConverter NODE_CANDIDATE_CONVERTER = new NodeCandidateConverter();
-  private static final RequirementConverter REQUIREMENT_CONVERTER = new RequirementConverter();
 
   @Inject
   public NodeCandidateListener(MessageInterface messageInterface,
@@ -35,15 +35,16 @@ public class NodeCandidateListener implements Runnable {
   public void run() {
     Subscription subscription = messageInterface.subscribe(NodeCandidateRequestMessage.class,
         NodeCandidateRequestMessage.parser(), (id, content) -> {
-          final CloudiatorModel cloudiatorModel = modelGenerator.generateModel(id);
-          final DefaultNodeGenerator defaultNodeGenerator = new DefaultNodeGenerator(
-              new NodeCandidateFactory(), cloudiatorModel);
-
-          OclCsp oclCsp = OclCsp
-              .ofRequirements(REQUIREMENT_CONVERTER.apply(content.getRequirements()).stream().map(
-                  requirement -> (RepresentableAsOCL) requirement).collect(Collectors.toList()));
-
           try {
+            final CloudiatorModel cloudiatorModel = modelGenerator
+                .generateModel(content.getUserId());
+            final DefaultNodeGenerator defaultNodeGenerator = new DefaultNodeGenerator(
+                new NodeCandidateFactory(), cloudiatorModel);
+
+            OclCsp oclCsp = OclCsp
+                .ofRequirements(REQUIREMENT_CONVERTER.apply(content.getRequirements()).stream().map(
+                    requirement -> (RepresentableAsOCL) requirement).collect(Collectors.toList()));
+
             final ConsistentNodeGenerator consistentNodeGenerator = new ConsistentNodeGenerator(
                 defaultNodeGenerator, new ConstraintChecker(oclCsp));
 
@@ -59,6 +60,12 @@ public class NodeCandidateListener implements Runnable {
             messageInterface.reply(NodeCandidateRequestResponse.class, id,
                 Error.newBuilder().setCode(400).setMessage(String
                     .format("Could not parse constraint problem. Error was %s.", e.getMessage()))
+                    .build());
+          } catch (ModelGenerationException e) {
+            LOGGER.error("Error while generating the model.", e);
+            messageInterface.reply(NodeCandidateRequestResponse.class, id,
+                Error.newBuilder().setCode(400).setMessage(String
+                    .format("Could not generate model. Error was %s.", e.getMessage()))
                     .build());
           }
 

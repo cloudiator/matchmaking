@@ -16,7 +16,8 @@ public class MemoryCachedModelGenerator implements ModelGenerator {
   private final LoadingCache<String, CloudiatorModel> modelCache = CacheBuilder.newBuilder()
       .build(
           new CacheLoader<String, CloudiatorModel>() {
-            public CloudiatorModel load(@Nullable String userId) { // no checked exception
+            public CloudiatorModel load(@Nullable String userId)
+                throws ModelGenerationException { // no checked exception
               return delegate.generateModel(userId);
             }
           });
@@ -28,10 +29,13 @@ public class MemoryCachedModelGenerator implements ModelGenerator {
 
 
   @Override
-  public CloudiatorModel generateModel(String userId) {
+  public CloudiatorModel generateModel(String userId) throws ModelGenerationException {
     try {
       return modelCache.get(userId);
     } catch (ExecutionException e) {
+      if (e.getCause() instanceof ModelGenerationException) {
+        throw (ModelGenerationException) e.getCause();
+      }
       throw new IllegalStateException(e.getCause());
     }
   }

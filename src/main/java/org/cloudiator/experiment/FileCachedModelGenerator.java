@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import javax.inject.Named;
+import org.cloudiator.ocl.ModelGenerationException;
 import org.cloudiator.ocl.ModelGenerator;
 import org.cloudiator.ocl.Solver;
 import org.eclipse.emf.common.util.URI;
@@ -33,6 +34,20 @@ public class FileCachedModelGenerator implements ModelGenerator {
     this.delegate = delegate;
   }
 
+  private static void saveModel(CloudiatorModel model) throws IOException {
+    Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
+    Map<String, Object> m = reg.getExtensionToFactoryMap();
+    m.put(FILE_ENDING, new XMIResourceFactoryImpl());
+
+    ResourceSet resSet = new ResourceSetImpl();
+    Resource resource = resSet.createResource(URI
+        .createURI(FILE_NAME));
+
+    resource.getContents().add(model);
+
+    resource.save(Collections.EMPTY_MAP);
+  }
+
   public CloudiatorModel load() {
     // Initialize the model
     CloudiatorPackage.eINSTANCE.eClass();
@@ -54,26 +69,12 @@ public class FileCachedModelGenerator implements ModelGenerator {
     return (CloudiatorModel) resource.getContents().get(0);
   }
 
-  private static void saveModel(CloudiatorModel model) throws IOException {
-    Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
-    Map<String, Object> m = reg.getExtensionToFactoryMap();
-    m.put(FILE_ENDING, new XMIResourceFactoryImpl());
-
-    ResourceSet resSet = new ResourceSetImpl();
-    Resource resource = resSet.createResource(URI
-        .createURI(FILE_NAME));
-
-    resource.getContents().add(model);
-
-    resource.save(Collections.EMPTY_MAP);
-  }
-
   @Override
-  public CloudiatorModel generateModel(String userId) {
+  public CloudiatorModel generateModel(String userId) throws ModelGenerationException {
     try {
       return load();
     } catch (Exception e) {
-      LOGGER.warn("Error while loading cached file. Regenerating.",e);
+      LOGGER.warn("Error while loading cached file. Regenerating.", e);
       CloudiatorModel cloudiatorModel = delegate.generateModel(userId);
       try {
         saveModel(cloudiatorModel);

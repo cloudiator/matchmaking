@@ -1,6 +1,5 @@
 package org.cloudiator.experiment;
 
-import org.cloudiator.choco.TimeLimit;
 import cloudiator.CloudiatorModel;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -9,9 +8,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.DoublePredicate;
+import org.cloudiator.choco.TimeLimit;
 import org.cloudiator.ocl.ConsistentNodeGenerator;
 import org.cloudiator.ocl.ConstraintChecker;
 import org.cloudiator.ocl.DefaultNodeGenerator;
+import org.cloudiator.ocl.ModelGenerationException;
+import org.cloudiator.ocl.ModelGenerator;
 import org.cloudiator.ocl.NodeCandidate;
 import org.cloudiator.ocl.Solution;
 import org.eclipse.ocl.pivot.utilities.ParserException;
@@ -19,42 +21,24 @@ import org.eclipse.ocl.pivot.utilities.ParserException;
 public class Experiment {
 
 
-  public enum CloudiatorModelType {
-
-    SMALL(new SmallExperimentModelGenerator().generateModel("test")),
-    EXPERIMENT(new LargeModelGenerator().generateModel("test")),
-    CLOUD_HARMONY(new FileCachedModelGenerator(new CloudHarmony()).generateModel("test"));
-
-    private final CloudiatorModel cloudiatorModel;
-    private final Set<NodeCandidate> candidates;
-
-    CloudiatorModelType(CloudiatorModel cloudiatorModel) {
-      this.cloudiatorModel = cloudiatorModel;
-      try {
-        this.candidates = new ConsistentNodeGenerator(
-            new DefaultNodeGenerator(ExperimentCSP.NODE_CANDIDATE_FACTORY,
-                cloudiatorModel),
-            new ConstraintChecker(ExperimentCSP.CSP)).getPossibleNodes();
-      } catch (ParserException e) {
-        throw new ExceptionInInitializerError(e);
-      }
-    }
-
-    public CloudiatorModel getCloudiatorModel() {
-      return cloudiatorModel;
-    }
-
-    public Set<NodeCandidate> getCandidates() {
-      return candidates;
-    }
-  }
-
   private final TimeLimit limit;
   private final int nodeSize;
   private final int repetitions;
-  private volatile boolean finished = false;
   private final boolean iterative;
   private final CloudiatorModelType cloudiatorModelType;
+  DoubleSummaryStatistics costStatistics;
+  DoubleSummaryStatistics timeStatistics;
+  private volatile boolean finished = false;
+  private List<Solution> solutions = new ArrayList<>();
+
+  public Experiment(TimeLimit limit, int nodeSize, int repetitions, boolean iterative,
+      CloudiatorModelType cloudiatorModelType) {
+    this.limit = limit;
+    this.nodeSize = nodeSize;
+    this.repetitions = repetitions;
+    this.iterative = iterative;
+    this.cloudiatorModelType = cloudiatorModelType;
+  }
 
   public boolean isIterative() {
     return iterative;
@@ -72,20 +56,6 @@ public class Experiment {
     return repetitions;
   }
 
-  DoubleSummaryStatistics costStatistics;
-  DoubleSummaryStatistics timeStatistics;
-
-  private List<Solution> solutions = new ArrayList<>();
-
-  public Experiment(TimeLimit limit, int nodeSize, int repetitions, boolean iterative,
-      CloudiatorModelType cloudiatorModelType) {
-    this.limit = limit;
-    this.nodeSize = nodeSize;
-    this.repetitions = repetitions;
-    this.iterative = iterative;
-    this.cloudiatorModelType = cloudiatorModelType;
-  }
-
   public Optional<Solution> optimal() {
     return solutions.stream().filter(Solution::isOptimal).findAny();
   }
@@ -93,7 +63,6 @@ public class Experiment {
   public boolean hasSolution() {
     return solutions.size() > 0;
   }
-
 
   public void addSolution(Solution solution) {
     if (finished) {
@@ -153,6 +122,46 @@ public class Experiment {
     System.out.println("Average Time: " + timeStatistics().getAverage());
     System.out.println("Min Time: " + timeStatistics().getMin());
     System.out.println("Max Time: " + timeStatistics().getMax());
+  }
+
+  public enum CloudiatorModelType {
+
+    SMALL(new SmallExperimentModelGenerator()),
+    EXPERIMENT(new LargeModelGenerator()),
+    CLOUD_HARMONY(new FileCachedModelGenerator(new CloudHarmony()));
+
+    private final ModelGenerator modelGenerator;
+    private Set<NodeCandidate> candidates = null;
+    private CloudiatorModel model = null;
+
+    CloudiatorModelType(ModelGenerator modelGenerator) {
+      this.modelGenerator = modelGenerator;
+    }
+
+    public CloudiatorModel getCloudiatorModel() {
+      if (model == null) {
+        try {
+          model = modelGenerator.generateModel("test");
+        } catch (ModelGenerationException e) {
+          throw new IllegalStateException(e);
+        }
+      }
+      return model;
+    }
+
+    public Set<NodeCandidate> getCandidates() {
+      if (this.candidates == null) {
+        try {
+          this.candidates = new ConsistentNodeGenerator(
+              new DefaultNodeGenerator(ExperimentCSP.NODE_CANDIDATE_FACTORY,
+                  getCloudiatorModel()),
+              new ConstraintChecker(ExperimentCSP.CSP)).getPossibleNodes();
+        } catch (ParserException e) {
+          throw new ExceptionInInitializerError(e);
+        }
+      }
+      return candidates;
+    }
   }
 
 }

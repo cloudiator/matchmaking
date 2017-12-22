@@ -11,6 +11,7 @@ import cloudiator.Property;
 import de.uniulm.omi.cloudiator.util.TwoWayConverter;
 import java.util.stream.Collectors;
 import org.cloudiator.messages.entities.IaasEntities;
+import org.cloudiator.messages.entities.IaasEntities.Cloud.Builder;
 import org.cloudiator.messages.entities.IaasEntities.Configuration;
 import org.cloudiator.messages.entities.IaasEntities.Credential;
 
@@ -32,18 +33,23 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
     modelCloud.setEndpoint(cloud.getEndpoint());
     modelCloud.setType(TYPE_CONVERTER.applyBack(cloud.getCloudType()));
     modelCloud.setApi(API_CONVERTER.applyBack(cloud.getApi()));
-    modelCloud.setConfiguration(CLOUD_CONFIGURATION_CONVERTER.applyBack(cloud.getConfiguration()));
+    modelCloud
+        .setConfiguration(CLOUD_CONFIGURATION_CONVERTER.applyBack(cloud.getConfiguration()));
+
     modelCloud.setCloudcredential(CLOUD_CREDENTIAL_CONVERTER.applyBack(cloud.getCredential()));
     return modelCloud;
   }
 
   @Override
   public IaasEntities.Cloud apply(Cloud cloud) {
-    return IaasEntities.Cloud.newBuilder().setId(cloud.getId()).setEndpoint(cloud.getEndpoint())
+    final Builder builder = IaasEntities.Cloud.newBuilder().setId(cloud.getId())
+        .setEndpoint(cloud.getEndpoint())
         .setCloudType(TYPE_CONVERTER.apply(cloud.getType()))
         .setApi(API_CONVERTER.apply(cloud.getApi()))
-        .setConfiguration(CLOUD_CONFIGURATION_CONVERTER.apply(cloud.getConfiguration()))
-        .setCredential(CLOUD_CREDENTIAL_CONVERTER.apply(cloud.getCloudcredential())).build();
+        .setCredential(CLOUD_CREDENTIAL_CONVERTER.apply(cloud.getCloudcredential()));
+
+    return builder.build();
+
   }
 
   private static class ApiConverter implements TwoWayConverter<Api, IaasEntities.Api> {

@@ -11,9 +11,9 @@ import javax.inject.Inject;
 
 public class PriceModelGenerator {
 
-  private final PriceFunction priceFunction;
   private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorPackage.eINSTANCE
       .getCloudiatorFactory();
+  private final PriceFunction priceFunction;
 
   @Inject
   public PriceModelGenerator(PriceFunction priceFunction) {

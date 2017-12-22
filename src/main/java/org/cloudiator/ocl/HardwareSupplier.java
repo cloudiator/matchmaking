@@ -12,10 +12,10 @@ import org.cloudiator.messaging.services.HardwareService;
 
 public class HardwareSupplier implements Supplier<Set<Hardware>> {
 
+  private static final HardwareConverter HARDWARE_CONVERTER = new HardwareConverter();
   private final Cloud cloud;
   private final String userId;
   private final HardwareService hardwareService;
-  private static final HardwareConverter HARDWARE_CONVERTER = new HardwareConverter();
 
   public HardwareSupplier(HardwareService hardwareService, Cloud cloud, String userId) {
     this.hardwareService = hardwareService;

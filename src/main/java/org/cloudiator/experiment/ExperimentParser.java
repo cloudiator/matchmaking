@@ -1,7 +1,5 @@
 package org.cloudiator.experiment;
 
-import org.cloudiator.choco.TimeLimit;
-import org.cloudiator.experiment.Experiment.CloudiatorModelType;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -10,6 +8,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.cloudiator.choco.TimeLimit;
+import org.cloudiator.experiment.Experiment.CloudiatorModelType;
 
 public class ExperimentParser {
 
@@ -71,11 +71,11 @@ public class ExperimentParser {
 
     private final boolean iterative;
     private final TimeLimit timeLimit;
-    private CloudiatorModelType cloudiatorModelType;
     private final int nodeSize;
     private final double price;
     private final double timeInSeconds;
     private final boolean optimal;
+    private CloudiatorModelType cloudiatorModelType;
 
 
     private ExperimentLine(boolean iterative, TimeLimit timeLimit,

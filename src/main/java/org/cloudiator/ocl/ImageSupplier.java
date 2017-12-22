@@ -12,10 +12,10 @@ import org.cloudiator.messaging.services.ImageService;
 
 public class ImageSupplier implements Supplier<Set<Image>> {
 
+  private static final ImageConverter IMAGE_CONVERTER = new ImageConverter();
   private final ImageService imageService;
   private final String userId;
   private final Cloud cloud;
-  private static final ImageConverter IMAGE_CONVERTER = new ImageConverter();
 
   public ImageSupplier(ImageService imageService, String userId, Cloud cloud) {
     this.imageService = imageService;

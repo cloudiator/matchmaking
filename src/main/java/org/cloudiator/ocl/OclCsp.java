@@ -1,13 +1,26 @@
 package org.cloudiator.ocl;
 
+import cloudiator.CloudiatorPackage;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Set;
 import org.cloudiator.domain.RepresentableAsOCL;
+import org.eclipse.ocl.pivot.ExpressionInOCL;
+import org.eclipse.ocl.pivot.utilities.OCL;
+import org.eclipse.ocl.pivot.utilities.ParserException;
+import org.eclipse.ocl.xtext.essentialocl.EssentialOCLStandaloneSetup;
 
 public class OclCsp {
+
+  private static OCL ocl = OCL.newInstance(OCL.CLASS_PATH);
+
+  static {
+    EssentialOCLStandaloneSetup.doSetup();
+  }
 
   //Set<String> constraints = new HashSet<>();
   //constraints.add("nodes->exists(location.name = 'RegionOne')");
@@ -22,10 +35,22 @@ public class OclCsp {
   //constraints.add("nodes->select(n | n.hardware.cores > 4)->size() >= 2");
   //constraints.add("nodes.hardware.cores->sum() >= 15");
 
-  public Set<String> constraints;
+  private Set<String> unparsedConstraints;
+  private Set<ExpressionInOCL> constraints;
 
   private OclCsp(Collection<String> constraints) {
-    this.constraints = Sets.newHashSet(constraints);
+    this.unparsedConstraints = Sets.newHashSet(constraints);
+    final Builder<ExpressionInOCL> builder = ImmutableSet.<ExpressionInOCL>builder();
+    for (String c : constraints) {
+      try {
+        ExpressionInOCL expression = ocl
+            .createInvariant(CloudiatorPackage.eINSTANCE.getComponent(), c);
+        builder.add(expression);
+      } catch (ParserException e) {
+        throw new IllegalStateException(String.format("Could not parse constraint %s.", c), e);
+      }
+    }
+    this.constraints = builder.build();
   }
 
   public static OclCsp ofConstraints(Collection<String> constraints) {
@@ -40,7 +65,11 @@ public class OclCsp {
     return new OclCsp(constraints);
   }
 
-  public Set<String> getConstraints() {
+  public Set<String> getUnparsedConstraints() {
+    return unparsedConstraints;
+  }
+
+  public Set<ExpressionInOCL> getConstraints() {
     return constraints;
   }
 

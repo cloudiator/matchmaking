@@ -4,7 +4,6 @@ import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorPackage;
 import cloudiator.Hardware;
 import de.uniulm.omi.cloudiator.util.TwoWayConverter;
-import java.math.BigInteger;
 import org.cloudiator.messages.entities.IaasEntities;
 import org.cloudiator.messages.entities.IaasEntities.HardwareFlavor;
 import org.cloudiator.messages.entities.IaasEntities.HardwareFlavor.Builder;
@@ -18,9 +17,9 @@ public class HardwareConverter implements TwoWayConverter<IaasEntities.HardwareF
   @Override
   public HardwareFlavor applyBack(Hardware hardware) {
 
-    final Builder builder = HardwareFlavor.newBuilder().setCores(hardware.getCores().intValue())
+    final Builder builder = HardwareFlavor.newBuilder().setCores(hardware.getCores())
         .setId(hardware.getId()).setProviderId(hardware.getProviderId())
-        .setRam(hardware.getRam().intValue());
+        .setRam(hardware.getRam()).setName(hardware.getName());
     if (hardware.getLocation() != null) {
       builder.setLocation(LOCATION_CONVERTER.applyBack(hardware.getLocation()));
     }
@@ -40,8 +39,8 @@ public class HardwareConverter implements TwoWayConverter<IaasEntities.HardwareF
     hardware.setProviderId(hardwareFlavor.getProviderId());
     hardware.setName(hardwareFlavor.getName());
     hardware.setId(hardwareFlavor.getId());
-    hardware.setCores(BigInteger.valueOf(hardwareFlavor.getCores()));
-    hardware.setRam(BigInteger.valueOf(hardwareFlavor.getRam()));
+    hardware.setCores(hardwareFlavor.getCores());
+    hardware.setRam((int) hardwareFlavor.getRam());
     hardware.setDisk(hardwareFlavor.getDisk());
 
     return hardware;

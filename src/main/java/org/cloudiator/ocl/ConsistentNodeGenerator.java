@@ -14,12 +14,13 @@ public class ConsistentNodeGenerator implements NodeGenerator {
   }
 
   @Override
-  public Set<NodeCandidate> getPossibleNodes() {
-    Set<NodeCandidate> consistentNodes = nodeGenerator.getPossibleNodes().stream()
-        .filter(this.constraintChecker::consistent).collect(Collectors.toSet());
-    System.out
-        .println(String.format("%s generated %s consistent nodes", this, consistentNodes.size()));
-    return consistentNodes;
+  public NodeCandidates getPossibleNodes() {
+    Set<NodeCandidate> consistentNodes =
+        nodeGenerator.getPossibleNodes().stream().filter(this.constraintChecker::consistent)
+            .collect(Collectors.toSet());
+    System.out.println(
+        String.format("%s generated %s consistent nodes", this, consistentNodes.size()));
+    return NodeCandidates.of(consistentNodes);
   }
 
 }

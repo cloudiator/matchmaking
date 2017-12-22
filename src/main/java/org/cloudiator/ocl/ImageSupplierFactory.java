@@ -8,7 +8,8 @@ public class ImageSupplierFactory {
 
   private final ImageService imageService;
 
-  @Inject public ImageSupplierFactory(ImageService imageService) {
+  @Inject
+  public ImageSupplierFactory(ImageService imageService) {
     this.imageService = imageService;
   }
 

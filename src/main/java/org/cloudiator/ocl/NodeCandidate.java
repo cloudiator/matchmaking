@@ -1,5 +1,7 @@
 package org.cloudiator.ocl;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import cloudiator.Cloud;
 import cloudiator.CloudiatorFactory;
 import cloudiator.Hardware;
@@ -11,11 +13,11 @@ import javax.annotation.Nullable;
 
 public class NodeCandidate implements Comparable<NodeCandidate> {
 
+  private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorFactory.eINSTANCE;
   private final Hardware hardware;
   private final Image image;
   private final Location location;
   private final Cloud cloud;
-  private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorFactory.eINSTANCE;
   @Nullable
   private Double price = null;
 
@@ -34,6 +36,7 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
     node.setHardware(hardware);
     node.setLocation(location);
     node.setCloud(cloud);
+    node.setPrice(price);
     return node;
   }
 
@@ -42,9 +45,7 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
   }
 
   public Double getPrice() {
-    if (price == null) {
-      price = getNode().getPrice();
-    }
+    checkState(price != null, "price not set");
     return price;
   }
 
@@ -107,18 +108,6 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
         .add("location", location).add("price", price).toString();
   }
 
-  public static class NodeCandidateFactory {
-
-    public NodeCandidateFactory() {
-    }
-
-    public NodeCandidate of(Cloud cloud, Hardware hardware, Image image, Location location,
-        @Nullable Double price) {
-      return new NodeCandidate(cloud, hardware, image, location, price);
-    }
-  }
-
-
   @Override
   public int compareTo(NodeCandidate o) {
     return this.getPrice().compareTo(o.getPrice());
@@ -138,6 +127,17 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
 
   public Cloud getCloud() {
     return cloud;
+  }
+
+  public static class NodeCandidateFactory {
+
+    public NodeCandidateFactory() {
+    }
+
+    public NodeCandidate of(Cloud cloud, Hardware hardware, Image image, Location location,
+        @Nullable Double price) {
+      return new NodeCandidate(cloud, hardware, image, location, price);
+    }
   }
 
 

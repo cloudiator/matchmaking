@@ -17,9 +17,9 @@ import org.cloudiator.ocl.NodeCandidate.NodeCandidateFactory;
 
 public class DefaultNodeGenerator implements NodeGenerator {
 
+  private static final PriceCache PRICE_CACHE = new PriceCache();
   private final NodeCandidateFactory nodeCandidateFactory;
   private final CloudiatorModel cloudiatorModel;
-  private static final PriceCache PRICE_CACHE = new PriceCache();
 
   public DefaultNodeGenerator(NodeCandidateFactory nodeCandidateFactory,
       CloudiatorModel cloudiatorModel) {
@@ -30,13 +30,28 @@ public class DefaultNodeGenerator implements NodeGenerator {
     }
   }
 
+  private static boolean isValidCombination(Image image, Hardware hardware, Location location) {
+    checkNotNull(location, "location is null");
+    String imageLocationId = null;
+    if (image.getLocation() != null) {
+      imageLocationId = image.getLocation().getId();
+    }
+
+    String hardwareLocationId = null;
+    if (hardware.getLocation() != null) {
+      hardwareLocationId = hardware.getLocation().getId();
+    }
+
+    return location.getId().equals(imageLocationId) && location.getId().equals(hardwareLocationId);
+  }
+
   /*
    * (non-Javadoc)
    *
    * @see ocl.NodeGenerator#getPossibleNodes()
    */
   @Override
-  public Set<NodeCandidate> getPossibleNodes() {
+  public NodeCandidates getPossibleNodes() {
     Set<NodeCandidate> nodeCandidates = new HashSet<>();
     for (Cloud cloud : cloudiatorModel.getClouds()) {
       for (Image image : cloud.getImages()) {
@@ -57,22 +72,7 @@ public class DefaultNodeGenerator implements NodeGenerator {
     }
     System.out
         .println(String.format("%s generated all possible nodes: %s", this, nodeCandidates.size()));
-    return nodeCandidates;
-  }
-
-  private static boolean isValidCombination(Image image, Hardware hardware, Location location) {
-    checkNotNull(location, "location is null");
-    String imageLocationId = null;
-    if (image.getLocation() != null) {
-      imageLocationId = image.getLocation().getId();
-    }
-
-    String hardwareLocationId = null;
-    if (hardware.getLocation() != null) {
-      hardwareLocationId = hardware.getLocation().getId();
-    }
-
-    return location.getId().equals(imageLocationId) && location.getId().equals(hardwareLocationId);
+    return NodeCandidates.of(nodeCandidates);
   }
 
   static class PriceCache {

@@ -16,18 +16,6 @@ public class TimeLimit {
     this.duration = duration;
   }
 
-  public long toMillis() {
-    return timeUnit.toMillis(duration);
-  }
-
-  @Override
-  public String toString() {
-    return "TimeLimit{" +
-        "timeUnit=" + timeUnit +
-        ", duration=" + duration +
-        '}';
-  }
-
   public static TimeLimit from(String string) {
     TimeUnit parsedUnit = null;
     for (TimeUnit timeUnit : TimeUnit.values()) {
@@ -39,6 +27,18 @@ public class TimeLimit {
     checkNotNull(parsedUnit, "Could not parse time unit");
     long duration = Long.valueOf(string.replaceAll("[^0-9]+", " ").trim());
     return new TimeLimit(parsedUnit, duration);
+  }
+
+  public long toMillis() {
+    return timeUnit.toMillis(duration);
+  }
+
+  @Override
+  public String toString() {
+    return "TimeLimit{" +
+        "timeUnit=" + timeUnit +
+        ", duration=" + duration +
+        '}';
   }
 
   @Override

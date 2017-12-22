@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import org.cloudiator.choco.ChocoSolver;
+import org.cloudiator.choco.ChocoSolverTesting;
 import org.cloudiator.choco.TimeLimit;
 import org.cloudiator.experiment.Experiment.CloudiatorModelType;
 import org.cloudiator.ocl.OclCsp;
@@ -56,15 +56,15 @@ public class ExperimentRunner {
     PrintWriter smallModelWriter = new PrintWriter("solutionsSmall", "UTF-8");
 
     for (Experiment experiment : experiments) {
-      ChocoSolver chocoSolver = new ChocoSolver(
+      ChocoSolverTesting chocoSolverTesting = new ChocoSolverTesting(
           experiment.getCloudiatorModelType().getCandidates());
 
       for (int rep = 0; rep < experiment.getRepetitions(); rep++) {
         Solution solution = null;
         if (!experiment.isIterative()) {
-          solution = chocoSolver.solveDirect(experiment.getNodeSize(), experiment.getLimit());
+          solution = chocoSolverTesting.solveDirect(experiment.getNodeSize(), experiment.getLimit());
         } else {
-          solution = chocoSolver.solveIteratively(experiment.getNodeSize(), experiment.getLimit());
+          solution = chocoSolverTesting.solveIteratively(experiment.getNodeSize(), experiment.getLimit());
         }
         if (solution != null) {
           experiment.addSolution(solution);

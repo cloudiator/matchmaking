@@ -1,14 +1,14 @@
 package org.cloudiator.experiment;
 
-import org.cloudiator.choco.ChocoSolver;
-import org.cloudiator.choco.TimeLimit;
-import org.cloudiator.experiment.Experiment.CloudiatorModelType;
 import java.math.BigInteger;
 import java.util.DoubleSummaryStatistics;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
+import org.cloudiator.choco.ChocoSolverTesting;
+import org.cloudiator.choco.TimeLimit;
+import org.cloudiator.experiment.Experiment.CloudiatorModelType;
 import org.cloudiator.ocl.NodeCandidate;
 import org.cloudiator.ocl.Solution;
 
@@ -52,7 +52,7 @@ public class ExperimentTest {
     Map<String, Integer> countryCountsCloudHarmony = new HashMap<>();
 
     for (NodeCandidate nodeCandidate : CloudiatorModelType.SMALL.getCandidates()) {
-      String country = nodeCandidate.getLocation().getCountry();
+      String country = nodeCandidate.getLocation().getGeoLocation().getCountry();
       if (countryCountsSmall.containsKey(country)) {
         countryCountsSmall.put(country, countryCountsSmall.get(country) + 1);
       } else {
@@ -61,7 +61,7 @@ public class ExperimentTest {
     }
 
     for (NodeCandidate nodeCandidate : CloudiatorModelType.CLOUD_HARMONY.getCandidates()) {
-      String country = nodeCandidate.getLocation().getCountry();
+      String country = nodeCandidate.getLocation().getGeoLocation().getCountry();
       if (countryCountsCloudHarmony.containsKey(country)) {
         countryCountsCloudHarmony.put(country, countryCountsCloudHarmony.get(country) + 1);
       } else {
@@ -72,10 +72,10 @@ public class ExperimentTest {
     System.out.println(countryCountsSmall);
     System.out.println(countryCountsCloudHarmony);
 
-    ChocoSolver chocoSolver = new ChocoSolver(CloudiatorModelType.SMALL.getCandidates());
+    ChocoSolverTesting chocoSolverTesting = new ChocoSolverTesting(CloudiatorModelType.SMALL.getCandidates());
 
-    final Solution solution5 = chocoSolver.solveDirect(5, new TimeLimit(TimeUnit.MINUTES, 10));
-    final Solution solution6 = chocoSolver.solveDirect(6, new TimeLimit(TimeUnit.MINUTES, 10));
+    final Solution solution5 = chocoSolverTesting.solveDirect(5, new TimeLimit(TimeUnit.MINUTES, 10));
+    final Solution solution6 = chocoSolverTesting.solveDirect(6, new TimeLimit(TimeUnit.MINUTES, 10));
 
     System.out.println(solution5);
     System.out.println(solution6);

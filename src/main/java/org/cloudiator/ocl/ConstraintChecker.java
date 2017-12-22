@@ -14,11 +14,11 @@ import org.eclipse.ocl.xtext.essentialocl.EssentialOCLStandaloneSetup;
 
 public class ConstraintChecker {
 
+  private static OCL ocl = OCL.newInstance(OCL.CLASS_PATH);
+
   static {
     EssentialOCLStandaloneSetup.doSetup();
   }
-
-  private static OCL ocl = OCL.newInstance(OCL.CLASS_PATH);
 
   private final Set<Query> forAllQueries;
   private final Set<Query> otherQueries;
@@ -28,7 +28,7 @@ public class ConstraintChecker {
     forAllQueries = new HashSet<>();
     otherQueries = new HashSet<>();
 
-    for (String constraint : csp.getConstraints()) {
+    for (String constraint : csp.getUnparsedConstraints()) {
       ExpressionInOCL expression = ocl
           .createInvariant(CloudiatorPackage.eINSTANCE.getComponent(), constraint);
       Query query = ocl.createQuery(expression);

@@ -8,12 +8,11 @@ import java.util.Set;
 
 public class IdRequirementInOCL implements IdRequirement, RepresentableAsOCL {
 
-  private final IdRequirement delegate;
-
   private final static String TEMPLATE = "nodes->exists(%s = '%s')";
   private final static String HARDWARE_TEMPLATE = String.format(TEMPLATE, "hardware.id", "%s");
   private final static String LOCATION_TEMPLATE = String.format(TEMPLATE, "location.id", "%s");
   private final static String IMAGE_TEMPLATE = String.format(TEMPLATE, "image.id", "%s");
+  private final IdRequirement delegate;
 
   public IdRequirementInOCL(IdRequirement delegate) {
     checkNotNull(delegate, "delegate is null");

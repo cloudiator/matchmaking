@@ -1,16 +1,20 @@
 package org.cloudiator.experiment;
 
+import cloudiator.Api;
 import cloudiator.Cloud;
+import cloudiator.CloudConfiguration;
+import cloudiator.CloudCredential;
 import cloudiator.CloudType;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorModel;
+import cloudiator.GeoLocation;
 import cloudiator.Hardware;
 import cloudiator.Image;
 import cloudiator.Location;
+import cloudiator.OSArchitecture;
 import cloudiator.OSFamily;
 import cloudiator.OperatingSystem;
 import cloudiator.Price;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +31,7 @@ public class SmallExperimentModelGenerator implements ModelGenerator {
   private static final PriceFunction PRICE_FUNCTION = new ExperimentModelPriceFunction();
 
   private static final int NR = 1;
+  static final double DISK = 1000d;
 
 
   @Override
@@ -36,6 +41,17 @@ public class SmallExperimentModelGenerator implements ModelGenerator {
       Cloud cloud = CLOUDIATOR_FACTORY.createCloud();
       cloud.setId(String.valueOf(i));
       cloud.setType(CloudType.PUBLIC);
+      cloud.setEndpoint("http://cloud" + cloud.getId());
+      CloudCredential cloudCredential = CLOUDIATOR_FACTORY.createCloudCredential();
+      cloudCredential.setUser(userId);
+      cloudCredential.setSecret(userId);
+      cloud.setCloudcredential(cloudCredential);
+      Api api = CLOUDIATOR_FACTORY.createApi();
+      api.setProviderName(cloud.getId());
+      cloud.setApi(api);
+      CloudConfiguration cloudConfiguration = CLOUDIATOR_FACTORY.createCloudConfiguration();
+      cloudConfiguration.setNodeGroup("cloudiator");
+      cloud.setConfiguration(cloudConfiguration);
 
       LocationGenerator locationGenerator = new LocationGenerator(cloud);
       for (Location location : locationGenerator.get()) {
@@ -69,8 +85,6 @@ public class SmallExperimentModelGenerator implements ModelGenerator {
 
   public static class LocationGenerator implements Supplier<List<Location>> {
 
-    private final Cloud cloud;
-
     public static final Map<String, Double> OPTIONS = new HashMap<String, Double>() {{
       put("DE", 1.00);
       put("US", 1.01);
@@ -88,6 +102,7 @@ public class SmallExperimentModelGenerator implements ModelGenerator {
       put("CA", 1.13);
       put("IN", 1.14);
     }};
+    private final Cloud cloud;
 
     private LocationGenerator(Cloud cloud) {
       this.cloud = cloud;
@@ -100,10 +115,15 @@ public class SmallExperimentModelGenerator implements ModelGenerator {
 
       for (String country : OPTIONS.keySet()) {
         Location location = CLOUDIATOR_FACTORY.createLocation();
+        GeoLocation geoLocation = CLOUDIATOR_FACTORY.createGeoLocation();
         location.setName(country);
         location.setProviderId(country);
         location.setId(cloud.getId() + ":" + location.getProviderId());
-        location.setCountry(country);
+        geoLocation.setCountry(country);
+        geoLocation.setCity("Ulm");
+        geoLocation.setLatitude(5.1234);
+        geoLocation.setLongitude(5.1234);
+        location.setGeoLocation(geoLocation);
         locations.add(location);
       }
       return locations;
@@ -146,8 +166,9 @@ public class SmallExperimentModelGenerator implements ModelGenerator {
         hardware.setName(hardware.getProviderId());
         hardware.setId(
             cloud.getId() + ":" + location.getProviderId() + ":" + hardware.getProviderId());
-        hardware.setCores(BigInteger.valueOf(cores));
-        hardware.setRam(BigInteger.valueOf(ram));
+        hardware.setCores(cores);
+        hardware.setRam(ram);
+        hardware.setDisk(DISK);
         hardware.setLocation(location);
         hardwareList.add(hardware);
       }
@@ -158,14 +179,13 @@ public class SmallExperimentModelGenerator implements ModelGenerator {
 
   private static class ImageGenerator implements Supplier<List<Image>> {
 
-    private final Cloud cloud;
-    private final Location location;
-
     private static final Map<String, OSFamily> OPTIONS = new HashMap<String, OSFamily>() {{
       put("ubuntu", OSFamily.UBUNTU);
       //put("debian", OSFamily.DEBIAN);
       //put("rhel", OSFamily.RHEL);
     }};
+    private final Cloud cloud;
+    private final Location location;
 
     private ImageGenerator(Cloud cloud, Location location) {
       this.cloud = cloud;
@@ -184,13 +204,15 @@ public class SmallExperimentModelGenerator implements ModelGenerator {
         image.setId(cloud.getId() + ":" + location.getProviderId() + ":" + image.getProviderId());
         image.setLocation(location);
 
-        OperatingSystem os = CLOUDIATOR_MODEL.getOperatingsystem().stream()
+        OperatingSystem os = CLOUDIATOR_MODEL.getOperatingsystems().stream()
             .filter(operatingSystem -> operatingSystem.getFamily().equals(entry.getValue()))
             .findAny().orElseGet(
                 () -> {
                   OperatingSystem newOs = CLOUDIATOR_FACTORY.createOperatingSystem();
                   newOs.setFamily(entry.getValue());
-                  CLOUDIATOR_MODEL.getOperatingsystem().add(newOs);
+                  newOs.setVersion("1");
+                  newOs.setArchitecture(OSArchitecture.AMD64);
+                  CLOUDIATOR_MODEL.getOperatingsystems().add(newOs);
                   return newOs;
                 });
         image.setOperatingSystem(os);

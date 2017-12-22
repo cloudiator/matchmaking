@@ -19,7 +19,7 @@ public class DiscoveryBasedModelGenerator implements ModelGenerator {
   }
 
   @Override
-  public CloudiatorModel generateModel(String userId) {
+  public CloudiatorModel generateModel(String userId) throws ModelGenerationException {
     final CloudiatorModel cloudiatorModel = CLOUDIATOR_FACTORY.createCloudiatorModel();
     discoveryServiceBasedCloudModelGeneratorFactory.newInstance(userId, cloudiatorModel).generate();
     return cloudiatorModel;

@@ -1,12 +1,11 @@
 package org.cloudiator.ocl;
 
 import cloudiator.Cloud;
-import cloudiator.CloudType;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorModel;
 import cloudiator.CloudiatorPackage;
+import org.cloudiator.converters.CloudConverter;
 import org.cloudiator.messages.Cloud.CloudQueryRequest;
-import org.cloudiator.messaging.ResponseException;
 import org.cloudiator.messaging.services.CloudService;
 
 public class DiscoveryServiceBasedModelGenerator {
@@ -20,6 +19,7 @@ public class DiscoveryServiceBasedModelGenerator {
   private final ImageSupplierFactory imageSupplierFactory;
   private final LocationSupplierFactory locationSupplierFactory;
   private final PriceModelGenerator priceModelGenerator;
+  private final static CloudConverter CLOUD_CONVERTER = new CloudConverter();
 
   public DiscoveryServiceBasedModelGenerator(CloudiatorModel cloudiatorModel, String userId,
       CloudService cloudService, HardwareSupplierFactory hardwareSupplierFactory,
@@ -39,23 +39,11 @@ public class DiscoveryServiceBasedModelGenerator {
     return CloudQueryRequest.newBuilder().setUserId(userId).build();
   }
 
-  public void generate() {
+  public void generate() throws ModelGenerationException {
     try {
       cloudService.getClouds(buildQuery()).getCloudsList().stream().map(c -> {
-        final Cloud cloud = cloudiatorFactory.createCloud();
-        cloud.setId(c.getId());
 
-
-        switch (c.getCloudType()) {
-          case PUBLIC_CLOUD:
-            cloud.setType(CloudType.PUBLIC);
-            break;
-          case PRIVATE_CLOUD:
-            cloud.setType(CloudType.PRIVATE);
-            break;
-          case UNRECOGNIZED:
-            throw new AssertionError("Unknown cloud type " + c.getCloudType());
-        }
+        Cloud cloud = CLOUD_CONVERTER.applyBack(c);
 
         //add locations first as hardware and images need to related to locations
         cloud.getLocations().addAll(locationSupplierFactory.newInstance(cloud, userId).get());
@@ -66,9 +54,9 @@ public class DiscoveryServiceBasedModelGenerator {
 
         return cloud;
       }).forEach(cloud -> cloudiatorModel.getClouds().add(cloud));
-    } catch (ResponseException e) {
-      throw new IllegalStateException(
-          String.format("Could not retrieve cloud list due to error %s", e.getMessage()), e);
+    } catch (Exception e) {
+      throw new ModelGenerationException(
+          String.format("Could not generate model due to error %s", e.getMessage()), e);
     }
   }
 

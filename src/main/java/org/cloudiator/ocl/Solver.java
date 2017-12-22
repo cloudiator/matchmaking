@@ -24,15 +24,15 @@ public class Solver {
   }
 
   @Nullable
-  public Solution solve(OclCsp csp, String userId) throws ParserException {
+  public Solution solve(OclCsp csp, String userId) throws ParserException, ModelGenerationException {
     ConstraintChecker cc = new ConstraintChecker(csp);
 
     LOGGER.debug(String.format("%s is solving CSP %s for user %s", this, csp, userId));
 
-    NodeGenerator nodeGenerator = new DifferentNodeGenerator(
+    NodeGenerator nodeGenerator =
         new ConsistentNodeGenerator(
             new DefaultNodeGenerator(nodeCandidateFactory, modelGenerator.generateModel(userId)),
-            cc), csp);
+            cc);
     SolutionGenerator solutionGenerator = new SolutionGenerator(nodeGenerator);
     long startGeneration = System.currentTimeMillis();
 

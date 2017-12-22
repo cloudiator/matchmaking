@@ -8,7 +8,8 @@ public class LocationSupplierFactory {
 
   private final LocationService locationService;
 
-  @Inject public LocationSupplierFactory(LocationService locationService) {
+  @Inject
+  public LocationSupplierFactory(LocationService locationService) {
     this.locationService = locationService;
   }
 

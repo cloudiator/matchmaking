@@ -24,7 +24,7 @@ public class ImageConverter implements TwoWayConverter<IaasEntities.Image, Image
   public IaasEntities.Image applyBack(Image image) {
     final Builder builder = IaasEntities.Image.newBuilder().setId(image.getId())
         .setProviderId(image.getProviderId())
-        .setOperationSystem(OS_CONVERTER.applyBack(image.getOperatingSystem()));
+        .setOperationSystem(OS_CONVERTER.applyBack(image.getOperatingSystem())).setName(image.getName());
 
     if (image.getLocation() != null) {
       builder.setLocation(LOCATION_CONVERTER.applyBack(image.getLocation()));

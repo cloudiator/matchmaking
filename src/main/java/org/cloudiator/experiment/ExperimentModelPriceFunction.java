@@ -4,8 +4,8 @@ import cloudiator.Cloud;
 import cloudiator.Hardware;
 import cloudiator.Image;
 import cloudiator.Location;
-import org.cloudiator.experiment.LargeModelGenerator.LocationGenerator;
 import java.math.BigDecimal;
+import org.cloudiator.experiment.LargeModelGenerator.LocationGenerator;
 import org.cloudiator.ocl.HardwareBasedPriceFunction;
 import org.cloudiator.ocl.PriceFunction;
 
@@ -29,7 +29,7 @@ public class ExperimentModelPriceFunction implements PriceFunction {
         .doubleValue();
 
     //include location factor
-    double locationFactor = LocationGenerator.OPTIONS.get(location.getCountry());
+    double locationFactor = LocationGenerator.OPTIONS.get(location.getGeoLocation().getCountry());
 
     return (basicPrice + imageCost) * cloudFactor * locationFactor;
   }

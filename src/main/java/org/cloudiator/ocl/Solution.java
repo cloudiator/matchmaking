@@ -46,15 +46,15 @@ public class Solution implements Comparable<Solution> {
     return nodeCandiates.isEmpty();
   }
 
-  public void setTime(float time) {
-    this.time = time;
-  }
-
   public float getTime() {
     if (time == null) {
       throw new IllegalStateException("time not set");
     }
     return time;
+  }
+
+  public void setTime(float time) {
+    this.time = time;
   }
 
   public Double getCosts() {
@@ -71,7 +71,8 @@ public class Solution implements Comparable<Solution> {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("time", getTime()).add("price", getCosts()).add("nodes", nodeCandiates)
+    return MoreObjects.toStringHelper(this).add("time", getTime()).add("price", getCosts())
+        .add("nodes", nodeCandiates)
         .toString();
   }
 

@@ -8,7 +8,8 @@ public class HardwareSupplierFactory {
 
   private final HardwareService hardwareService;
 
-  @Inject public HardwareSupplierFactory(HardwareService hardwareService) {
+  @Inject
+  public HardwareSupplierFactory(HardwareService hardwareService) {
     this.hardwareService = hardwareService;
   }
 

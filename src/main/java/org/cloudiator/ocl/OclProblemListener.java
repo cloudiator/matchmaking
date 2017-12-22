@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
 
 public class OclProblemListener implements Runnable {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(OclProblemListener.class);
   private final MessageInterface messageInterface;
   private final Solver solver;
-  private static final Logger LOGGER = LoggerFactory.getLogger(OclProblemListener.class);
 
   @Inject
   public OclProblemListener(MessageInterface messageInterface, Solver solver) {

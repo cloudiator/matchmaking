@@ -11,8 +11,6 @@ public class Data {
   Map<Integer, Double> optimalSolutionsCloudHarmonyCosts = new HashMap<>();
 
 
-
-
   public void addExperiment(Experiment experiment) {
 
   }

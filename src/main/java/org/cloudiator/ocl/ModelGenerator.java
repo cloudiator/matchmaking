@@ -4,5 +4,5 @@ import cloudiator.CloudiatorModel;
 
 public interface ModelGenerator {
 
-  CloudiatorModel generateModel(String userId);
+  CloudiatorModel generateModel(String userId) throws ModelGenerationException;
 }

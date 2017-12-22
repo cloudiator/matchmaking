@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 
 public class OclServiceModule extends AbstractModule {
 
-  private final OclContext oclContext;
   private static final Logger LOGGER = LoggerFactory.getLogger(OclServiceModule.class);
+  private final OclContext oclContext;
 
   public OclServiceModule(OclContext oclContext) {
     checkNotNull(oclContext, "oclContext is null");

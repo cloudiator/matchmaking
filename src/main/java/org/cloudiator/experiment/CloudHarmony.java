@@ -9,6 +9,7 @@ import cloudiator.CloudCredential;
 import cloudiator.CloudType;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorModel;
+import cloudiator.GeoLocation;
 import cloudiator.Hardware;
 import cloudiator.Image;
 import cloudiator.Location;
@@ -24,7 +25,6 @@ import io.github.cloudiator.cloudharmony.model.ComputeInstanceTypePrice;
 import io.github.cloudiator.cloudharmony.model.ComputeProperties;
 import io.github.cloudiator.cloudharmony.model.MarketshareSnapshot.ServiceTypeEnum;
 import io.github.cloudiator.cloudharmony.model.ServiceRegion;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.cloudiator.ocl.ModelGenerator;
@@ -45,27 +46,6 @@ public class CloudHarmony implements ModelGenerator {
   private static final CloudiatorModel CLOUDIATOR_MODEL = CLOUDIATOR_FACTORY
       .createCloudiatorModel();
   private static final Map<String, Image> images = generateImages();
-
-  private List<String> services() throws ApiException {
-    return new ArrayList<>(API_API
-        .getServices(null, Collections.singletonList(ServiceTypeEnum.COMPUTE.toString()), null)
-        .getIds());
-  }
-
-  private Set<CloudService> cloudServices() throws ApiException {
-    return services().stream().map(s -> {
-      try {
-        return API_API.getService(s, null);
-      } catch (ApiException e) {
-        return null;
-      }
-    }).filter(cloudService -> {
-      if (cloudService == null) {
-        return false;
-      }
-      return true;
-    }).collect(Collectors.toSet());
-  }
 
   private static Image generateCloudAndLocationUniqueImage(Image image, Cloud cloud,
       Location location) {
@@ -88,7 +68,7 @@ public class CloudHarmony implements ModelGenerator {
     ubuntu.setProviderId("linux.ubuntu");
     ubuntu.setName("linux.ubuntu");
     OperatingSystem ubuntuOs = CLOUDIATOR_FACTORY.createOperatingSystem();
-    CLOUDIATOR_MODEL.getOperatingsystem().add(ubuntuOs);
+    CLOUDIATOR_MODEL.getOperatingsystems().add(ubuntuOs);
     ubuntuOs.setFamily(OSFamily.UBUNTU);
     ubuntu.setOperatingSystem(ubuntuOs);
     images.put(ubuntu.getId(), ubuntu);
@@ -98,7 +78,7 @@ public class CloudHarmony implements ModelGenerator {
     windows2008.setProviderId("windows.2008");
     windows2008.setName("windows.2008");
     OperatingSystem windows2008Os = CLOUDIATOR_FACTORY.createOperatingSystem();
-    CLOUDIATOR_MODEL.getOperatingsystem().add(windows2008Os);
+    CLOUDIATOR_MODEL.getOperatingsystems().add(windows2008Os);
     windows2008Os.setFamily(OSFamily.WINDOWS);
     windows2008Os.setVersion("2008");
     windows2008.setOperatingSystem(windows2008Os);
@@ -109,7 +89,7 @@ public class CloudHarmony implements ModelGenerator {
     suse.setProviderId("linux.suse");
     suse.setName("linux.suse");
     OperatingSystem suseOs = CLOUDIATOR_FACTORY.createOperatingSystem();
-    CLOUDIATOR_MODEL.getOperatingsystem().add(suseOs);
+    CLOUDIATOR_MODEL.getOperatingsystems().add(suseOs);
     suseOs.setFamily(OSFamily.SUSE);
     suse.setOperatingSystem(suseOs);
     images.put(suse.getId(), suse);
@@ -119,7 +99,7 @@ public class CloudHarmony implements ModelGenerator {
     freebsd.setProviderId("freeBSD");
     freebsd.setName("freeBSD");
     OperatingSystem freebsdOs = CLOUDIATOR_FACTORY.createOperatingSystem();
-    CLOUDIATOR_MODEL.getOperatingsystem().add(freebsdOs);
+    CLOUDIATOR_MODEL.getOperatingsystems().add(freebsdOs);
     freebsdOs.setFamily(OSFamily.FREEBSD);
     freebsd.setOperatingSystem(freebsdOs);
     images.put(freebsd.getId(), freebsd);
@@ -129,7 +109,7 @@ public class CloudHarmony implements ModelGenerator {
     windows2012.setProviderId("windows.2012");
     windows2012.setName("windows.2012");
     OperatingSystem windows2012Os = CLOUDIATOR_FACTORY.createOperatingSystem();
-    CLOUDIATOR_MODEL.getOperatingsystem().add(windows2012Os);
+    CLOUDIATOR_MODEL.getOperatingsystems().add(windows2012Os);
     windows2012Os.setFamily(OSFamily.WINDOWS);
     windows2012Os.setVersion("2012");
     windows2012.setOperatingSystem(windows2012Os);
@@ -140,7 +120,7 @@ public class CloudHarmony implements ModelGenerator {
     debian.setProviderId("linux.debian");
     debian.setName("linux.debian");
     OperatingSystem debianOs = CLOUDIATOR_FACTORY.createOperatingSystem();
-    CLOUDIATOR_MODEL.getOperatingsystem().add(debianOs);
+    CLOUDIATOR_MODEL.getOperatingsystems().add(debianOs);
     debianOs.setFamily(OSFamily.DEBIAN);
     debian.setOperatingSystem(debianOs);
     images.put(debian.getId(), debian);
@@ -150,7 +130,7 @@ public class CloudHarmony implements ModelGenerator {
     gentoo.setProviderId("linux.gentoo");
     gentoo.setName("linux.gentoo");
     OperatingSystem gentooOs = CLOUDIATOR_FACTORY.createOperatingSystem();
-    CLOUDIATOR_MODEL.getOperatingsystem().add(gentooOs);
+    CLOUDIATOR_MODEL.getOperatingsystems().add(gentooOs);
     gentooOs.setFamily(OSFamily.GENTOO);
     gentoo.setOperatingSystem(gentooOs);
     images.put(gentoo.getId(), gentoo);
@@ -160,7 +140,7 @@ public class CloudHarmony implements ModelGenerator {
     rhel.setProviderId("linux.rhel");
     rhel.setName("linux.rhel");
     OperatingSystem rhelOs = CLOUDIATOR_FACTORY.createOperatingSystem();
-    CLOUDIATOR_MODEL.getOperatingsystem().add(rhelOs);
+    CLOUDIATOR_MODEL.getOperatingsystems().add(rhelOs);
     rhelOs.setFamily(OSFamily.RHEL);
     rhel.setOperatingSystem(rhelOs);
     images.put(rhel.getId(), rhel);
@@ -170,7 +150,7 @@ public class CloudHarmony implements ModelGenerator {
     fedora.setProviderId("linux.fedora");
     fedora.setName("linux.fedora");
     OperatingSystem fedoraOs = CLOUDIATOR_FACTORY.createOperatingSystem();
-    CLOUDIATOR_MODEL.getOperatingsystem().add(fedoraOs);
+    CLOUDIATOR_MODEL.getOperatingsystems().add(fedoraOs);
     fedoraOs.setFamily(OSFamily.FEDORA);
     fedora.setOperatingSystem(fedoraOs);
     images.put(fedora.getId(), fedora);
@@ -180,7 +160,7 @@ public class CloudHarmony implements ModelGenerator {
     centos.setProviderId("linux.centos");
     centos.setName("linux.centos");
     OperatingSystem centosOs = CLOUDIATOR_FACTORY.createOperatingSystem();
-    CLOUDIATOR_MODEL.getOperatingsystem().add(centosOs);
+    CLOUDIATOR_MODEL.getOperatingsystems().add(centosOs);
     centosOs.setFamily(OSFamily.CENTOS);
     centos.setOperatingSystem(centosOs);
     images.put(centos.getId(), centos);
@@ -188,13 +168,41 @@ public class CloudHarmony implements ModelGenerator {
     return images;
   }
 
+  private List<String> services() throws ApiException {
+    return new ArrayList<>(API_API
+        .getServices(null, Collections.singletonList(ServiceTypeEnum.COMPUTE.toString()), null)
+        .getIds());
+  }
+
+  private static class CloudServiceFilter implements Predicate<CloudService> {
+
+    @Override
+    public boolean test(CloudService cloudService) {
+      return true;
+    }
+  }
+
+  private Set<CloudService> cloudServices() throws ApiException {
+    return services().stream().map(s -> {
+      try {
+        return API_API.getService(s, null);
+      } catch (ApiException e) {
+        return null;
+      }
+    }).filter(cloudService -> {
+      if (cloudService == null) {
+        return false;
+      }
+      return true;
+    }).filter(new CloudServiceFilter()).collect(Collectors.toSet());
+  }
 
   @Override
   public CloudiatorModel generateModel(String userId) {
     try {
       for (CloudService cloudService : cloudServices()) {
         Api api = CLOUDIATOR_FACTORY.createApi();
-        api.setProviderName(cloudService.getName());
+        api.setProviderName(cloudService.getServiceId());
         CloudCredential cc = CLOUDIATOR_FACTORY.createCloudCredential();
         cc.setUser("cloudHarmony");
         cc.setSecret("cloudHarmonySecret");
@@ -202,7 +210,7 @@ public class CloudHarmony implements ModelGenerator {
         cloudConfiguration.setNodeGroup("cloudiator");
         Cloud cloud = CLOUDIATOR_FACTORY.createCloud();
         cloud.setType(CloudType.PUBLIC);
-        cloud.setId(cloudService.getServiceId());
+        cloud.setId(cloudService.getServiceId().replaceAll(":", "_"));
         cloud.setApi(api);
         cloud.setCloudcredential(cc);
         cloud.setConfiguration(cloudConfiguration);
@@ -230,16 +238,19 @@ public class CloudHarmony implements ModelGenerator {
                   .getRegions().size() + " service regions.");
 
           Location location = CLOUDIATOR_FACTORY.createLocation();
-          location.setCity(serviceRegion.getCity());
-          location.setCountry(serviceRegion.getCountry().toString());
-          location.setLatitude(serviceRegion.getLocationLat().doubleValue());
-          location.setLongitude(serviceRegion.getLocationLong().doubleValue());
+          GeoLocation geoLocation = CLOUDIATOR_FACTORY.createGeoLocation();
+          geoLocation.setCity(serviceRegion.getCity());
+          geoLocation.setCountry(serviceRegion.getCountry().toString());
+          geoLocation.setLatitude(serviceRegion.getLocationLat().doubleValue());
+          geoLocation.setLongitude(serviceRegion.getLocationLong().doubleValue());
+          location.setGeoLocation(geoLocation);
           location.setId(cloud.getId() + serviceRegion.getProviderCode());
+          location.setName(serviceRegion.getProviderCode());
           location.setProviderId(serviceRegion.getProviderCode());
           cloud.getLocations().add(location);
 
           ComputeProperties computeProperties = computePropertiesForCloudServiceAndRegion(
-              cloud.getId(), location.getProviderId());
+              cloud.getApi().getProviderName(), location.getProviderId());
 
           if (computeProperties != null) {
             System.out.println("Analyzing compute properties: " + computeProperties.getName());
@@ -249,7 +260,8 @@ public class CloudHarmony implements ModelGenerator {
                   "Analyzing compute instance type: " + instanceType + " of " + computeProperties
                       .getInstanceTypes().size() + " instance types.");
 
-              ComputeInstanceType computeInstanceType = computeInstanceType(cloud.getId(),
+              ComputeInstanceType computeInstanceType = computeInstanceType(
+                  cloud.getApi().getProviderName(),
                   instanceType, location.getProviderId());
 
               if (computeInstanceType != null) {
@@ -257,13 +269,13 @@ public class CloudHarmony implements ModelGenerator {
                 Hardware hardware = CLOUDIATOR_FACTORY.createHardware();
                 hardware.setId(location.getId() + instanceType);
                 hardware.setProviderId(instanceType);
-                hardware.setCores(computeInstanceType.getCpuCores().toBigInteger());
+                hardware.setName(instanceType);
+                hardware.setCores(computeInstanceType.getCpuCores().intValue());
                 if (computeInstanceType.getLocalStorage() != null) {
-                  hardware.setDisk(computeInstanceType.getLocalStorage().floatValue());
+                  hardware.setDisk(computeInstanceType.getLocalStorage().doubleValue());
                 }
                 hardware.setRam(
-                    computeInstanceType.getMemory().toBigInteger()
-                        .multiply(BigInteger.valueOf(1000)));
+                    computeInstanceType.getMemory().intValue() * 1000);
                 hardware.setLocation(location);
                 cloud.getHardwareList().add(hardware);
 
