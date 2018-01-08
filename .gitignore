@@ -3,3 +3,4 @@ target
 .idea
 ocl.iml
 src/main/resources/application.conf
+/logs/
