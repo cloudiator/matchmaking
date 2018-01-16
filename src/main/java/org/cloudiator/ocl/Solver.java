@@ -5,7 +5,6 @@ import cloudiator.CloudiatorPackage;
 import com.google.inject.Inject;
 import javax.annotation.Nullable;
 import org.cloudiator.ocl.NodeCandidate.NodeCandidateFactory;
-import org.eclipse.ocl.pivot.utilities.ParserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +12,7 @@ public class Solver {
 
   private static final CloudiatorFactory cloudiatorFactory = CloudiatorPackage.eINSTANCE
       .getCloudiatorFactory();
-  private static final NodeCandidateFactory nodeCandidateFactory = new NodeCandidateFactory();
+  private static final NodeCandidateFactory nodeCandidateFactory = NodeCandidateFactory.create();
   private static final Logger LOGGER = LoggerFactory.getLogger(Solver.class);
 
   private final ModelGenerator modelGenerator;
@@ -24,8 +23,8 @@ public class Solver {
   }
 
   @Nullable
-  public Solution solve(OclCsp csp, String userId) throws ParserException, ModelGenerationException {
-    ConstraintChecker cc = new ConstraintChecker(csp);
+  public Solution solve(OclCsp csp, String userId) throws ModelGenerationException {
+    ConstraintChecker cc = ConstraintChecker.create(csp);
 
     LOGGER.debug(String.format("%s is solving CSP %s for user %s", this, csp, userId));
 

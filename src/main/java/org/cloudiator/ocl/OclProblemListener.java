@@ -34,12 +34,13 @@ public class OclProblemListener implements Runnable {
 
               String userId = solutionRequest.getUserId();
 
-              OclCsp csp = OclCsp.ofConstraints(
-                  solutionRequest.getProblem().getRequirementsList().stream().map(
-                      OclRequirement::getConstraint).collect(
-                      Collectors.toSet()));
-
               try {
+
+                OclCsp csp = OclCsp.ofConstraints(
+                    solutionRequest.getProblem().getRequirementsList().stream().map(
+                        OclRequirement::getConstraint).collect(
+                        Collectors.toSet()));
+
                 Solution solution = solver.solve(csp, userId);
 
                 if (solution == null) {
@@ -63,12 +64,13 @@ public class OclProblemListener implements Runnable {
                 messageInterface.reply(id, matchmakingResponseBuilder.build());
 
               } catch (Exception e) {
-                LOGGER.error(String.format("Error while solving the problem %s.", csp), e);
+                LOGGER.error(String.format("Error while solving the problem: %s.", e.getMessage()),
+                    e);
                 messageInterface.reply(MatchmakingResponse.class, id,
                     Error.newBuilder().setCode(500)
                         .setMessage(
                             String
-                                .format("An error occurred while solving the problem %s: %s", csp,
+                                .format("An error occurred while solving the problem: %s",
                                     e.getMessage()))
                         .build());
               }

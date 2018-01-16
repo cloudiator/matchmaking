@@ -1,22 +1,88 @@
 package org.cloudiator.choco;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import cloudiator.CloudiatorPackage.Literals;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import org.chocosolver.solver.variables.IntVar;
 import org.cloudiator.EMFUtil;
+import org.cloudiator.ocl.OclCsp;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.ocl.pivot.CallExp;
+import org.eclipse.ocl.pivot.LoopExp;
+import org.eclipse.ocl.pivot.OCLExpression;
+import org.eclipse.ocl.pivot.PropertyCallExp;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ClassAttributeHandler {
 
   private final ModelGenerationContext modelGenerationContext;
   private final EMFUtil emfUtil;
+  private static final Logger LOGGER = LoggerFactory.getLogger(ClassAttributeHandler.class);
+  private final AttributeCacheLoader attributeCacheLoader = new AttributeCacheLoader();
+  private RelevantAttributeCache relevantAttributeCache = null;
+
+  private static class RelevantAttributeCache {
+
+    private final Set<EAttribute> cache = new HashSet<>();
+
+    private void store(EAttribute eAttribute) {
+      this.cache.add(eAttribute);
+    }
+
+    private boolean check(EAttribute eAttribute) {
+      return cache.contains(eAttribute);
+    }
+
+  }
+
+  private class AttributeCacheLoader {
+
+    private final Set<EAttribute> mandatoryAttributes = new HashSet<EAttribute>() {{
+      add((EAttribute) Literals.PRICE.getEStructuralFeature("price"));
+    }};
+
+    private void loadAttributeCache(OclCsp oclCsp) {
+      checkState(relevantAttributeCache == null, "Attribute cache already loaded");
+      relevantAttributeCache = new RelevantAttributeCache();
+      mandatoryAttributes.forEach(eAttribute -> relevantAttributeCache.store(eAttribute));
+      oclCsp.getConstraints().forEach(
+          expressionInOCL -> handleOclExpression(expressionInOCL.getOwnedBody()));
+    }
+
+    private void handleOclExpression(OCLExpression oclExpression) {
+      if (oclExpression instanceof CallExp) {
+        this.handleOclExpression(((CallExp) oclExpression).getOwnedSource());
+      }
+      if (oclExpression instanceof LoopExp) {
+        this.handleOclExpression(((LoopExp) oclExpression).getOwnedBody());
+      }
+      if (oclExpression instanceof PropertyCallExp) {
+        final EObject esObject = ((PropertyCallExp) oclExpression).getReferredProperty()
+            .getESObject();
+        if (esObject instanceof EAttribute) {
+          EAttribute eAttribute = (EAttribute) esObject;
+          relevantAttributeCache.store(eAttribute);
+        }
+      }
+    }
+
+
+  }
 
   ClassAttributeHandler(ModelGenerationContext modelGenerationContext) {
     this.modelGenerationContext = modelGenerationContext;
     this.emfUtil = EMFUtil.of(modelGenerationContext.getCloudiatorModel());
+    attributeCacheLoader.loadAttributeCache(modelGenerationContext.getOclCsp());
+  }
+
+  private boolean isRelevant(EAttribute eAttribute) {
+    return eAttribute.isID() || relevantAttributeCache.check(eAttribute);
   }
 
 
@@ -55,17 +121,22 @@ public class ClassAttributeHandler {
       modelGenerationContext.getVariableStore()
           .storeIdVariable(node, eClass, intVar);
 
-      System.out.println(String.format("Generating variable %s to represent artificial OID for class %s for node %s.",intVar,eClass.getName(),node));
+      LOGGER.debug(String
+          .format("Generating variable %s to represent artificial OID for class %s for node %s.",
+              intVar, eClass.getName(), node));
 
     }
-
 
 
   }
 
   private void handleAttributesOfClass(EClass eClass) {
     for (EAttribute eAttribute : eClass.getEAllAttributes()) {
-      handleAttribute(eAttribute);
+      if (isRelevant(eAttribute)) {
+        handleAttribute(eAttribute);
+      }
+      LOGGER.debug(String
+          .format("Skipping attribute %s as it is not relevant for the problem.", eAttribute));
     }
   }
 
@@ -89,7 +160,7 @@ public class ClassAttributeHandler {
 
       modelGenerationContext.getVariableStore().storeVariable(i, eAttribute, intVar);
 
-      System.out.println(String
+      LOGGER.debug(String
           .format("Adding new variable %s to represent attribute %s of class %s of node %s.",
               intVar, eAttribute.getName(), eAttribute.getContainerClass().getName(), i));
     }

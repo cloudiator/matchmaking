@@ -4,9 +4,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import cloudiator.CloudiatorPackage.Literals;
 import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.Variable;
@@ -15,11 +12,14 @@ import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RelationshipHandler {
 
   private final ModelGenerationContext modelGenerationContext;
   private final EMFUtil emfUtil;
+  private static final Logger LOGGER = LoggerFactory.getLogger(RelationshipHandler.class);
 
   RelationshipHandler(ModelGenerationContext modelGenerationContext) {
     this.modelGenerationContext = modelGenerationContext;
@@ -32,6 +32,13 @@ public class RelationshipHandler {
     //handleRelationship(Literals.NODE__IMAGE);
     //handleRelationship(Literals.NODE__HARDWARE);
     //handleRelationship(Literals.NODE__LOCATION);
+
+    handleRelationship(Literals.IMAGE__CLOUD);
+    handleRelationship(Literals.HARDWARE__CLOUD);
+    handleRelationship(Literals.LOCATION__CLOUD);
+
+    handleRelationship(Literals.IMAGE__LOCATION);
+    handleRelationship(Literals.HARDWARE__LOCATION);
 
     handleRelationship(Literals.CLOUD__API);
     handleRelationship(Literals.CLOUD__CLOUDCREDENTIAL);
@@ -79,7 +86,7 @@ public class RelationshipHandler {
             .arithm(remoteIdVariable, "=", remoteId);
         modelGenerationContext.getModel().ifThen(owningEqual, remoteEqual);
 
-        System.out.println(String.format(
+        LOGGER.debug(String.format(
             "Adding new implies constraint to express relationship between class %s and %s: %s => %s",
             owing.getName(), remote.getName(), owningEqual, remoteEqual));
 

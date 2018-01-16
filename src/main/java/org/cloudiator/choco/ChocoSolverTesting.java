@@ -657,7 +657,7 @@ public class ChocoSolverTesting {
     }
     model.or(countryConstraints.toArray(new Constraint[countryConstraints.size()])).post();
 
-    //constraints.add("nodes->select(n | n.hardware.cores > 4)->size() >= 2");
+    //constraints.add("nodes->select(n | n.hardware.cores >= 4)->size() >= 2");
 
     IntVar limit = model.intVar(0, numberOfNodes);
     model.arithm(limit, ">=", 2).post();

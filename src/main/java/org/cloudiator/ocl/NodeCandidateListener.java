@@ -39,14 +39,14 @@ public class NodeCandidateListener implements Runnable {
             final CloudiatorModel cloudiatorModel = modelGenerator
                 .generateModel(content.getUserId());
             final DefaultNodeGenerator defaultNodeGenerator = new DefaultNodeGenerator(
-                new NodeCandidateFactory(), cloudiatorModel);
+                NodeCandidateFactory.create(), cloudiatorModel);
 
             OclCsp oclCsp = OclCsp
                 .ofRequirements(REQUIREMENT_CONVERTER.apply(content.getRequirements()).stream().map(
                     requirement -> (RepresentableAsOCL) requirement).collect(Collectors.toList()));
 
             final ConsistentNodeGenerator consistentNodeGenerator = new ConsistentNodeGenerator(
-                defaultNodeGenerator, new ConstraintChecker(oclCsp));
+                defaultNodeGenerator, ConstraintChecker.create(oclCsp));
 
             messageInterface
                 .reply(id, NodeCandidateRequestResponse.newBuilder().addAllCandidates(

@@ -131,7 +131,11 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
 
   public static class NodeCandidateFactory {
 
-    public NodeCandidateFactory() {
+    private NodeCandidateFactory() {
+    }
+
+    public static NodeCandidateFactory create() {
+      return new NodeCandidateFactory();
     }
 
     public NodeCandidate of(Cloud cloud, Hardware hardware, Image image, Location location,

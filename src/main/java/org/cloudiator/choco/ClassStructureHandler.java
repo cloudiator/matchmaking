@@ -1,5 +1,7 @@
 package org.cloudiator.choco;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import cloudiator.CloudiatorPackage.Literals;
 import javax.annotation.Nullable;
 import org.chocosolver.solver.constraints.Constraint;
@@ -9,11 +11,14 @@ import org.cloudiator.EMFUtil;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ClassStructureHandler {
 
   private final ModelGenerationContext modelGenerationContext;
   private final EMFUtil emfUtil;
+  private static final Logger LOGGER = LoggerFactory.getLogger(ClassStructureHandler.class);
 
   public ClassStructureHandler(ModelGenerationContext modelGenerationContext) {
     this.modelGenerationContext = modelGenerationContext;
@@ -50,7 +55,14 @@ public class ClassStructureHandler {
             //the attribute variable
             Variable attribute = modelGenerationContext.getVariableStore().getVariables(node)
                 .get(eAttribute);
-            //id equals constraint
+
+            //if attribute variable does not exists we don't need it as its irrelevant
+            if (attribute == null) {
+              continue;
+            }
+
+            checkState(idVariable != null, "id variable is null");
+            checkState(attribute != null, "attribute variable is null");
 
             //value of the id field
             int idValue;
@@ -73,10 +85,11 @@ public class ClassStructureHandler {
             //add implies constraint
             modelGenerationContext.getModel().ifThen(idEqual, attributeEqual);
 
-            System.out.println(
+            LOGGER.debug(
                 String.format(
                     "Adding new implies constraint to express structure for attribute %s of class %s: %s => %s",
-                    eAttribute.getName(), eAttribute.getEContainingClass().getName(), idEqual, attributeEqual));
+                    eAttribute.getName(), eAttribute.getEContainingClass().getName(), idEqual,
+                    attributeEqual));
 
           }
         }

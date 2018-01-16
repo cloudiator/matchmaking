@@ -16,7 +16,6 @@ import org.cloudiator.ocl.ModelGenerationException;
 import org.cloudiator.ocl.ModelGenerator;
 import org.cloudiator.ocl.NodeCandidate;
 import org.cloudiator.ocl.Solution;
-import org.eclipse.ocl.pivot.utilities.ParserException;
 
 public class Experiment {
 
@@ -151,14 +150,10 @@ public class Experiment {
 
     public Set<NodeCandidate> getCandidates() {
       if (this.candidates == null) {
-        try {
-          this.candidates = new ConsistentNodeGenerator(
-              new DefaultNodeGenerator(ExperimentCSP.NODE_CANDIDATE_FACTORY,
-                  getCloudiatorModel()),
-              new ConstraintChecker(ExperimentCSP.CSP)).getPossibleNodes();
-        } catch (ParserException e) {
-          throw new ExceptionInInitializerError(e);
-        }
+        this.candidates = new ConsistentNodeGenerator(
+            new DefaultNodeGenerator(ExperimentCSP.NODE_CANDIDATE_FACTORY,
+                getCloudiatorModel()),
+            ConstraintChecker.create(ExperimentCSP.CSP)).getPossibleNodes();
       }
       return candidates;
     }

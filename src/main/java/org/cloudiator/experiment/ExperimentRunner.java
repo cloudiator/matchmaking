@@ -15,13 +15,14 @@ import org.cloudiator.choco.TimeLimit;
 import org.cloudiator.experiment.Experiment.CloudiatorModelType;
 import org.cloudiator.ocl.OclCsp;
 import org.cloudiator.ocl.Solution;
+import org.eclipse.ocl.pivot.utilities.ParserException;
 
 public class ExperimentRunner {
 
   private static final Injector INJECTOR = Guice.createInjector(new ExperimentModule());
 
   public static void main(String[] args)
-      throws FileNotFoundException, UnsupportedEncodingException {
+      throws FileNotFoundException, UnsupportedEncodingException, ParserException {
 
     Set<String> constraints = new HashSet<>();
 

@@ -10,22 +10,16 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public class NodeCandidates implements Set<NodeCandidate> {
+public class NodeCandidates implements Set<NodeCandidate>, NodeGenerator {
 
   private final Set<NodeCandidate> nodeCandidates;
 
   private NodeCandidates(Set<NodeCandidate> nodeCandidates) {
-    nodeCandidates = ImmutableSet.copyOf(this.nodeCandidates = nodeCandidates);
+    this.nodeCandidates = ImmutableSet.copyOf(nodeCandidates);
   }
 
   public static NodeCandidates of(Set<NodeCandidate> nodeCandidates) {
     return new NodeCandidates(nodeCandidates);
-  }
-
-  public void importToModel(CloudiatorModel cloudiatorModel) {
-    for (NodeCandidate nodeCandidate : nodeCandidates) {
-      cloudiatorModel.getNodes().add(nodeCandidate.getNode());
-    }
   }
 
   @Override
@@ -126,5 +120,10 @@ public class NodeCandidates implements Set<NodeCandidate> {
   @Override
   public void forEach(Consumer<? super NodeCandidate> consumer) {
     nodeCandidates.forEach(consumer);
+  }
+
+  @Override
+  public NodeCandidates getPossibleNodes() {
+    return this;
   }
 }
