@@ -8,9 +8,9 @@
     <artifactId>project</artifactId>
     <version>0.3.0-SNAPSHOT</version>
   </parent>
-  <artifactId>ocl</artifactId>
+  <artifactId>matchmaking</artifactId>
   <packaging>jar</packaging>
-  <name>ocl</name>
+  <name>matchmaking</name>
   <version>0.3.0-SNAPSHOT</version>
 
   <repositories>
