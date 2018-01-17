@@ -2,25 +2,27 @@ package org.cloudiator.ocl;
 
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import org.cloudiator.converters.RequirementConverter;
+import org.cloudiator.domain.RepresentableAsOCL;
 import org.cloudiator.messages.General.Error;
-import org.cloudiator.messages.entities.CommonEntities.OclRequirement;
 import org.cloudiator.messages.entities.IaasEntities.VirtualMachineRequest;
+import org.cloudiator.messages.entities.Matchmaking.MatchmakingRequest;
 import org.cloudiator.messages.entities.Matchmaking.MatchmakingResponse;
 import org.cloudiator.messages.entities.Matchmaking.MatchmakingResponse.Builder;
-import org.cloudiator.messages.entities.Matchmaking.OclSolutionRequest;
 import org.cloudiator.messaging.MessageInterface;
 import org.cloudiator.messaging.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OclProblemListener implements Runnable {
+public class MatchmakingRequestListener implements Runnable {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(OclProblemListener.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MatchmakingRequestListener.class);
   private final MessageInterface messageInterface;
   private final Solver solver;
+  private static final RequirementConverter REQUIREMENT_CONVERTER = new RequirementConverter();
 
   @Inject
-  public OclProblemListener(MessageInterface messageInterface, Solver solver) {
+  public MatchmakingRequestListener(MessageInterface messageInterface, Solver solver) {
     this.messageInterface = messageInterface;
     this.solver = solver;
   }
@@ -29,25 +31,28 @@ public class OclProblemListener implements Runnable {
   @Override
   public void run() {
     Subscription subscribe = messageInterface
-        .subscribe(OclSolutionRequest.class, OclSolutionRequest.parser(),
-            (id, solutionRequest) -> {
+        .subscribe(MatchmakingRequest.class, MatchmakingRequest.parser(),
+            (id, matchmakingRequest) -> {
 
-              String userId = solutionRequest.getUserId();
+              String userId = matchmakingRequest.getUserId();
 
               try {
 
-                OclCsp csp = OclCsp.ofConstraints(
-                    solutionRequest.getProblem().getRequirementsList().stream().map(
-                        OclRequirement::getConstraint).collect(
-                        Collectors.toSet()));
+                OclCsp oclCsp = OclCsp
+                    .ofRequirements(
+                        REQUIREMENT_CONVERTER.apply(matchmakingRequest.getRequirements()).stream()
+                            .map(
+                                requirement -> (RepresentableAsOCL) requirement)
+                            .collect(Collectors.toList()));
 
-                Solution solution = solver.solve(csp, userId);
+                Solution solution = solver.solve(oclCsp, userId);
 
                 if (solution == null) {
                   messageInterface.reply(MatchmakingResponse.class, id,
                       Error.newBuilder().setCode(400)
                           .setMessage(
-                              String.format("Could not find a solution for the problem %s.", csp))
+                              String
+                                  .format("Could not find a solution for the problem %s.", oclCsp))
                           .build());
                   return;
                 }

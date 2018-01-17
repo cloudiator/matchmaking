@@ -51,7 +51,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>org.cloudiator.ocl.OclAgent</mainClass>
+              <mainClass>org.cloudiator.ocl.MatchmakingAgent</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>

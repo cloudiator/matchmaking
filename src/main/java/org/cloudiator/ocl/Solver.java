@@ -50,6 +50,7 @@ public class Solver {
     Solution solution = bestFit.solve();
 
     long solvingTime = System.currentTimeMillis() - startSolving;
+    solution.setTime(solvingTime);
 
     LOGGER.debug(String
         .format("%s found a solution %s for CSP %s in %s milliseconds", this, solution, csp,

@@ -8,7 +8,7 @@ import org.cloudiator.messaging.kafka.KafkaMessagingModule;
 import org.cloudiator.messaging.services.MessageServiceModule;
 import org.eclipse.ocl.pivot.utilities.ParserException;
 
-public class OclAgent {
+public class MatchmakingAgent {
 
   private final static Injector injector = Guice
       .createInjector(new MessageServiceModule(),
@@ -16,12 +16,12 @@ public class OclAgent {
           new KafkaMessagingModule(new KafkaContext(
               Configuration.conf().getConfig("kafka"))));
 
-  public OclAgent() {
+  public MatchmakingAgent() {
 
   }
 
   public static void main(String[] args) throws ParserException {
-    injector.getInstance(OclProblemListener.class).run();
+    injector.getInstance(MatchmakingRequestListener.class).run();
     injector.getInstance(NodeCandidateListener.class).run();
   }
 
