@@ -3,6 +3,7 @@ package org.cloudiator.choco;
 import static com.google.common.base.Preconditions.checkState;
 
 import cloudiator.CloudiatorPackage.Literals;
+import com.google.common.base.Supplier;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -111,9 +112,16 @@ public class ClassAttributeHandler {
 
   private void addArtificialId(EClass eClass) {
 
-    final int[] domain = emfUtil.getAllObjectsOfClass(eClass).stream().mapToInt(
-        eObject -> modelGenerationContext.getOidGenerator().generateIdFor(eClass, eObject))
-        .toArray();
+    final Collection<EObject> allObjectsOfClass = emfUtil.getAllObjectsOfClass(eClass);
+
+    int[] domain;
+    if (allObjectsOfClass.isEmpty()) {
+      domain = new int[]{modelGenerationContext.getOidGenerator().generateIdFor(eClass, null)};
+    } else {
+      domain = allObjectsOfClass.stream().mapToInt(
+          eObject -> modelGenerationContext.getOidGenerator().generateIdFor(eClass, eObject))
+          .toArray();
+    }
 
     for (int node = 1; node <= modelGenerationContext.nodeSize(); node++) {
       String name = String.format("%s.OID - %s", eClass.getName(), node);
@@ -154,9 +162,19 @@ public class ClassAttributeHandler {
             String.format("Domain of variable %s is empty.", generateVariableName(eAttribute, i)));
       }
 
-      final IntVar intVar = modelGenerationContext.getModel()
-          .intVar(generateVariableName(eAttribute, i),
-              domain.stream().mapToInt(Integer::intValue).toArray());
+      final IntVar intVar;
+      if (domain.size() == 1) {
+        intVar = modelGenerationContext.getModel()
+            .intVar(generateVariableName(eAttribute, i),
+                domain.stream().findFirst().orElseThrow(
+                    (Supplier<IllegalStateException>) () -> new IllegalStateException(String.format(
+                        "Expected domain of attribute %s to contain only one value. Got %s values.",
+                        eAttribute, domain.size()))));
+      } else {
+        intVar = modelGenerationContext.getModel()
+            .intVar(generateVariableName(eAttribute, i),
+                domain.stream().mapToInt(Integer::intValue).toArray());
+      }
 
       modelGenerationContext.getVariableStore().storeVariable(i, eAttribute, intVar);
 
@@ -178,11 +196,13 @@ public class ClassAttributeHandler {
     Collection<Object> attributeValues = emfUtil.getValuesOfAttribute(eAttribute);
     Set<Integer> domain = new HashSet<>();
 
-    for (Object o : attributeValues) {
-      domain.add(modelGenerationContext.mapValue(o, eAttribute));
-
+    if (attributeValues.isEmpty()) {
+      domain.add(modelGenerationContext.mapValue(null, eAttribute));
+    } else {
+      for (Object o : attributeValues) {
+        domain.add(modelGenerationContext.mapValue(o, eAttribute));
+      }
     }
-
     return domain;
   }
 

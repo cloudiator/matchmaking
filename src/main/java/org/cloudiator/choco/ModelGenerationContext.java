@@ -8,9 +8,12 @@ import com.google.common.collect.Table;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import javax.annotation.Nullable;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.Variable;
 import org.cloudiator.ocl.OclCsp;
+import org.cloudiator.ocl.Solution;
 import org.eclipse.emf.common.util.Enumerator;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
@@ -25,9 +28,12 @@ public class ModelGenerationContext {
   private final VariableStore variableStore;
   private final ObjectIdentifierGenerator oidGenerator;
   private final OclCsp oclCsp;
+  @Nullable
+  private final Solution existingSolution;
+
 
   public ModelGenerationContext(CloudiatorModel cloudiatorModel, Model model, int numberOfNodes,
-      OclCsp oclCsp) {
+      OclCsp oclCsp, @Nullable Solution existingSolution) {
     this.cloudiatorModel = cloudiatorModel;
     this.model = model;
     this.numberOfNodes = numberOfNodes;
@@ -35,6 +41,7 @@ public class ModelGenerationContext {
     this.variableStore = new VariableStore();
     this.oidGenerator = ObjectIdentifierGenerator.create();
     this.oclCsp = oclCsp;
+    this.existingSolution = existingSolution;
   }
 
   public ObjectIdentifierGenerator getOidGenerator() {
@@ -104,6 +111,10 @@ public class ModelGenerationContext {
 
   public int nodeSize() {
     return numberOfNodes;
+  }
+
+  public Optional<Solution> getExistingSolution() {
+    return Optional.ofNullable(existingSolution);
   }
 
   public static class VariableStore {

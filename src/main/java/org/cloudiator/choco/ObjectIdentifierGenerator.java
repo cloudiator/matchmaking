@@ -25,11 +25,12 @@ public class ObjectIdentifierGenerator {
 
   private static class OidHandler {
 
-    private Integer counter = 0;
+    private Integer counter = 1;
     private final Map<Object, Integer> objectIdMap = new HashMap<>();
 
 
     private OidHandler() {
+      objectIdMap.put(null, 0);
     }
 
     private int next() {

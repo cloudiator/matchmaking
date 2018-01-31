@@ -10,7 +10,7 @@ public class ObjectMapperImpl<T> implements ObjectMapper<T> {
   private int counter = 1;
 
   public ObjectMapperImpl() {
-
+    map.put(0, null);
   }
 
   @Override

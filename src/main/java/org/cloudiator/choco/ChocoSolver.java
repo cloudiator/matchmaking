@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.search.strategy.Search;
@@ -23,7 +24,7 @@ import org.cloudiator.ocl.Solution;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 
-public class ChocoSolver {
+public class ChocoSolver implements org.cloudiator.Solver {
 
   private static class ChocoSolverInternal {
 
@@ -38,11 +39,11 @@ public class ChocoSolver {
       this.nodeCandidates = nodeCandidates;
     }
 
-    public Solution solve(int numberOfNodes) {
+    public Solution solve(int numberOfNodes, @Nullable Solution existingSolution) {
 
       final ModelGenerationContext modelGenerationContext = new ModelGenerationContext(
           cloudiatorModel,
-          new Model(), numberOfNodes, oclCsp);
+          new Model(), numberOfNodes, oclCsp, existingSolution);
 
       ChocoModelGeneration.visit(modelGenerationContext);
 
@@ -166,12 +167,15 @@ public class ChocoSolver {
 
     int i = 1;
 
+    Solution solution = null;
     while (true) {
       final ChocoSolverInternal chocoSolverInternal = new ChocoSolverInternal(oclCsp,
           solverModel, nodeCandidates);
-      Solution solution = chocoSolverInternal.solve(i);
+      solution = chocoSolverInternal.solve(i, solution);
       if (!solution.noSolution()) {
         return solution;
+      } else {
+        solution = null;
       }
       i++;
     }

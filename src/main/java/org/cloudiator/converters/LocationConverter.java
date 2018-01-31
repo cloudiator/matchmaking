@@ -19,7 +19,12 @@ public class LocationConverter implements
   public IaasEntities.Location applyBack(@Nullable Location location) {
     final IaasEntities.Location.Builder builder = IaasEntities.Location.newBuilder()
         .setProviderId(location.getProviderId())
-        .setId(location.getId()).setName(location.getName());
+        .setId(location.getId()).setName(location.getName())
+        .setIsAssignable(location.isAssignable());
+
+    if (location.getParent() != null) {
+      builder.setParent(applyBack(location.getParent()));
+    }
 
     if (location.getGeoLocation() != null) {
       builder.setGeoLocation(GEO_LOCATION_CONVERTER.applyBack(location.getGeoLocation()));
@@ -34,6 +39,11 @@ public class LocationConverter implements
     modelLocation.setId(location.getId());
     modelLocation.setProviderId(location.getProviderId());
     modelLocation.setName(location.getName());
+    modelLocation.setAssignable(location.getIsAssignable());
+
+    if (location.hasParent()) {
+      modelLocation.setParent(apply(location.getParent()));
+    }
 
     if (location.hasGeoLocation()) {
       modelLocation.setGeoLocation(GEO_LOCATION_CONVERTER.apply(location.getGeoLocation()));

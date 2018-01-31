@@ -1,9 +1,11 @@
 package org.cloudiator.choco;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import cloudiator.CloudiatorPackage.Literals;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.Variable;
@@ -75,9 +77,9 @@ public class RelationshipHandler {
       checkState(remoteIdVariable != null, "Could not find id variable for " + remote.getName());
 
       for (EObject object : emfUtil.getAllObjectsOfClass(owing)) {
-        final int owningId = valueOfIdAttribute(object);
+        final int owningId = valueOfIdAttribute(object, owing);
         final Object remoteObject = object.eGet(eReference, true);
-        final int remoteId = valueOfIdAttribute((EObject) remoteObject);
+        final int remoteId = valueOfIdAttribute((EObject) remoteObject, remote);
 
         //owning equal
         final Constraint owningEqual = modelGenerationContext.getModel()
@@ -102,12 +104,12 @@ public class RelationshipHandler {
 
     for (int node = 1; node <= modelGenerationContext.nodeSize(); node++) {
       for (EObject object : emfUtil.getAllObjectsOfClass(owning)) {
-        int owningId = valueOfIdAttribute(object);
+        int owningId = valueOfIdAttribute(object, owning);
 
         //we are always guaranteed to get a list as we handle a many relationship
         //noinspection unchecked
         int[] remoteObjects = ((List<Object>) object
-            .eGet(eReference, true)).stream().mapToInt(o -> valueOfIdAttribute((EObject) o))
+            .eGet(eReference, true)).stream().mapToInt(o -> valueOfIdAttribute((EObject) o, remote))
             .toArray();
 
         Variable variableOwningId = modelGenerationContext.getVariableStore().getIdVariables(node)
@@ -124,12 +126,19 @@ public class RelationshipHandler {
     }
   }
 
-  private int valueOfIdAttribute(EObject eObject) {
-    final EAttribute idAttribute = eObject.eClass().getEIDAttribute();
+  private int valueOfIdAttribute(@Nullable EObject eObject, EClass eClass) {
+
+    checkNotNull(eClass, "eClass is null");
+
+    final EAttribute idAttribute = eClass.getEIDAttribute();
     if (idAttribute != null) {
-      return modelGenerationContext.mapValue(eObject.eGet(idAttribute), idAttribute);
+      if (eObject == null) {
+        return modelGenerationContext.mapValue(null, idAttribute);
+      } else {
+        return modelGenerationContext.mapValue(eObject.eGet(idAttribute), idAttribute);
+      }
     }
-    return modelGenerationContext.getOidGenerator().generateIdFor(eObject.eClass(), eObject);
+    return modelGenerationContext.getOidGenerator().generateIdFor(eClass, eObject);
   }
 
   public static class RelationModelVisitor implements ModelGenerationContextVisitor {

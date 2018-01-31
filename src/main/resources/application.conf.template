@@ -1,5 +1,0 @@
-kafka.bootstrapServers =
-kafka.groupId = ocl
-kafka.responseTimeout = 10000
-
-ocl.discoveryModel = LARGE

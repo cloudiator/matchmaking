@@ -31,18 +31,47 @@ public class DefaultNodeGenerator implements NodeGenerator {
   }
 
   private static boolean isValidCombination(Image image, Hardware hardware, Location location) {
+    checkNotNull(hardware, "hardware is null");
+    checkNotNull(image, "image is null");
     checkNotNull(location, "location is null");
-    String imageLocationId = null;
+
+    //we have a valid combination if the location is assignable
+    //and is in the scope of the image and the hardware
+
+    if (!location.isAssignable()) {
+      //if the location is not assignable, the combination is always invalid
+      return false;
+    }
+
+    final Set<String> locationScope = locationIds(location);
+
     if (image.getLocation() != null) {
-      imageLocationId = image.getLocation().getId();
+      //we have to check the image scope
+      if (!locationScope.contains(image.getLocation().getId())) {
+        return false;
+      }
+    } else {
+      image.setLocation(location);
     }
 
-    String hardwareLocationId = null;
     if (hardware.getLocation() != null) {
-      hardwareLocationId = hardware.getLocation().getId();
+      //we have to check the hardware scope
+      if (!locationScope.contains(hardware.getLocation().getId())) {
+        return false;
+      }
+    } else {
+      hardware.setLocation(location);
     }
 
-    return location.getId().equals(imageLocationId) && location.getId().equals(hardwareLocationId);
+    return true;
+  }
+
+  private static Set<String> locationIds(Location location) {
+    Set<String> ids = new HashSet<>();
+    for (Location i = location; i != null; i = i.getParent()) {
+      ids.add(i.getId());
+    }
+    return ids;
   }
 
   /*

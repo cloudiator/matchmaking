@@ -14,7 +14,7 @@ public class MatchmakingAgent {
       .createInjector(new MessageServiceModule(),
           new OclServiceModule(new OclContext(Configuration.conf().getConfig("ocl"))),
           new KafkaMessagingModule(new KafkaContext(
-              Configuration.conf().getConfig("kafka"))));
+              Configuration.conf())));
 
   public MatchmakingAgent() {
 
