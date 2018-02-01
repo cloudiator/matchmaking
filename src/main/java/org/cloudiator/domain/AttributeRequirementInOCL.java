@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collections;
 import java.util.Set;
+import org.apache.commons.lang3.math.NumberUtils;
 
 public class AttributeRequirementInOCL implements AttributeRequirement, RepresentableAsOCL {
 
@@ -21,7 +22,18 @@ public class AttributeRequirementInOCL implements AttributeRequirement, Represen
     return Collections
         .singleton(String.format(OCL_TEMPLATE, attributeRequirement.requirementClass(),
             attributeRequirement.requirementAttribute(),
-            attributeRequirement.requirementOperator().operator(), attributeRequirement.value()));
+            attributeRequirement.requirementOperator().operator(),
+            handleValue(attributeRequirement.value())));
+  }
+
+  private String handleValue(String value) {
+    if (NumberUtils.isCreatable(value)) {
+      //its a number, return
+      return value;
+    } else {
+      //is a string, wrap
+      return "\'" + value + "\'";
+    }
   }
 
   @Override

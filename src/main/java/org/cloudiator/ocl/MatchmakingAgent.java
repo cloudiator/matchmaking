@@ -12,7 +12,7 @@ public class MatchmakingAgent {
 
   private final static Injector injector = Guice
       .createInjector(new MessageServiceModule(),
-          new OclServiceModule(new OclContext(Configuration.conf().getConfig("ocl"))),
+          new OclServiceModule(new OclContext(Configuration.conf().getConfig("matchmaking"))),
           new KafkaMessagingModule(new KafkaContext(
               Configuration.conf())));
 
