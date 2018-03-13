@@ -3,10 +3,10 @@ package org.cloudiator.choco;
 import static com.google.common.base.Preconditions.checkState;
 
 import cloudiator.CloudiatorPackage.Literals;
-import com.google.common.base.Supplier;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.chocosolver.solver.variables.IntVar;
 import org.cloudiator.EMFUtil;
 import org.cloudiator.ocl.OclCsp;
