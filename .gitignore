@@ -2,5 +2,5 @@
 target
 .idea
 *.iml
-src/main/resources/application.conf
+matchmaking-agent/src/main/resources/application.conf
 /logs/
