@@ -35,7 +35,7 @@ public class OclCsp {
     final Builder<ExpressionInOCL> builder = ImmutableSet.<ExpressionInOCL>builder();
     for (String c : constraints) {
 
-      ExpressionInOCL expression = org.cloudiator.matchmaking.ocl.OCLHelper.getOcl()
+      ExpressionInOCL expression = OCLUtil
           .createInvariant(CloudiatorPackage.eINSTANCE.getComponent(), c);
       builder.add(expression);
 

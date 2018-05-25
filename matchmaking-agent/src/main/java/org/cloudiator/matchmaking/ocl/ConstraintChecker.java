@@ -21,9 +21,9 @@ public class ConstraintChecker {
     otherQueries = new HashSet<>();
 
     for (String constraint : csp.getUnparsedConstraints()) {
-      ExpressionInOCL expression = OCLHelper.getOcl()
+      ExpressionInOCL expression = OCLUtil
           .createInvariant(CloudiatorPackage.eINSTANCE.getComponent(), constraint);
-      Query query = OCLHelper.getOcl().createQuery(expression);
+      Query query = OCLUtil.createQuery(expression);
       if (constraint.contains("forAll")) {
         forAllQueries.add(query);
       } else {

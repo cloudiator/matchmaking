@@ -41,6 +41,8 @@ public class NodeCandidateListener implements Runnable {
             final DefaultNodeGenerator defaultNodeGenerator = new DefaultNodeGenerator(
                 NodeCandidateFactory.create(), cloudiatorModel);
 
+            
+
             OclCsp oclCsp = OclCsp
                 .ofRequirements(REQUIREMENT_CONVERTER.apply(content.getRequirements()).stream().map(
                     requirement -> (RepresentableAsOCL) requirement).collect(Collectors.toList()));
