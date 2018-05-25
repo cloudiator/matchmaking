@@ -47,8 +47,8 @@
     </encoder>
   </appender>
 
-  <logger level="DEBUG" name="org.cloudiator.choco"/>
-  <logger level="DEBUG" name="org.cloudiator.ocl"/>
+  <logger level="DEBUG" name="org.cloudiator.matchmaking.choco"/>
+  <logger level="DEBUG" name="org.cloudiator.matchmaking.ocl"/>
   <logger level="DEBUG" name="org.cloudiator.messaging"/>
 
   <root level="WARN">
