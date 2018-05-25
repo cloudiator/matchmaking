@@ -45,6 +45,9 @@ public class MatchmakingRequestListener implements Runnable {
                                 requirement -> (RepresentableAsOCL) requirement)
                             .collect(Collectors.toList()));
 
+                LOGGER.info(
+                    String.format("%s has generated the constraint problem %s", this, oclCsp));
+
                 Solution solution = solver.solve(oclCsp, userId);
 
                 if (solution == null) {

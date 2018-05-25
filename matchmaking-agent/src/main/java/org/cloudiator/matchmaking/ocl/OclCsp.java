@@ -11,6 +11,8 @@ import java.util.Set;
 import org.cloudiator.matchmaking.domain.RepresentableAsOCL;
 import org.eclipse.ocl.pivot.ExpressionInOCL;
 import org.eclipse.ocl.pivot.utilities.ParserException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OclCsp {
 
@@ -29,11 +31,16 @@ public class OclCsp {
 
   private Set<String> unparsedConstraints;
   private Set<ExpressionInOCL> constraints;
+  private static final Logger LOGGER = LoggerFactory.getLogger(OclCsp.class);
+
 
   private OclCsp(Collection<String> constraints) throws ParserException {
+
     this.unparsedConstraints = Sets.newHashSet(constraints);
     final Builder<ExpressionInOCL> builder = ImmutableSet.<ExpressionInOCL>builder();
     for (String c : constraints) {
+
+      LOGGER.debug(String.format("Parsing constraint %s.", c));
 
       ExpressionInOCL expression = OCLUtil
           .createInvariant(CloudiatorPackage.eINSTANCE.getComponent(), c);
