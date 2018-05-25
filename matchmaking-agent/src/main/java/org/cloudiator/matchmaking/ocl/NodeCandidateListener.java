@@ -6,12 +6,12 @@ import java.util.stream.Collectors;
 import org.cloudiator.matchmaking.converters.NodeCandidateConverter;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
 import org.cloudiator.matchmaking.domain.RepresentableAsOCL;
+import org.cloudiator.matchmaking.ocl.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.entities.Matchmaking.NodeCandidateRequestMessage;
 import org.cloudiator.messages.entities.Matchmaking.NodeCandidateRequestResponse;
 import org.cloudiator.messaging.MessageInterface;
 import org.cloudiator.messaging.Subscription;
-import org.cloudiator.matchmaking.ocl.NodeCandidate.NodeCandidateFactory;
 import org.eclipse.ocl.pivot.utilities.ParserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +66,12 @@ public class NodeCandidateListener implements Runnable {
             messageInterface.reply(NodeCandidateRequestResponse.class, id,
                 Error.newBuilder().setCode(400).setMessage(String
                     .format("Could not generate model. Error was %s.", e.getMessage()))
+                    .build());
+          } catch (Exception e) {
+            LOGGER.error("Unexpected error while calculating the node candidates.", e);
+            messageInterface.reply(NodeCandidateRequestResponse.class, id,
+                Error.newBuilder().setCode(500).setMessage(String
+                    .format("Unexpected error. Error was %s.", e.getMessage()))
                     .build());
           }
 
