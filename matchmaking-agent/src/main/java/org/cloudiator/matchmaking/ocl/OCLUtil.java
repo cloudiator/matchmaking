@@ -25,7 +25,11 @@ public class OCLUtil {
 
   public static ExpressionInOCL createInvariant(EObject contextElement, String expression)
       throws ParserException {
-    return getOcl().createInvariant(contextElement, expression);
+    try {
+      return getOcl().createInvariant(contextElement, expression);
+    } catch (Exception e) {
+      return getOcl().createInvariant(contextElement, expression);
+    }
   }
 
   public static Query createQuery(ExpressionInOCL constraint) {
