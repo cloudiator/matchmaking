@@ -28,8 +28,17 @@
     </encoder>
   </appender>
 
+  <appender name="stash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+    <destination>${LOGSTASH_HOST}</destination>
+
+    <!-- encoder is required -->
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+      <customFields>{"service":"matchmaking-agent"}</customFields>
+    </encoder>
+  </appender>
+
   <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>logs/ocl.log</file>
+    <file>logs/matchmaking.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- daily rollover -->
       <fileNamePattern>logs/logFile.%d{yyyy-MM-dd}.log</fileNamePattern>
@@ -54,6 +63,10 @@
   <root level="WARN">
     <appender-ref ref="STDOUT"/>
     <appender-ref ref="FILE"/>
+  </root>
+
+  <root level="DEBUG">
+    <appender-ref ref="stash"/>
   </root>
 
 </configuration>
