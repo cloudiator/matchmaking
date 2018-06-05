@@ -21,6 +21,9 @@
   <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT">
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>INFO</level>
+    </filter>
     <encoder>
       <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} [%level] from %logger in %thread -
         %message%n%xException
@@ -60,13 +63,12 @@
   <logger level="DEBUG" name="org.cloudiator.matchmaking.ocl"/>
   <logger level="DEBUG" name="org.cloudiator.messaging"/>
 
-  <root level="WARN">
-    <appender-ref ref="STDOUT"/>
-    <appender-ref ref="FILE"/>
-  </root>
 
   <root level="DEBUG">
+    <appender-ref ref="STDOUT"/>
+    <appender-ref ref="FILE"/>
     <appender-ref ref="stash"/>
   </root>
+
 
 </configuration>
