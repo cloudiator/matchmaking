@@ -32,7 +32,7 @@
   </appender>
 
   <appender name="stash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-    <destination>${LOGSTASH_HOST}</destination>
+    <destination>${LOGSTASH_HOST:-localhost:5000}</destination>
 
     <!-- encoder is required -->
     <encoder class="net.logstash.logback.encoder.LogstashEncoder">
@@ -44,7 +44,7 @@
     <file>logs/matchmaking.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- daily rollover -->
-      <fileNamePattern>logs/logFile.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <fileNamePattern>logs/matchmaking.%d{yyyy-MM-dd}.log</fileNamePattern>
 
       <!-- keep 30 days' worth of history capped at 3GB total size -->
       <maxHistory>30</maxHistory>
