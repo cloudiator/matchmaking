@@ -29,9 +29,7 @@ public class RequirementConverter implements OneWayConverter<NodeRequirements, S
           requirements.add(convertOclRequirement(requirement.getOclRequirement()));
           break;
         case REQUIREMENT_NOT_SET:
-          //do nothing
-          //todo: maybe log?
-          break;
+          throw new AssertionError("Requirement type not set.");
         case ATTRIBUTEREQUIREMENT:
           requirements.add(convertAttributeRequirement(requirement.getAttributeRequirement()));
           break;

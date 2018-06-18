@@ -16,10 +16,7 @@
 
 package org.cloudiator.matchmaking.domain;
 
-import java.util.Collections;
-import java.util.Set;
-
-public class OclRequirement implements Requirement, RepresentableAsOCL {
+public class OclRequirement implements Requirement {
 
   private final String constraint;
 
@@ -35,8 +32,4 @@ public class OclRequirement implements Requirement, RepresentableAsOCL {
     return constraint;
   }
 
-  @Override
-  public Set<String> getOCLConstraints() {
-    return Collections.singleton(constraint);
-  }
 }

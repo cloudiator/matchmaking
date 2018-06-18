@@ -33,8 +33,7 @@ public class AttributeRequirementBuilder {
   }
 
   public AttributeRequirement build() {
-    return new AttributeRequirementInOCL(
-        new AttributeRequirementImpl(requirementClass, requirementAttribute, requirementOperator,
-            value));
+    return new AttributeRequirementImpl(requirementClass, requirementAttribute, requirementOperator,
+        value);
   }
 }

@@ -5,6 +5,7 @@
   <modules>
     <module>matchmaking-eclipse</module>
     <module>matchmaking-agent</module>
+    <module>matchmaking-common</module>
   </modules>
 
   <parent>
@@ -16,6 +17,16 @@
   <packaging>pom</packaging>
   <name>matchmaking</name>
   <version>0.3.0-SNAPSHOT</version>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.github.cloudiator</groupId>
+        <artifactId>matchmaking-common</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
 
 </project>

@@ -8,7 +8,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Set;
-import org.cloudiator.matchmaking.domain.RepresentableAsOCL;
+import org.cloudiator.matchmaking.domain.RepresentAsOCL;
+import org.cloudiator.matchmaking.domain.Requirement;
 import org.eclipse.ocl.pivot.ExpressionInOCL;
 import org.eclipse.ocl.pivot.utilities.ParserException;
 import org.slf4j.Logger;
@@ -54,11 +55,11 @@ public class OclCsp {
     return new OclCsp(constraints);
   }
 
-  public static OclCsp ofRequirements(Collection<RepresentableAsOCL> requirements)
+  public static OclCsp ofRequirements(Collection<Requirement> requirements)
       throws ParserException {
     Collection<String> constraints = Lists.newArrayList();
-    for (RepresentableAsOCL representableAsOCL : requirements) {
-      constraints.addAll(representableAsOCL.getOCLConstraints());
+    for (Requirement requirement : requirements) {
+      constraints.addAll(RepresentAsOCL.INSTANCE.apply(requirement).getOCLConstraints());
     }
     return new OclCsp(constraints);
   }

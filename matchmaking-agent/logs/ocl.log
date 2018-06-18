@@ -1,0 +1,18 @@
+2018-06-18 14:03:42 +0200 [DEBUG] from org.cloudiator.matchmaking.ocl.OclCsp in main -
+        Parsing constraint nodes->forAll(n | n.hardware.ram < 8000).
+2018-06-18 14:03:43 +0200 [DEBUG] from org.cloudiator.matchmaking.ocl.OclCsp in main -
+        Parsing constraint nodes->forAll(n | n.hardware.cores >= 4 implies n.hardware.ram >= 4096).
+2018-06-18 14:03:44 +0200 [DEBUG] from org.cloudiator.matchmaking.ocl.OclCsp in main -
+        Parsing constraint nodes->forAll(n | n.image.operatingSystem.family = OSFamily::UBUNTU).
+2018-06-18 14:03:44 +0200 [DEBUG] from org.cloudiator.matchmaking.ocl.OclCsp in main -
+        Parsing constraint nodes->forAll(n | n.hardware.cores >= 2).
+2018-06-18 14:03:44 +0200 [DEBUG] from org.cloudiator.matchmaking.ocl.OclCsp in main -
+        Parsing constraint nodes->forAll(n | n.hardware.ram >= 1024).
+2018-06-18 14:03:44 +0200 [DEBUG] from org.cloudiator.matchmaking.ocl.OclCsp in main -
+        Parsing constraint nodes->select(n | n.hardware.cores >= 4)->size() = 2.
+2018-06-18 14:03:44 +0200 [DEBUG] from org.cloudiator.matchmaking.ocl.OclCsp in main -
+        Parsing constraint nodes->exists(location.geoLocation.country = 'DE').
+2018-06-18 14:03:44 +0200 [DEBUG] from org.cloudiator.matchmaking.ocl.OclCsp in main -
+        Parsing constraint nodes->isUnique(n | n.location.geoLocation.country).
+2018-06-18 14:03:44 +0200 [DEBUG] from org.cloudiator.matchmaking.ocl.OclCsp in main -
+        Parsing constraint nodes.hardware.cores->sum() >= 15.

@@ -68,6 +68,10 @@
       <artifactId>common-messaging</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.github.cloudiator</groupId>
+      <artifactId>matchmaking-common</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.github.cloudiator.common</groupId>
       <artifactId>common-util</artifactId>
     </dependency>
