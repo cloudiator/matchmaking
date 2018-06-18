@@ -3,7 +3,9 @@ package org.cloudiator.matchmaking.domain;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import cloudiator.CloudiatorPackage;
+import com.google.common.base.Joiner;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.eclipse.emf.ecore.EEnum;
@@ -11,7 +13,9 @@ import org.eclipse.emf.ecore.EEnum;
 public class AttributeRequirementInOCL implements AttributeRequirement, RepresentableAsOCL {
 
   private final static String OCL_TEMPLATE = "nodes->forAll(n | n.%s.%s %s %s)";
+  private final static String IN_TEMPLATE = "nodes->forAll(n | Set{%s}->includes(n.%s.%s))";
 
+  //add("nodes->forAll(n | Set{'test','test2','test3'}->includes(n.location.geoLocation.country))");
 
   private final AttributeRequirement attributeRequirement;
 
@@ -22,11 +26,32 @@ public class AttributeRequirementInOCL implements AttributeRequirement, Represen
 
   @Override
   public Set<String> getOCLConstraints() {
-    return Collections
-        .singleton(String.format(OCL_TEMPLATE, attributeRequirement.requirementClass(),
-            attributeRequirement.requirementAttribute(),
-            attributeRequirement.requirementOperator().operator(),
-            handleValue(attributeRequirement.value())));
+
+    switch (attributeRequirement.requirementOperator()) {
+      case IN:
+        return Collections
+            .singleton(handleInConstraint());
+      default:
+        return Collections
+            .singleton(handleOtherConstraint());
+    }
+  }
+
+  private String handleInConstraint() {
+    final Set<String> ins = new HashSet<>();
+    for (final String value : attributeRequirement.value().split(",")) {
+      ins.add(handleValue(value.trim()));
+    }
+    final String setContent = Joiner.on(",").join(ins);
+    return String.format(IN_TEMPLATE, setContent, attributeRequirement.requirementClass(),
+        attributeRequirement.requirementAttribute());
+  }
+
+  private String handleOtherConstraint() {
+    return String.format(OCL_TEMPLATE, attributeRequirement.requirementClass(),
+        attributeRequirement.requirementAttribute(),
+        attributeRequirement.requirementOperator().operator(),
+        handleValue(attributeRequirement.value()));
   }
 
   private String handleValue(String value) {

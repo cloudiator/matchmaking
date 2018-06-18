@@ -18,6 +18,7 @@ public class OclTestCsp {
     add("nodes->forAll(n | n.image.operatingSystem.family = OSFamily::UBUNTU)");
     add("nodes->select(n | n.hardware.cores >= 4)->size() = 2");
     add("nodes.hardware.cores->sum() >= 15");
+    add("nodes->forAll(n | Set{'ulm','stuttgart','freiburg'}->includes(n.location.geoLocation.country))");
   }};
 
 }

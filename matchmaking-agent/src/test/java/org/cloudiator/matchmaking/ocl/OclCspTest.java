@@ -10,6 +10,7 @@ public class OclCspTest {
   }
 
   @org.junit.Test
-  public void ofRequirements() {
+  public void ofRequirements() throws ParserException {
+    OclCsp.ofRequirements(TestAttributeRequirements.TEST_REQUIREMENTS);
   }
 }

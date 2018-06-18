@@ -35,7 +35,7 @@ public class OclCsp {
   private static final Logger LOGGER = LoggerFactory.getLogger(OclCsp.class);
 
 
-  private OclCsp(Collection<String> constraints) throws ParserException {
+  private OclCsp(Iterable<String> constraints) throws ParserException {
 
     this.unparsedConstraints = Sets.newHashSet(constraints);
     final Builder<ExpressionInOCL> builder = ImmutableSet.<ExpressionInOCL>builder();
@@ -51,12 +51,13 @@ public class OclCsp {
     this.constraints = builder.build();
   }
 
-  public static OclCsp ofConstraints(Collection<String> constraints) throws ParserException {
+  public static OclCsp ofConstraints(Iterable<String> constraints) throws ParserException {
     return new OclCsp(constraints);
   }
 
-  public static OclCsp ofRequirements(Collection<Requirement> requirements)
-      throws ParserException {
+
+  public static OclCsp ofRequirements(Collection<Requirement> requirements) throws ParserException {
+
     Collection<String> constraints = Lists.newArrayList();
     for (Requirement requirement : requirements) {
       constraints.addAll(RepresentAsOCL.INSTANCE.apply(requirement).getOCLConstraints());

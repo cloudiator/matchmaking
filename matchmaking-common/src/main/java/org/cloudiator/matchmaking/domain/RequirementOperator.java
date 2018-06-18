@@ -6,7 +6,10 @@ public enum RequirementOperator {
   LEQ("<="),
   GEQ(">="),
   GT(">"),
-  LT("<");
+  LT("<"),
+  NEQ("<>"),
+  IN("IN");
+
 
   private final String operator;
 
