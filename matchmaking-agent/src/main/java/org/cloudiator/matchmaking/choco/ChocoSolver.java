@@ -39,7 +39,7 @@ public class ChocoSolver implements org.cloudiator.matchmaking.Solver {
       this.nodeCandidates = nodeCandidates;
     }
 
-    public Solution solve(int numberOfNodes, @Nullable Solution existingSolution) {
+    Solution solve(int numberOfNodes, @Nullable Solution existingSolution) {
 
       final ModelGenerationContext modelGenerationContext = new ModelGenerationContext(
           cloudiatorModel,

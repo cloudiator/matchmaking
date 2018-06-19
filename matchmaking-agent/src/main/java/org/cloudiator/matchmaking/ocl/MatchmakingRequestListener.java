@@ -1,6 +1,6 @@
 package org.cloudiator.matchmaking.ocl;
 
-import java.util.ArrayList;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
 import org.cloudiator.messages.General.Error;
@@ -18,7 +18,7 @@ public class MatchmakingRequestListener implements Runnable {
   private static final Logger LOGGER = LoggerFactory.getLogger(MatchmakingRequestListener.class);
   private final MessageInterface messageInterface;
   private final Solver solver;
-  private static final RequirementConverter REQUIREMENT_CONVERTER = new RequirementConverter();
+  private static final RequirementConverter REQUIREMENT_CONVERTER = RequirementConverter.INSTANCE;
 
   @Inject
   public MatchmakingRequestListener(MessageInterface messageInterface, Solver solver) {
@@ -39,8 +39,8 @@ public class MatchmakingRequestListener implements Runnable {
 
                 OclCsp oclCsp = OclCsp
                     .ofRequirements(
-                        new ArrayList<>(
-                            REQUIREMENT_CONVERTER.apply(matchmakingRequest.getRequirements())));
+                        matchmakingRequest.getRequirements().getRequirementsList().stream()
+                            .map(REQUIREMENT_CONVERTER).collect(Collectors.toList()));
 
                 LOGGER.info(
                     String.format("%s has generated the constraint problem %s", this, oclCsp));

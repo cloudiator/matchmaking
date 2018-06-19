@@ -2,7 +2,6 @@ package org.cloudiator.matchmaking.ocl;
 
 import cloudiator.CloudiatorModel;
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
 import org.cloudiator.matchmaking.converters.NodeCandidateConverter;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
@@ -19,7 +18,7 @@ import org.slf4j.LoggerFactory;
 public class NodeCandidateListener implements Runnable {
 
   private static final NodeCandidateConverter NODE_CANDIDATE_CONVERTER = new NodeCandidateConverter();
-  private static final RequirementConverter REQUIREMENT_CONVERTER = new RequirementConverter();
+  private static final RequirementConverter REQUIREMENT_CONVERTER = RequirementConverter.INSTANCE;
   private final Logger LOGGER = LoggerFactory.getLogger(NodeCandidateListener.class);
   private final MessageInterface messageInterface;
   private final ModelGenerator modelGenerator;
@@ -43,7 +42,9 @@ public class NodeCandidateListener implements Runnable {
 
             OclCsp oclCsp = OclCsp
                 .ofRequirements(
-                    new ArrayList<>(REQUIREMENT_CONVERTER.apply(content.getRequirements())));
+                    content.getRequirements().getRequirementsList().stream()
+                        .map(REQUIREMENT_CONVERTER).collect(Collectors.toList())
+                );
 
             final ConsistentNodeGenerator consistentNodeGenerator = new ConsistentNodeGenerator(
                 defaultNodeGenerator, ConstraintChecker.create(oclCsp));
