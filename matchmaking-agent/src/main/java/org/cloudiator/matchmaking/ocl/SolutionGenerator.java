@@ -6,14 +6,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.cloudiator.matchmaking.domain.NodeCandidate;
+import org.cloudiator.matchmaking.domain.Solution;
 
 public class SolutionGenerator {
 
-  private final NodeGenerator nodeGenerator;
   private volatile Set<NodeCandidate> nodeCandidates;
 
-  public SolutionGenerator(NodeGenerator nodeGenerator) {
-    this.nodeGenerator = nodeGenerator;
+  public SolutionGenerator(Set<NodeCandidate> nodeCandidates) {
+    this.nodeCandidates = nodeCandidates;
   }
 
   public void clean() {
@@ -25,17 +26,13 @@ public class SolutionGenerator {
   }
 
   private Set<NodeCandidate> nodeCandidates() {
-    if (this.nodeCandidates == null || this.nodeCandidates.isEmpty()) {
-      this.nodeCandidates = nodeGenerator.getPossibleNodes();
-    }
     return this.nodeCandidates;
   }
 
   public List<Solution> generateInitialSolutions() {
-    List<Solution> candidates = nodeCandidates().stream()
+    return nodeCandidates().stream()
         .map(node -> Solution.of(Collections.singletonList(node)))
         .collect(Collectors.toList());
-    return candidates;
   }
 
   public List<Solution> getChilds(Solution solution) {

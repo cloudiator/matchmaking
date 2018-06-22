@@ -19,8 +19,8 @@ import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.search.strategy.Search;
 import org.chocosolver.solver.variables.IntVar;
-import org.cloudiator.matchmaking.ocl.NodeCandidate;
-import org.cloudiator.matchmaking.ocl.Solution;
+import org.cloudiator.matchmaking.domain.NodeCandidate;
+import org.cloudiator.matchmaking.domain.Solution;
 
 public class ChocoSolverTesting {
 

@@ -7,9 +7,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 import org.chocosolver.solver.variables.IntVar;
-import org.cloudiator.matchmaking.ocl.NodeCandidate;
+import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.ocl.NodeCandidates;
-import org.cloudiator.matchmaking.ocl.Solution;
+import org.cloudiator.matchmaking.domain.Solution;
 import org.eclipse.emf.ecore.EClass;
 
 public class ChocoSolutionToSolution implements

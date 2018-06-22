@@ -1,30 +1,26 @@
 package org.cloudiator.matchmaking.choco;
 
-import cloudiator.Cloud;
-import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorModel;
 import cloudiator.CloudiatorPackage.Literals;
-import cloudiator.Hardware;
-import cloudiator.Image;
-import cloudiator.Location;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Stream;
+import java.util.LinkedList;
 import javax.annotation.Nullable;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
+import org.chocosolver.solver.exception.ContradictionException;
+import org.chocosolver.solver.search.loop.monitors.IMonitorContradiction;
 import org.chocosolver.solver.search.strategy.Search;
 import org.chocosolver.solver.variables.IntVar;
-import org.cloudiator.matchmaking.ocl.NodeCandidate;
+import org.chocosolver.util.criteria.Criterion;
+import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.ocl.NodeCandidates;
 import org.cloudiator.matchmaking.ocl.OclCsp;
-import org.cloudiator.matchmaking.ocl.Solution;
 import org.eclipse.emf.ecore.EAttribute;
-import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class ChocoSolver implements org.cloudiator.matchmaking.Solver {
+public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ChocoSolver.class);
 
   private static class ChocoSolverInternal {
 
@@ -65,11 +61,24 @@ public class ChocoSolver implements org.cloudiator.matchmaking.Solver {
       solver.setSearch(
           Search.activityBasedSearch(modelGenerationContext.getModel().retrieveIntVars(true)));
 
+      final LinkedList<ContradictionException> contradictions = new LinkedList<>();
+
+      solver.plugMonitor((IMonitorContradiction) e -> {
+        contradictions.add(e);
+      });
+      solver.limitSearch(new Criterion() {
+        @Override
+        public boolean isMet() {
+          return Thread.currentThread().isInterrupted();
+        }
+      });
+
       while (solver.solve()) {
         solution.record();
       }
 
       if (solver.getSolutionCount() == 0) {
+        LOGGER.trace(String.format("%s could not find a solution.", contradictions.getLast()));
         return Solution.EMPTY_SOLUTION;
       }
 
@@ -77,13 +86,10 @@ public class ChocoSolver implements org.cloudiator.matchmaking.Solver {
           .apply(solution);
 
       if (solver.isObjectiveOptimal()) {
-        System.out.println("Solved optimally.");
         ret.setIsOptimal(true);
       }
 
       ret.setTime(solver.getTimeCount());
-
-      System.out.println(ret);
 
       return ret;
 
@@ -92,72 +98,9 @@ public class ChocoSolver implements org.cloudiator.matchmaking.Solver {
   }
 
   private CloudiatorModel generateSolvingModel(NodeCandidates nodeCandidates) {
-    final CloudiatorModel ret = CloudiatorFactory.eINSTANCE.createCloudiatorModel();
 
-    Set<Cloud> cloudSet = new HashSet<>();
-
-    Set<String> imageIds = new HashSet<>();
-    Set<String> locationIds = new HashSet<>();
-    Set<String> hardwareIds = new HashSet<>();
-
-    for (NodeCandidate nodeCandidate : nodeCandidates) {
-      cloudSet.add(nodeCandidate.getCloud());
-      imageIds.add(nodeCandidate.getImage().getId());
-      locationIds.add(nodeCandidate.getLocation().getId());
-      hardwareIds.add(nodeCandidate.getHardware().getId());
-    }
-
-    cloudSet.forEach(cloud -> ret.getClouds().add(EcoreUtil.copy(cloud)));
-
-    ret.getClouds().stream().flatMap(
-        (Function<Cloud, Stream<Image>>) cloud -> cloud.getImages().stream()).map(
-        Image::getOperatingSystem).forEach(
-        operatingSystem -> ret.getOperatingsystems().add(operatingSystem));
-
-    ret.getClouds().forEach(new Consumer<Cloud>() {
-      @Override
-      public void accept(Cloud cloud) {
-
-        Set<Image> imagesToBeRemoved = new HashSet<>();
-        Set<Location> locationsToBeRemoved = new HashSet<>();
-        Set<Hardware> hardwareToBeRemoved = new HashSet<>();
-
-        cloud.getImages().forEach(new Consumer<Image>() {
-          @Override
-          public void accept(Image image) {
-            if (!imageIds.contains(image.getId())) {
-              imagesToBeRemoved.add(image);
-            }
-          }
-        });
-
-        cloud.getLocations().forEach(new Consumer<Location>() {
-          @Override
-          public void accept(Location location) {
-            if (!locationIds.contains(location.getId())) {
-              locationsToBeRemoved.add(location);
-            }
-          }
-        });
-
-        cloud.getHardwareList().forEach(new Consumer<Hardware>() {
-          @Override
-          public void accept(Hardware hardware) {
-            if (!hardwareIds.contains(hardware.getId())) {
-              hardwareToBeRemoved.add(hardware);
-            }
-          }
-        });
-
-        //remove everything
-        cloud.getImages().removeAll(imagesToBeRemoved);
-        cloud.getHardwareList().removeAll(hardwareToBeRemoved);
-        cloud.getLocations().removeAll(locationsToBeRemoved);
-
-      }
-    });
-
-    return ret;
+    SolvingModelGenerator solvingModelGenerator = new SolvingModelGenerator();
+    return solvingModelGenerator.apply(nodeCandidates);
   }
 
 
@@ -167,18 +110,16 @@ public class ChocoSolver implements org.cloudiator.matchmaking.Solver {
 
     int i = 1;
 
-    Solution solution = null;
-    while (true) {
+    while (!Thread.currentThread().isInterrupted()) {
       final ChocoSolverInternal chocoSolverInternal = new ChocoSolverInternal(oclCsp,
           solverModel, nodeCandidates);
-      solution = chocoSolverInternal.solve(i, solution);
+      Solution solution = chocoSolverInternal.solve(i, null);
       if (!solution.noSolution()) {
         return solution;
-      } else {
-        solution = null;
       }
       i++;
     }
+    return Solution.EMPTY_SOLUTION;
   }
 
 }

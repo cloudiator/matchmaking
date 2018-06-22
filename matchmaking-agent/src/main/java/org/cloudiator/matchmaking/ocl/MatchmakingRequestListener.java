@@ -3,6 +3,7 @@ package org.cloudiator.matchmaking.ocl;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
+import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.entities.IaasEntities.VirtualMachineRequest;
 import org.cloudiator.messages.entities.Matchmaking.MatchmakingRequest;
@@ -17,13 +18,13 @@ public class MatchmakingRequestListener implements Runnable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MatchmakingRequestListener.class);
   private final MessageInterface messageInterface;
-  private final Solver solver;
+  private final MetaSolver metaSolver;
   private static final RequirementConverter REQUIREMENT_CONVERTER = RequirementConverter.INSTANCE;
 
   @Inject
-  public MatchmakingRequestListener(MessageInterface messageInterface, Solver solver) {
+  public MatchmakingRequestListener(MessageInterface messageInterface, MetaSolver metaSolver) {
     this.messageInterface = messageInterface;
-    this.solver = solver;
+    this.metaSolver = metaSolver;
   }
 
 
@@ -45,9 +46,9 @@ public class MatchmakingRequestListener implements Runnable {
                 LOGGER.info(
                     String.format("%s has generated the constraint problem %s", this, oclCsp));
 
-                Solution solution = solver.solve(oclCsp, userId);
+                Solution solution = metaSolver.solve(oclCsp, userId);
 
-                if (solution == null) {
+                if (solution.noSolution()) {
                   messageInterface.reply(MatchmakingResponse.class, id,
                       Error.newBuilder().setCode(400)
                           .setMessage(

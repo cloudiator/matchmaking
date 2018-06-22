@@ -1,4 +1,4 @@
-package org.cloudiator.matchmaking.ocl;
+package org.cloudiator.matchmaking.domain;
 
 import static com.google.common.base.Preconditions.checkState;
 

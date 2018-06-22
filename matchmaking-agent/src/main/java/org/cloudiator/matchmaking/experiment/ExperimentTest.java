@@ -9,8 +9,8 @@ import java.util.function.ToDoubleFunction;
 import org.cloudiator.matchmaking.choco.ChocoSolverTesting;
 import org.cloudiator.matchmaking.choco.TimeLimit;
 import org.cloudiator.matchmaking.experiment.Experiment.CloudiatorModelType;
-import org.cloudiator.matchmaking.ocl.NodeCandidate;
-import org.cloudiator.matchmaking.ocl.Solution;
+import org.cloudiator.matchmaking.domain.NodeCandidate;
+import org.cloudiator.matchmaking.domain.Solution;
 
 public class ExperimentTest {
 

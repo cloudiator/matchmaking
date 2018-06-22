@@ -4,9 +4,11 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.primitives.Ints;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -15,13 +17,16 @@ import javax.annotation.Nullable;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.constraints.Operator;
 import org.chocosolver.solver.variables.IntVar;
+import org.chocosolver.solver.variables.SetVar;
 import org.chocosolver.solver.variables.Variable;
 import org.cloudiator.matchmaking.EMFUtil;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.ocl.pivot.AssociationClassCallExp;
 import org.eclipse.ocl.pivot.BooleanLiteralExp;
 import org.eclipse.ocl.pivot.CallExp;
+import org.eclipse.ocl.pivot.CollectionItem;
 import org.eclipse.ocl.pivot.CollectionLiteralExp;
+import org.eclipse.ocl.pivot.CollectionLiteralPart;
 import org.eclipse.ocl.pivot.EnumLiteralExp;
 import org.eclipse.ocl.pivot.ExpressionInOCL;
 import org.eclipse.ocl.pivot.FeatureCallExp;
@@ -85,7 +90,7 @@ public class ConstraintHandler {
   public void generate() {
     for (ExpressionInOCL expressionInOCL : modelGenerationContext.getOclCsp().getConstraints()) {
       checkState(context.isEmpty(), "Expected empty context");
-      LOGGER.info("Handling ExpressionInOCL " + expressionInOCL);
+      LOGGER.trace("Handling ExpressionInOCL " + expressionInOCL);
       final ConstraintOrVariable constraintOrVariable = this
           .handleOclExpression(expressionInOCL.getOwnedBody());
 
@@ -200,9 +205,34 @@ public class ConstraintHandler {
         return handleCollectOperation(operationCallExp, "sum");
       case "size":
         return handleSizeOperation(operationCallExp);
+      case "includes":
+        return handleIncludesOperation(operationCallExp);
       default:
         throw new AssertionError("Can not handle operation of type:" + referredOperation.getName());
     }
+  }
+
+  private ConstraintOrVariable handleIncludesOperation(OperationCallExp operationCallExp) {
+
+    final OCLExpression ownedSource = operationCallExp.getOwnedSource();
+    final OCLExpression argument = operationCallExp.getOwnedArguments().get(0);
+
+    //first, handle the attribute so that the context is set
+    final ConstraintOrVariable attribute = handleOclExpression(argument);
+    final ConstraintOrVariable set = handleOclExpression(ownedSource);
+
+    checkState(set.isVariable(), "Expected left side (set) to be a variable.");
+    checkState(attribute.isVariable(), "Expected right side (included) to be a variable");
+
+    checkState(attribute.getVariable() instanceof IntVar,
+        "Expected right side (included) to be a int var");
+    checkState(set.getVariable() instanceof SetVar,
+        "Expected left side (set) to be a set variable.");
+
+    final Constraint member = modelGenerationContext.getModel()
+        .member((IntVar) attribute.getVariable(), (SetVar) set.getVariable());
+
+    return ConstraintOrVariable.fromConstraint(member);
   }
 
   private ConstraintOrVariable handleSizeOperation(OperationCallExp operationCallExp) {
@@ -510,8 +540,26 @@ public class ConstraintHandler {
 
   private ConstraintOrVariable handleCollectionLiteralExp(
       CollectionLiteralExp collectionLiteralExp) {
-    UNSUPPORTED("handleCollectionLiteralExp");
-    return ConstraintOrVariable.empty();
+
+    Set<IntVar> intVars = new HashSet<>();
+
+    for (CollectionLiteralPart collectionLiteralPart : collectionLiteralExp.getOwnedParts()) {
+      checkState(collectionLiteralPart instanceof CollectionItem,
+          "Expected collectionLiteralPart to be a CollectionItem but was " + collectionLiteralPart
+              .getClass().getName());
+      CollectionItem collectionItem = (CollectionItem) collectionLiteralPart;
+      final OCLExpression ownedItem = collectionItem.getOwnedItem();
+      checkState(ownedItem instanceof LiteralExp,
+          "Expected owned item to be a literal exp but was" + ownedItem.getClass().getName());
+      final ConstraintOrVariable constraintOrVariable = handleLiteralExp((LiteralExp) ownedItem);
+      checkState(constraintOrVariable.isVariable(),
+          "Expected LiteralExp to be represented as a variable.");
+
+      intVars.add((IntVar) constraintOrVariable.getVariable());
+    }
+
+    return ConstraintOrVariable.fromVariable(modelGenerationContext.getModel()
+        .setVar(Ints.toArray(ChocoHelper.getMergedDomainOfVariables(intVars))));
   }
 
   private ConstraintOrVariable handleInvalidLiteralExp(InvalidLiteralExp invalidLiteralExp) {

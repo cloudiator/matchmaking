@@ -2,6 +2,7 @@ package org.cloudiator.matchmaking.ocl;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.cloudiator.matchmaking.domain.NodeCandidate;
 
 public class ConsistentNodeGenerator implements NodeGenerator {
 

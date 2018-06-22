@@ -14,7 +14,7 @@ import org.cloudiator.matchmaking.choco.ChocoSolverTesting;
 import org.cloudiator.matchmaking.choco.TimeLimit;
 import org.cloudiator.matchmaking.experiment.Experiment.CloudiatorModelType;
 import org.cloudiator.matchmaking.ocl.OclCsp;
-import org.cloudiator.matchmaking.ocl.Solution;
+import org.cloudiator.matchmaking.domain.Solution;
 import org.eclipse.ocl.pivot.utilities.ParserException;
 
 public class ExperimentRunner {

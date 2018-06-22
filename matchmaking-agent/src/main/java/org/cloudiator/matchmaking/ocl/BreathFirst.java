@@ -3,6 +3,7 @@ package org.cloudiator.matchmaking.ocl;
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.stream.Collectors;
+import org.cloudiator.matchmaking.domain.Solution;
 
 public class BreathFirst {
 

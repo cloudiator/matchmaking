@@ -14,8 +14,8 @@ import org.cloudiator.matchmaking.ocl.ConstraintChecker;
 import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator;
 import org.cloudiator.matchmaking.ocl.ModelGenerationException;
 import org.cloudiator.matchmaking.ocl.ModelGenerator;
-import org.cloudiator.matchmaking.ocl.NodeCandidate;
-import org.cloudiator.matchmaking.ocl.Solution;
+import org.cloudiator.matchmaking.domain.NodeCandidate;
+import org.cloudiator.matchmaking.domain.Solution;
 
 public class Experiment {
 

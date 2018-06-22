@@ -30,17 +30,17 @@ public class RelationshipHandler {
 
   public void handle() {
 
-    //handleRelationship(Literals.NODE__CLOUD);
-    //handleRelationship(Literals.NODE__IMAGE);
-    //handleRelationship(Literals.NODE__HARDWARE);
-    //handleRelationship(Literals.NODE__LOCATION);
+    handleRelationship(Literals.NODE__CLOUD);
+    handleRelationship(Literals.NODE__IMAGE);
+    handleRelationship(Literals.NODE__HARDWARE);
+    handleRelationship(Literals.NODE__LOCATION);
 
-    handleRelationship(Literals.IMAGE__CLOUD);
-    handleRelationship(Literals.HARDWARE__CLOUD);
-    handleRelationship(Literals.LOCATION__CLOUD);
+    //handleRelationship(Literals.IMAGE__CLOUD);
+    //handleRelationship(Literals.HARDWARE__CLOUD);
+    //handleRelationship(Literals.LOCATION__CLOUD);
 
-    handleRelationship(Literals.IMAGE__LOCATION);
-    handleRelationship(Literals.HARDWARE__LOCATION);
+    //handleRelationship(Literals.IMAGE__LOCATION);
+    //handleRelationship(Literals.HARDWARE__LOCATION);
 
     handleRelationship(Literals.CLOUD__API);
     handleRelationship(Literals.CLOUD__CLOUDCREDENTIAL);
@@ -63,21 +63,21 @@ public class RelationshipHandler {
 
   private void handleOneRelationship(EReference eReference) {
 
-    EClass owing = eReference.getEContainingClass();
+    EClass owning = eReference.getEContainingClass();
     EClass remote = eReference.getEReferenceType();
 
     for (int node = 1; node <= modelGenerationContext.nodeSize(); node++) {
 
       final IntVar owningIdVariable = (IntVar) modelGenerationContext.getVariableStore()
-          .getIdVariables(node).get(owing);
+          .getIdVariables(node).get(owning);
       final IntVar remoteIdVariable = (IntVar) modelGenerationContext.getVariableStore()
           .getIdVariables(node).get(remote);
 
-      checkState(owningIdVariable != null, "Could not find id variable for " + owing.getName());
+      checkState(owningIdVariable != null, "Could not find id variable for " + owning.getName());
       checkState(remoteIdVariable != null, "Could not find id variable for " + remote.getName());
 
-      for (EObject object : emfUtil.getAllObjectsOfClass(owing)) {
-        final int owningId = valueOfIdAttribute(object, owing);
+      for (EObject object : emfUtil.getAllObjectsOfClass(owning)) {
+        final int owningId = valueOfIdAttribute(object, owning);
         final Object remoteObject = object.eGet(eReference, true);
         final int remoteId = valueOfIdAttribute((EObject) remoteObject, remote);
 
@@ -88,9 +88,9 @@ public class RelationshipHandler {
             .arithm(remoteIdVariable, "=", remoteId);
         modelGenerationContext.getModel().ifThen(owningEqual, remoteEqual);
 
-        LOGGER.debug(String.format(
+        LOGGER.trace(String.format(
             "Adding new implies constraint to express relationship between class %s and %s: %s => %s",
-            owing.getName(), remote.getName(), owningEqual, remoteEqual));
+            owning.getName(), remote.getName(), owningEqual, remoteEqual));
 
       }
     }

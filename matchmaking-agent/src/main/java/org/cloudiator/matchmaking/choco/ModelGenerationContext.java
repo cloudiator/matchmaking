@@ -12,8 +12,8 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.Variable;
+import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.ocl.OclCsp;
-import org.cloudiator.matchmaking.ocl.Solution;
 import org.eclipse.emf.common.util.Enumerator;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EClass;
@@ -70,6 +70,9 @@ public class ModelGenerationContext {
   public int mapValue(Object o, EAttribute eAttribute) {
 
     if (eAttribute.getEAttributeType().getInstanceClass() == Integer.class) {
+      if (o == null) {
+        return 0;
+      }
       return (Integer) o;
     }
 

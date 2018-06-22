@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import java.util.stream.Collectors;
 import org.cloudiator.matchmaking.converters.NodeCandidateConverter;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
-import org.cloudiator.matchmaking.ocl.NodeCandidate.NodeCandidateFactory;
+import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.entities.Matchmaking.NodeCandidateRequestMessage;
 import org.cloudiator.messages.entities.Matchmaking.NodeCandidateRequestResponse;

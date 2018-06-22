@@ -3,7 +3,7 @@ package org.cloudiator.matchmaking.converters;
 import de.uniulm.omi.cloudiator.util.OneWayConverter;
 import javax.annotation.Nullable;
 import org.cloudiator.messages.entities.MatchmakingEntities;
-import org.cloudiator.matchmaking.ocl.NodeCandidate;
+import org.cloudiator.matchmaking.domain.NodeCandidate;
 
 public class NodeCandidateConverter implements
     OneWayConverter<NodeCandidate, MatchmakingEntities.NodeCandidate> {

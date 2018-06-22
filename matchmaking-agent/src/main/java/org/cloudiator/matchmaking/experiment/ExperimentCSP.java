@@ -1,7 +1,7 @@
 package org.cloudiator.matchmaking.experiment;
 
 import java.util.HashSet;
-import org.cloudiator.matchmaking.ocl.NodeCandidate.NodeCandidateFactory;
+import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.matchmaking.ocl.OclCsp;
 import org.eclipse.ocl.pivot.utilities.ParserException;
 

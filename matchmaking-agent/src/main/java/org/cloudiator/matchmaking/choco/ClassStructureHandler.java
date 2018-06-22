@@ -85,7 +85,7 @@ public class ClassStructureHandler {
             //add implies constraint
             modelGenerationContext.getModel().ifThen(idEqual, attributeEqual);
 
-            LOGGER.debug(
+            LOGGER.trace(
                 String.format(
                     "Adding new implies constraint to express structure for attribute %s of class %s: %s => %s",
                     eAttribute.getName(), eAttribute.getEContainingClass().getName(), idEqual,

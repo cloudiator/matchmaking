@@ -12,8 +12,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator.PriceCache.PriceKey;
-import org.cloudiator.matchmaking.ocl.NodeCandidate.NodeCandidateFactory;
+import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 
 public class DefaultNodeGenerator implements NodeGenerator {
 

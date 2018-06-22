@@ -12,7 +12,7 @@ import org.cloudiator.matchmaking.ocl.ConstraintChecker;
 import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator;
 import org.cloudiator.matchmaking.ocl.ModelGenerationException;
 import org.cloudiator.matchmaking.ocl.ModelGenerator;
-import org.cloudiator.matchmaking.ocl.NodeCandidate.NodeCandidateFactory;
+import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.matchmaking.ocl.NodeGenerator;
 import org.cloudiator.matchmaking.ocl.OclContext;
 import org.cloudiator.matchmaking.ocl.OclServiceModule;

@@ -57,6 +57,7 @@ public class ClassAttributeHandler {
     }
 
     private void handleOclExpression(OCLExpression oclExpression) {
+
       if (oclExpression instanceof CallExp) {
         this.handleOclExpression(((CallExp) oclExpression).getOwnedSource());
       }
@@ -88,6 +89,9 @@ public class ClassAttributeHandler {
 
 
   private void generate() {
+
+    handleClass(Literals.NODE);
+
     handleClass(Literals.CLOUD);
     handleClass(Literals.API);
     handleClass(Literals.CLOUD_CREDENTIAL);
@@ -129,7 +133,7 @@ public class ClassAttributeHandler {
       modelGenerationContext.getVariableStore()
           .storeIdVariable(node, eClass, intVar);
 
-      LOGGER.debug(String
+      LOGGER.trace(String
           .format("Generating variable %s to represent artificial OID for class %s for node %s.",
               intVar, eClass.getName(), node));
 
@@ -143,7 +147,7 @@ public class ClassAttributeHandler {
       if (isRelevant(eAttribute)) {
         handleAttribute(eAttribute);
       }
-      LOGGER.debug(String
+      LOGGER.trace(String
           .format("Skipping attribute %s as it is not relevant for the problem.", eAttribute));
     }
   }
@@ -178,7 +182,7 @@ public class ClassAttributeHandler {
 
       modelGenerationContext.getVariableStore().storeVariable(i, eAttribute, intVar);
 
-      LOGGER.debug(String
+      LOGGER.trace(String
           .format("Adding new variable %s to represent attribute %s of class %s of node %s.",
               intVar, eAttribute.getName(), eAttribute.getContainerClass().getName(), i));
     }

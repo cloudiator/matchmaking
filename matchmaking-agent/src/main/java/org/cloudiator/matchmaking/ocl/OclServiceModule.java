@@ -3,7 +3,10 @@ package org.cloudiator.matchmaking.ocl;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import org.cloudiator.matchmaking.choco.ChocoSolver;
+import org.cloudiator.matchmaking.domain.Solver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +22,11 @@ public class OclServiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
+
+    Multibinder<Solver> solverBinder = Multibinder.newSetBinder(binder(), Solver.class);
+    solverBinder.addBinding().to(ChocoSolver.class);
+    solverBinder.addBinding().to(BestFitSolver.class);
+
     bind(PriceFunction.class).to(HardwareBasedPriceFunction.class);
 
     LOGGER.info(String.format("Using %s as model generator.",

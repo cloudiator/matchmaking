@@ -1,4 +1,4 @@
-package org.cloudiator.matchmaking.ocl;
+package org.cloudiator.matchmaking.domain;
 
 import com.google.common.base.MoreObjects;
 import java.util.ArrayList;

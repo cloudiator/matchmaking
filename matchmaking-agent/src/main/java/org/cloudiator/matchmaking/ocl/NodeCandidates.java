@@ -8,6 +8,7 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import org.cloudiator.matchmaking.domain.NodeCandidate;
 
 public class NodeCandidates implements Set<NodeCandidate>, NodeGenerator {
 
