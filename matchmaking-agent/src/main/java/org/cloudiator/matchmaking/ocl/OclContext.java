@@ -21,4 +21,8 @@ public class OclContext {
     return ModelGenerators.valueOf(config.getString("discoveryModel"));
   }
 
+  public int cacheTime() {
+    return config.getInt("cacheTime");
+  }
+
 }

@@ -1,45 +1,48 @@
 package org.cloudiator.matchmaking.ocl;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import cloudiator.CloudiatorModel;
+import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
+@Singleton
 public class MemoryCachedModelGenerator implements ModelGenerator {
 
+  private final Cache<String, CloudiatorModel> modelCache;
   private final ModelGenerator delegate;
 
-  private final LoadingCache<String, CloudiatorModel> modelCache = CacheBuilder.newBuilder()
-      .expireAfterWrite(1,
-          TimeUnit.MINUTES)
-      .build(
-          new CacheLoader<String, CloudiatorModel>() {
-            public CloudiatorModel load(@Nullable String userId)
-                throws ModelGenerationException { // no checked exception
-              return delegate.generateModel(userId);
-            }
-          });
-
   @Inject
-  public MemoryCachedModelGenerator(@Named("Base") ModelGenerator delegate) {
+  public MemoryCachedModelGenerator(@Named("Base") ModelGenerator delegate,
+      @Named("cacheTime") int cacheTime) {
+
+    checkArgument(cacheTime >= 0, "cacheTime needs to be larger than zero");
+
+    this.modelCache = CacheBuilder.newBuilder()
+        .expireAfterWrite(cacheTime,
+            TimeUnit.SECONDS)
+        .build();
+
     this.delegate = delegate;
   }
 
 
   @Override
   public CloudiatorModel generateModel(String userId) throws ModelGenerationException {
+
     try {
-      return modelCache.get(userId);
+      return modelCache.get(userId, () -> delegate.generateModel(userId));
     } catch (ExecutionException e) {
       if (e.getCause() instanceof ModelGenerationException) {
         throw (ModelGenerationException) e.getCause();
       }
-      throw new IllegalStateException(e.getCause());
+      throw new IllegalStateException("Unexpected exception during generation of model.",
+          e.getCause());
     }
   }
 }
