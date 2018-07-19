@@ -5,18 +5,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class Solution implements Comparable<Solution> {
 
   public static final Solution EMPTY_SOLUTION = Solution.of(Collections.emptyList());
 
-  private final List<NodeCandidate> nodeCandiates;
+  private final List<NodeCandidate> nodeCandidates;
   private Double costs = null;
   private Float time = null;
-  private Boolean isOptimal = null;
+  private Boolean isOptimal = false;
 
   private Solution(Collection<NodeCandidate> candidates) {
-    this.nodeCandiates = new ArrayList<>(candidates);
+    this.nodeCandidates = new ArrayList<>(candidates);
   }
 
   public static Solution of(Collection<NodeCandidate> candidates) {
@@ -24,7 +25,7 @@ public class Solution implements Comparable<Solution> {
   }
 
   public List<NodeCandidate> getList() {
-    return nodeCandiates;
+    return nodeCandidates;
   }
 
   public int nodeSize() {
@@ -36,21 +37,15 @@ public class Solution implements Comparable<Solution> {
   }
 
   public boolean isOptimal() {
-    if (isOptimal == null) {
-      throw new IllegalStateException("optimal not set");
-    }
     return isOptimal;
   }
 
   public boolean noSolution() {
-    return nodeCandiates.isEmpty();
+    return nodeCandidates.isEmpty();
   }
 
-  public float getTime() {
-    if (time == null) {
-      throw new IllegalStateException("time not set");
-    }
-    return time;
+  public Optional<Float> getTime() {
+    return Optional.ofNullable(time);
   }
 
   public void setTime(float time) {
@@ -59,7 +54,7 @@ public class Solution implements Comparable<Solution> {
 
   public Double getCosts() {
     if (costs == null) {
-      costs = nodeCandiates.stream().mapToDouble(NodeCandidate::getPrice).sum();
+      costs = nodeCandidates.stream().mapToDouble(NodeCandidate::getPrice).sum();
     }
     return costs;
   }
@@ -73,7 +68,7 @@ public class Solution implements Comparable<Solution> {
   public String toString() {
     return MoreObjects.toStringHelper(this).add("time", getTime()).add("price", getCosts())
         .add("numberOfNodes", nodeSize())
-        .add("nodes", nodeCandiates)
+        .add("nodes", nodeCandidates)
         .toString();
   }
 
@@ -81,7 +76,7 @@ public class Solution implements Comparable<Solution> {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((nodeCandiates == null) ? 0 : nodeCandiates.hashCode());
+    result = prime * result + ((nodeCandidates == null) ? 0 : nodeCandidates.hashCode());
     return result;
   }
 
@@ -97,11 +92,11 @@ public class Solution implements Comparable<Solution> {
       return false;
     }
     Solution other = (Solution) obj;
-    if (nodeCandiates == null) {
-      if (other.nodeCandiates != null) {
+    if (nodeCandidates == null) {
+      if (other.nodeCandidates != null) {
         return false;
       }
-    } else if (!nodeCandiates.equals(other.nodeCandiates)) {
+    } else if (!nodeCandidates.equals(other.nodeCandidates)) {
       return false;
     }
     return true;

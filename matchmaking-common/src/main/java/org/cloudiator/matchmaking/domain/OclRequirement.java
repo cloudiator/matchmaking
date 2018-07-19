@@ -16,6 +16,9 @@
 
 package org.cloudiator.matchmaking.domain;
 
+import com.google.common.base.MoreObjects;
+import java.util.Objects;
+
 public class OclRequirement implements Requirement {
 
   private final String constraint;
@@ -32,4 +35,26 @@ public class OclRequirement implements Requirement {
     return constraint;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    OclRequirement that = (OclRequirement) o;
+    return Objects.equals(constraint, that.constraint);
+  }
+
+  @Override
+  public int hashCode() {
+
+    return Objects.hash(constraint);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("constraint", constraint).toString();
+  }
 }

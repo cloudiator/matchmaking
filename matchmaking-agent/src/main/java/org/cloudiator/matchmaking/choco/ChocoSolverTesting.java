@@ -43,7 +43,7 @@ public class ChocoSolverTesting {
     Solution solution = Solution.EMPTY_SOLUTION;
     for (int i = 2; i <= numberOfNodes; i++) {
       solution = solve(i, timeLimit, solution);
-      time = time + solution.getTime();
+      time = time + solution.getTime().get();
     }
     solution.setTime(time);
     return solution;

@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import cloudiator.CloudiatorPackage;
 import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -100,5 +101,11 @@ public class AttributeRequirementInOCL implements AttributeRequirement, Represen
     }
 
     return true;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("delegate", attributeRequirement)
+        .add("oclConstraints", getOCLConstraints()).toString();
   }
 }

@@ -16,6 +16,9 @@
 
 package org.cloudiator.matchmaking.domain;
 
+import com.google.common.base.MoreObjects;
+import java.util.Objects;
+
 public class IdRequirementImpl implements IdRequirement {
 
   private final String hardwareId;
@@ -43,4 +46,29 @@ public class IdRequirementImpl implements IdRequirement {
     return imageId;
   }
 
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("hardwareId", hardwareId)
+        .add("locationId", locationId).add("imageId", imageId).toString();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    IdRequirementImpl that = (IdRequirementImpl) o;
+    return Objects.equals(hardwareId, that.hardwareId) &&
+        Objects.equals(locationId, that.locationId) &&
+        Objects.equals(imageId, that.imageId);
+  }
+
+  @Override
+  public int hashCode() {
+
+    return Objects.hash(hardwareId, locationId, imageId);
+  }
 }

@@ -2,6 +2,7 @@ package org.cloudiator.matchmaking.domain;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Set;
@@ -43,5 +44,11 @@ public class IdRequirementInOCL implements IdRequirement, RepresentableAsOCL {
     constraints.add(String.format(IMAGE_TEMPLATE, imageId()));
 
     return ImmutableSet.copyOf(constraints);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("delegate", delegate)
+        .add("oclConstraints", getOCLConstraints()).toString();
   }
 }
