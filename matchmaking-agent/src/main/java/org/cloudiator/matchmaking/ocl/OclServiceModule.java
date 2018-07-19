@@ -34,6 +34,8 @@ public class OclServiceModule extends AbstractModule {
     bind(ModelGenerator.class).annotatedWith(Names.named("Base"))
         .to(oclContext.modelGenerator().modelGeneratorClass());
 
+    bindConstant().annotatedWith(Names.named("cacheTime")).to(oclContext.cacheTime());
+
     if (oclContext.modelGenerator().cacheClass().isPresent()) {
       LOGGER.info(String.format("Using cache %s for model generator.",
           oclContext.modelGenerator().cacheClass().get().getName()));

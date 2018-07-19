@@ -61,7 +61,7 @@
 
   <logger level="DEBUG" name="org.cloudiator.matchmaking.choco"/>
   <logger level="DEBUG" name="org.cloudiator.matchmaking.ocl"/>
-  <logger level="DEBUG" name="org.cloudiator.messaging"/>
+  <logger level="WARN" name="org.cloudiator.messaging"/>
 
 
   <root level="WARN">
