@@ -1,5 +1,6 @@
 package org.cloudiator.matchmaking.ocl;
 
+import com.google.common.base.MoreObjects;
 import java.util.ArrayList;
 import java.util.List;
 import org.cloudiator.matchmaking.domain.Solution;
@@ -78,5 +79,10 @@ public class BestFitSolver implements Solver {
 
     }
 
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).toString();
   }
 }

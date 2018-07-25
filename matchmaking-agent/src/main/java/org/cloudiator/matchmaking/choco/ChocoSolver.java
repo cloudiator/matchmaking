@@ -2,6 +2,7 @@ package org.cloudiator.matchmaking.choco;
 
 import cloudiator.CloudiatorModel;
 import cloudiator.CloudiatorPackage.Literals;
+import com.google.common.base.MoreObjects;
 import java.util.LinkedList;
 import javax.annotation.Nullable;
 import org.chocosolver.solver.Model;
@@ -122,4 +123,8 @@ public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
     return Solution.EMPTY_SOLUTION;
   }
 
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).toString();
+  }
 }
