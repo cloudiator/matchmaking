@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorPackage;
+import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
@@ -81,6 +82,9 @@ public class MetaSolver {
     LOGGER.info(
         String.format("Possible candidate generation for CSP %s took %s", csp, generationTime));
 
+    LOGGER.info(
+        String.format("Start solving of csp: %s using the following solvers: %s", csp,
+            Joiner.on(",").join(solvers)));
     long startSolving = System.currentTimeMillis();
 
     List<Callable<Solution>> solverCallables = new LinkedList<>();
@@ -97,8 +101,6 @@ public class MetaSolver {
 
     try {
 
-      long solvingTime = System.currentTimeMillis() - startSolving;
-
       final List<Future<Solution>> futures = executorService
           .invokeAll(solverCallables, 5, TimeUnit.MINUTES);
 
@@ -111,6 +113,12 @@ public class MetaSolver {
           return null;
         }
       }).collect(Collectors.toList());
+
+      long solvingTime = System.currentTimeMillis() - startSolving;
+
+      LOGGER.info(
+          String.format("Finished solving of csp: %s.", csp));
+
       final List<Solution> solutions = initialSolutions.stream().filter(
           Objects::nonNull).filter(solution -> !solution.noSolution()).collect(Collectors.toList());
 
@@ -124,6 +132,10 @@ public class MetaSolver {
       if (anyOptimalSolution.isPresent()) {
         final Solution optimalSolution = anyOptimalSolution.get();
         optimalSolution.setTime(solvingTime);
+
+        LOGGER.info(
+            String.format("Found optimal solution %s for csp: %s.", optimalSolution, csp));
+
         return optimalSolution;
       }
 
@@ -131,8 +143,16 @@ public class MetaSolver {
       if (minOptional.isPresent()) {
         final Solution solution = minOptional.get();
         solution.setTime(solvingTime);
+
+        LOGGER.info(
+            String.format("Not found an optimal solution. Using best solution %s for csp: %s.",
+                solution, csp));
+
         return solution;
       }
+
+      LOGGER.info(
+          String.format("No solution found for csp: %s.", csp));
 
       return Solution.EMPTY_SOLUTION;
 

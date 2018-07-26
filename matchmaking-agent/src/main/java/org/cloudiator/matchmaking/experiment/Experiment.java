@@ -85,7 +85,7 @@ public class Experiment {
             }
           }).summaryStatistics();
       timeStatistics = solutions.stream()
-          .mapToDouble(s -> BigDecimal.valueOf(s.getTime()).floatValue()).summaryStatistics();
+          .mapToDouble(s -> BigDecimal.valueOf(s.getTime().get()).floatValue()).summaryStatistics();
     }
   }
 
