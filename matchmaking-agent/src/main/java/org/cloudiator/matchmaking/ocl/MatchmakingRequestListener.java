@@ -1,5 +1,6 @@
 package org.cloudiator.matchmaking.ocl;
 
+import com.google.common.base.MoreObjects;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
@@ -27,12 +28,19 @@ public class MatchmakingRequestListener implements Runnable {
     this.metaSolver = metaSolver;
   }
 
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).toString();
+  }
 
   @Override
   public void run() {
     Subscription subscribe = messageInterface
         .subscribe(MatchmakingRequest.class, MatchmakingRequest.parser(),
             (id, matchmakingRequest) -> {
+
+              LOGGER.info(String
+                  .format("%s received new matchmaking request %s.", this, matchmakingRequest));
 
               String userId = matchmakingRequest.getUserId();
 
@@ -44,11 +52,16 @@ public class MatchmakingRequestListener implements Runnable {
                             .map(REQUIREMENT_CONVERTER).collect(Collectors.toList()));
 
                 LOGGER.info(
-                    String.format("%s has generated the constraint problem %s", this, oclCsp));
+                    String
+                        .format("%s has generated the constraint problem %s. Calling solver.", this,
+                            oclCsp));
 
                 Solution solution = metaSolver.solve(oclCsp, userId);
 
-                if (solution.noSolution()) {
+                if (solution == null || solution.noSolution()) {
+                  LOGGER
+                      .warn(
+                          String.format("%s could not find a solution for csp %s.", this, oclCsp));
                   messageInterface.reply(MatchmakingResponse.class, id,
                       Error.newBuilder().setCode(400)
                           .setMessage(
@@ -57,6 +70,10 @@ public class MatchmakingRequestListener implements Runnable {
                           .build());
                   return;
                 }
+
+                LOGGER.info(String
+                    .format("%s found a solution %s for the csp %s. Replying.", this, solution,
+                        oclCsp));
 
                 Builder matchmakingResponseBuilder = MatchmakingResponse.newBuilder();
 

@@ -34,6 +34,9 @@ public class NodeCandidateListener implements Runnable {
   public void run() {
     Subscription subscription = messageInterface.subscribe(NodeCandidateRequestMessage.class,
         NodeCandidateRequestMessage.parser(), (id, content) -> {
+
+          LOGGER.info(String.format("%s received new node candidate request %s.", this, content));
+
           try {
             final CloudiatorModel cloudiatorModel = modelGenerator
                 .generateModel(content.getUserId());
@@ -46,12 +49,19 @@ public class NodeCandidateListener implements Runnable {
                         .map(REQUIREMENT_CONVERTER).collect(Collectors.toList())
                 );
 
+            LOGGER.info(String.format("%s generated the csp %s.", this, oclCsp));
+
             final ConsistentNodeGenerator consistentNodeGenerator = new ConsistentNodeGenerator(
                 defaultNodeGenerator, ConstraintChecker.create(oclCsp));
 
+            final NodeCandidates nodeCandidates = consistentNodeGenerator.get();
+
+            LOGGER.info(String.format("%s found %s nodes for csp %s. Replying.", this,
+                nodeCandidates.size(), oclCsp));
+
             messageInterface
                 .reply(id, NodeCandidateRequestResponse.newBuilder().addAllCandidates(
-                    consistentNodeGenerator.get().stream()
+                    nodeCandidates.stream()
                         .map(NODE_CANDIDATE_CONVERTER)
                         .collect(
                             Collectors.toList())).build());
