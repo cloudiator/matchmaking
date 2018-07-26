@@ -65,7 +65,7 @@ public class MetaSolver {
     long startGeneration = System.currentTimeMillis();
 
     //generate node candidates
-    final NodeCandidates possibleNodes = nodeGenerator.getPossibleNodes();
+    final NodeCandidates possibleNodes = nodeGenerator.get();
 
     LOGGER.debug(String.format("CSP %s has %s possible candidates.", csp,
         possibleNodes.size()));

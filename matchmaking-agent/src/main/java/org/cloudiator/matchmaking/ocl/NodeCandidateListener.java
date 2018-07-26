@@ -51,7 +51,7 @@ public class NodeCandidateListener implements Runnable {
 
             messageInterface
                 .reply(id, NodeCandidateRequestResponse.newBuilder().addAllCandidates(
-                    consistentNodeGenerator.getPossibleNodes().stream()
+                    consistentNodeGenerator.get().stream()
                         .map(NODE_CANDIDATE_CONVERTER)
                         .collect(
                             Collectors.toList())).build());

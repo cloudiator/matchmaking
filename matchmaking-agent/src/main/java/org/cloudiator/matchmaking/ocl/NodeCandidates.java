@@ -123,7 +123,7 @@ public class NodeCandidates implements Set<NodeCandidate>, NodeGenerator {
   }
 
   @Override
-  public NodeCandidates getPossibleNodes() {
+  public NodeCandidates get() {
     return this;
   }
 }

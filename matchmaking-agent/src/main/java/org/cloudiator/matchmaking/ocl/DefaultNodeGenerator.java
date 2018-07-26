@@ -81,7 +81,7 @@ public class DefaultNodeGenerator implements NodeGenerator {
    * @see ocl.NodeGenerator#getPossibleNodes()
    */
   @Override
-  public NodeCandidates getPossibleNodes() {
+  public NodeCandidates get() {
     Set<NodeCandidate> nodeCandidates = new HashSet<>();
     for (Cloud cloud : cloudiatorModel.getClouds()) {
       for (Image image : cloud.getImages()) {

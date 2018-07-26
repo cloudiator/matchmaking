@@ -1,7 +1,7 @@
 package org.cloudiator.matchmaking.ocl;
 
-public interface NodeGenerator {
+import com.google.common.base.Supplier;
 
-  NodeCandidates getPossibleNodes();
+public interface NodeGenerator extends Supplier<NodeCandidates> {
 
 }

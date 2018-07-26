@@ -153,7 +153,7 @@ public class Experiment {
         this.candidates = new ConsistentNodeGenerator(
             new DefaultNodeGenerator(ExperimentCSP.NODE_CANDIDATE_FACTORY,
                 getCloudiatorModel()),
-            ConstraintChecker.create(ExperimentCSP.CSP)).getPossibleNodes();
+            ConstraintChecker.create(ExperimentCSP.CSP)).get();
       }
       return candidates;
     }

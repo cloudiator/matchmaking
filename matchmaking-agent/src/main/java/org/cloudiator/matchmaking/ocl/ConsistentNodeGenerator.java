@@ -15,9 +15,9 @@ public class ConsistentNodeGenerator implements NodeGenerator {
   }
 
   @Override
-  public NodeCandidates getPossibleNodes() {
+  public NodeCandidates get() {
     Set<NodeCandidate> consistentNodes =
-        nodeGenerator.getPossibleNodes().stream().filter(this.constraintChecker::consistent)
+        nodeGenerator.get().stream().filter(this.constraintChecker::consistent)
             .collect(Collectors.toSet());
     System.out.println(
         String.format("%s generated %s consistent nodes", this, consistentNodes.size()));
