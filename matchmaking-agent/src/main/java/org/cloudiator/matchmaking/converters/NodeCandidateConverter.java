@@ -13,6 +13,10 @@ public class NodeCandidateConverter implements
   private static final LocationConverter LOCATION_CONVERTER = new LocationConverter();
   private static final CloudConverter CLOUD_CONVERTER = new CloudConverter();
 
+  public static final NodeCandidateConverter INSTANCE = new NodeCandidateConverter();
+
+  private NodeCandidateConverter() {}
+
   @Nullable
   @Override
   public MatchmakingEntities.NodeCandidate apply(@Nullable NodeCandidate nodeCandidate) {

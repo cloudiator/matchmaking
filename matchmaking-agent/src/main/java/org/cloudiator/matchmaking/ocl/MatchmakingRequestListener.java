@@ -3,10 +3,10 @@ package org.cloudiator.matchmaking.ocl;
 import com.google.common.base.MoreObjects;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import org.cloudiator.matchmaking.converters.NodeCandidateConverter;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
 import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.messages.General.Error;
-import org.cloudiator.messages.entities.IaasEntities.VirtualMachineRequest;
 import org.cloudiator.messages.entities.Matchmaking.MatchmakingRequest;
 import org.cloudiator.messages.entities.Matchmaking.MatchmakingResponse;
 import org.cloudiator.messages.entities.Matchmaking.MatchmakingResponse.Builder;
@@ -21,6 +21,7 @@ public class MatchmakingRequestListener implements Runnable {
   private final MessageInterface messageInterface;
   private final MetaSolver metaSolver;
   private static final RequirementConverter REQUIREMENT_CONVERTER = RequirementConverter.INSTANCE;
+  private static final NodeCandidateConverter NODE_CANDIDATE_CONVERTER = NodeCandidateConverter.INSTANCE;
 
   @Inject
   public MatchmakingRequestListener(MessageInterface messageInterface, MetaSolver metaSolver) {
@@ -79,10 +80,7 @@ public class MatchmakingRequestListener implements Runnable {
 
                 solution.getList().forEach(
                     nodeCandidate -> matchmakingResponseBuilder
-                        .addNodes(VirtualMachineRequest.newBuilder()
-                            .setHardware(nodeCandidate.getHardware().getId())
-                            .setImage(nodeCandidate.getImage().getId())
-                            .setLocation(nodeCandidate.getLocation().getId()).build()));
+                        .addCandidates(NODE_CANDIDATE_CONVERTER.apply(nodeCandidate)));
 
                 messageInterface.reply(id, matchmakingResponseBuilder.build());
 

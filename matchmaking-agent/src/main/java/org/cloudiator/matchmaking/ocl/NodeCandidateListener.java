@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 public class NodeCandidateListener implements Runnable {
 
-  private static final NodeCandidateConverter NODE_CANDIDATE_CONVERTER = new NodeCandidateConverter();
+  private static final NodeCandidateConverter NODE_CANDIDATE_CONVERTER = NodeCandidateConverter.INSTANCE;
   private static final RequirementConverter REQUIREMENT_CONVERTER = RequirementConverter.INSTANCE;
   private final Logger LOGGER = LoggerFactory.getLogger(NodeCandidateListener.class);
   private final MessageInterface messageInterface;
