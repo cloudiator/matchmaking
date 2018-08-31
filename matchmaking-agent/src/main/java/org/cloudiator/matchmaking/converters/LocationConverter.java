@@ -13,6 +13,7 @@ public class LocationConverter implements
 
   private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorFactory.eINSTANCE;
   private static final GeoLocationConverter GEO_LOCATION_CONVERTER = new GeoLocationConverter();
+  private static final LocationScopeConverter LOCATION_SCOPE_CONVERTER = LocationScopeConverter.INSTANCE;
 
   @Nullable
   @Override
@@ -20,7 +21,8 @@ public class LocationConverter implements
     final IaasEntities.Location.Builder builder = IaasEntities.Location.newBuilder()
         .setProviderId(location.getProviderId())
         .setId(location.getId()).setName(location.getName())
-        .setIsAssignable(location.isAssignable());
+        .setIsAssignable(location.isAssignable())
+        .setLocationScope(LOCATION_SCOPE_CONVERTER.applyBack(location.getLocationScope()));
 
     if (location.getParent() != null) {
       builder.setParent(applyBack(location.getParent()));
@@ -40,6 +42,7 @@ public class LocationConverter implements
     modelLocation.setProviderId(location.getProviderId());
     modelLocation.setName(location.getName());
     modelLocation.setAssignable(location.getIsAssignable());
+    modelLocation.setLocationScope(LOCATION_SCOPE_CONVERTER.apply(location.getLocationScope()));
 
     if (location.hasParent()) {
       modelLocation.setParent(apply(location.getParent()));
