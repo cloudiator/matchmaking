@@ -13,8 +13,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.cloudiator.matchmaking.domain.NodeCandidate;
-import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator.PriceCache.PriceKey;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
+import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator.PriceCache.PriceKey;
 
 public class DefaultNodeGenerator implements NodeGenerator {
 
@@ -51,8 +51,6 @@ public class DefaultNodeGenerator implements NodeGenerator {
       if (!locationScope.contains(image.getLocation().getId())) {
         return false;
       }
-    } else {
-      image.setLocation(location);
     }
 
     if (hardware.getLocation() != null) {
@@ -60,8 +58,6 @@ public class DefaultNodeGenerator implements NodeGenerator {
       if (!locationScope.contains(hardware.getLocation().getId())) {
         return false;
       }
-    } else {
-      hardware.setLocation(location);
     }
 
     return true;
