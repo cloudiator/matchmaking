@@ -49,7 +49,7 @@ public class MatchmakingRequestListener implements Runnable {
 
                 OclCsp oclCsp = OclCsp
                     .ofRequirements(
-                        matchmakingRequest.getRequirements().getRequirementsList().stream()
+                        matchmakingRequest.getNodeRequirements().getRequirementsList().stream()
                             .map(REQUIREMENT_CONVERTER).collect(Collectors.toList()));
 
                 LOGGER.info(

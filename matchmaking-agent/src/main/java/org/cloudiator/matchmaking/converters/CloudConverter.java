@@ -93,23 +93,24 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
 
       final CloudConfiguration cloudConfiguration = CLOUDIATOR_FACTORY.createCloudConfiguration();
       cloudConfiguration.setNodeGroup(configuration.getNodeGroup());
-      cloudConfiguration.getProperties().addAll(configuration.getPropertyList().stream().map(
-          property -> {
-            final Property modelProperty = CLOUDIATOR_FACTORY.createProperty();
-            modelProperty.setKey(property.getKey());
-            modelProperty.setValue(property.getValue());
-            return modelProperty;
-          }).collect(Collectors.toList()));
+      cloudConfiguration.getProperties()
+          .addAll(configuration.getPropertiesMap().entrySet().stream().map(
+              entry -> {
+                final Property modelProperty = CLOUDIATOR_FACTORY.createProperty();
+                modelProperty.setKey(entry.getKey());
+                modelProperty.setValue(entry.getValue());
+                return modelProperty;
+              }).collect(Collectors.toList()));
 
       return cloudConfiguration;
     }
 
     @Override
     public Configuration apply(CloudConfiguration cloudConfiguration) {
-      return IaasEntities.Configuration.newBuilder().setNodeGroup(cloudConfiguration.getNodeGroup())
-          .addAllProperty(cloudConfiguration.getProperties().stream().map(
-              property -> IaasEntities.Property.newBuilder().setKey(property.getKey())
-                  .setValue(property.getValue()).build()).collect(Collectors.toList())).build();
+      return Configuration.newBuilder().setNodeGroup(cloudConfiguration.getNodeGroup())
+          .putAllProperties(cloudConfiguration.getProperties().stream()
+              .collect(Collectors.toMap(Property::getKey, Property::getValue)))
+          .build();
     }
   }
 

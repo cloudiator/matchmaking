@@ -45,7 +45,7 @@ public class NodeCandidateListener implements Runnable {
 
             OclCsp oclCsp = OclCsp
                 .ofRequirements(
-                    content.getRequirements().getRequirementsList().stream()
+                    content.getRequirementsList().stream()
                         .map(REQUIREMENT_CONVERTER).collect(Collectors.toList())
                 );
 
