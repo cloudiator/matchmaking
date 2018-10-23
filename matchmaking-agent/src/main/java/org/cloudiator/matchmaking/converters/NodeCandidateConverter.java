@@ -1,9 +1,8 @@
 package org.cloudiator.matchmaking.converters;
 
 import de.uniulm.omi.cloudiator.util.OneWayConverter;
-import javax.annotation.Nullable;
-import org.cloudiator.messages.entities.MatchmakingEntities;
 import org.cloudiator.matchmaking.domain.NodeCandidate;
+import org.cloudiator.messages.entities.MatchmakingEntities;
 
 public class NodeCandidateConverter implements
     OneWayConverter<NodeCandidate, MatchmakingEntities.NodeCandidate> {
@@ -15,12 +14,13 @@ public class NodeCandidateConverter implements
 
   public static final NodeCandidateConverter INSTANCE = new NodeCandidateConverter();
 
-  private NodeCandidateConverter() {}
+  private NodeCandidateConverter() {
+  }
 
-  @Nullable
   @Override
-  public MatchmakingEntities.NodeCandidate apply(@Nullable NodeCandidate nodeCandidate) {
+  public MatchmakingEntities.NodeCandidate apply(NodeCandidate nodeCandidate) {
     return MatchmakingEntities.NodeCandidate.newBuilder()
+        .setId(nodeCandidate.id())
         .setCloud(CLOUD_CONVERTER.apply(nodeCandidate.getCloud()))
         .setHardwareFlavor(HARDWARE_CONVERTER.applyBack(nodeCandidate.getHardware()))
         .setImage(IMAGE_CONVERTER.applyBack(nodeCandidate.getImage()))

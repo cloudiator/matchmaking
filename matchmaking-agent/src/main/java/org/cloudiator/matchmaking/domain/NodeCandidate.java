@@ -20,6 +20,7 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
   private final Cloud cloud;
   @Nullable
   private Double price = null;
+  private static final NodeCandidateIdGenerator ID_GENERATOR = new HashingNodeCandidateIdGenerator();
 
   public NodeCandidate(Cloud cloud, Hardware hardware,
       Image image, Location location, @Nullable Double price) {
@@ -28,6 +29,10 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
     this.image = image;
     this.location = location;
     this.price = price;
+  }
+
+  public String id() {
+    return ID_GENERATOR.generateId(this);
   }
 
   private Node toNode() {
