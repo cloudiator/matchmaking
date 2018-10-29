@@ -2,16 +2,16 @@ package org.cloudiator.matchmaking.ocl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import cloudiator.Cloud;
-import cloudiator.CloudiatorModel;
-import cloudiator.Hardware;
-import cloudiator.Image;
-import cloudiator.Location;
-import cloudiator.Price;
+import cloudiator.*;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import cloudiator.Runtime;
+import cloudiator.impl.HardwareImpl;
+import com.google.common.collect.ImmutableSet;
 import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator.PriceCache.PriceKey;
@@ -94,6 +94,22 @@ public class DefaultNodeGenerator implements NodeGenerator {
             }
           }
         }
+      }
+      // TODO create valid Faas node candidates
+      for (Location location : cloud.getLocations()) {
+        int memory = 128;
+        Hardware hardware = CloudiatorFactory.eINSTANCE.createHardware();
+        hardware.setId(cloud.getId() + memory);
+        hardware.setName(String.format("%s-%s", cloud.getApi().getProviderName(), memory));
+        hardware.setProviderId(hardware.getName());
+        hardware.setRam(memory);
+        hardware.setCores(1);
+        hardware.setDisk(512.);
+
+        Environment environment = CloudiatorFactory.eINSTANCE.createEnvironment();
+        environment.setRuntime(Runtime.NODEJS);
+        nodeCandidates.add(nodeCandidateFactory.of(
+            cloud, location, hardware, 0, 0, environment));
       }
     }
     System.out

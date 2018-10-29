@@ -22,6 +22,10 @@ public class ImageConverter implements TwoWayConverter<IaasEntities.Image, Image
 
   @Override
   public IaasEntities.Image applyBack(Image image) {
+    if (image == null) {
+      return null;
+    }
+
     final Builder builder = IaasEntities.Image.newBuilder().setId(image.getId())
         .setProviderId(image.getProviderId())
         .setOperationSystem(OS_CONVERTER.applyBack(image.getOperatingSystem())).setName(image.getName());
@@ -36,6 +40,10 @@ public class ImageConverter implements TwoWayConverter<IaasEntities.Image, Image
 
   @Override
   public Image apply(IaasEntities.Image image) {
+    if (image == null) {
+      return null;
+    }
+
     Image imageModel = CLOUDIATOR_FACTORY.createImage();
     imageModel.setId(image.getId());
     imageModel.setName(image.getName());

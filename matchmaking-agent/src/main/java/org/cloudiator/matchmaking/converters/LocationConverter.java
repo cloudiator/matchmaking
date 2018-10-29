@@ -18,6 +18,10 @@ public class LocationConverter implements
   @Nullable
   @Override
   public IaasEntities.Location applyBack(@Nullable Location location) {
+    if (location == null) {
+      return null;
+    }
+
     final IaasEntities.Location.Builder builder = IaasEntities.Location.newBuilder()
         .setProviderId(location.getProviderId())
         .setId(location.getId()).setName(location.getName())
@@ -37,6 +41,10 @@ public class LocationConverter implements
 
   @Override
   public Location apply(IaasEntities.Location location) {
+    if (location == null) {
+      return null;
+    }
+
     Location modelLocation = CLOUDIATOR_FACTORY.createLocation();
     modelLocation.setId(location.getId());
     modelLocation.setProviderId(location.getProviderId());

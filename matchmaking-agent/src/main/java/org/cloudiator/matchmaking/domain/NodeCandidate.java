@@ -1,29 +1,30 @@
 package org.cloudiator.matchmaking.domain;
 
-import static com.google.common.base.Preconditions.checkState;
-
-import cloudiator.Cloud;
-import cloudiator.CloudiatorFactory;
-import cloudiator.Hardware;
-import cloudiator.Image;
-import cloudiator.Location;
-import cloudiator.Node;
+import cloudiator.*;
 import com.google.common.base.MoreObjects;
+
 import javax.annotation.Nullable;
 
 public class NodeCandidate implements Comparable<NodeCandidate> {
 
   private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorFactory.eINSTANCE;
-  private final Hardware hardware;
-  private final Image image;
-  private final Location location;
-  private final Cloud cloud;
+  private NodeType type;
+  private Cloud cloud;
+  private Location location;
+  // IAAS
+  private Hardware hardware;
+  private Image image;
   @Nullable
   private Double price = null;
+  // FAAS
+  private double pricePerInvocation;
+  private double memoryPrice;
+  private Environment environment;
   private static final NodeCandidateIdGenerator ID_GENERATOR = new HashingNodeCandidateIdGenerator();
 
   public NodeCandidate(Cloud cloud, Hardware hardware,
       Image image, Location location, @Nullable Double price) {
+    this.type = NodeType.IAAS;
     this.cloud = cloud;
     this.hardware = hardware;
     this.image = image;
@@ -31,33 +32,84 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
     this.price = price;
   }
 
-  public String id() {
-    return ID_GENERATOR.generateId(this);
+  public NodeCandidate(Cloud cloud, Location location, Hardware hardware, double pricePerInvocation,
+      double memoryPrice, Environment environment) {
+    this.type = NodeType.FAAS;
+    this.cloud = cloud;
+    this.hardware = hardware;
+    this.location = location;
+    this.pricePerInvocation = pricePerInvocation;
+    this.memoryPrice = memoryPrice;
+    this.environment = environment;
   }
 
   private Node toNode() {
     Node node = CLOUDIATOR_FACTORY.createNode();
+    node.setType(type);
     node.setImage(image);
     node.setHardware(hardware);
     node.setLocation(location);
     node.setCloud(cloud);
     node.setPrice(price);
+    node.setPricePerInvocation(pricePerInvocation);
+    node.setMemoryPrice(memoryPrice);
+    node.setEnvironment(environment);
     return node;
+  }
+
+  public String id() {
+    return ID_GENERATOR.generateId(this);
   }
 
   public Node getNode() {
     return toNode();
   }
 
+  public NodeType getType() {
+    return type;
+  }
+
   public Double getPrice() {
-    checkState(price != null, "price not set");
+    if (price == null) {
+      return 0.;
+    }
+    //checkState(price != null, "price not set");
     return price;
+  }
+
+  public Hardware getHardware() {
+    return hardware;
+  }
+
+  public Image getImage() {
+    return image;
+  }
+
+  public Location getLocation() {
+    return location;
+  }
+
+  public Cloud getCloud() {
+    return cloud;
+  }
+
+  public double getPricePerInvocation() {
+    return pricePerInvocation;
+  }
+
+  public double getMemoryPrice() {
+    return memoryPrice;
+  }
+
+  public Environment getEnvironment() {
+    return environment;
   }
 
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = 1;
+    result = prime * result + ((type == null) ? 0 : type.hashCode());
     result = prime * result + ((hardware == null) ? 0 : hardware.hashCode());
     result = prime * result + ((image == null) ? 0 : image.hashCode());
     result = prime * result + ((location == null) ? 0 : location.hashCode());
@@ -77,6 +129,13 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
       return false;
     }
     NodeCandidate other = (NodeCandidate) obj;
+    if (type == null) {
+      if (other.type != null) {
+        return false;
+      }
+    } else if (!type.equals(other.type)) {
+      return false;
+    }
     if (cloud == null) {
       if (other.cloud != null) {
         return false;
@@ -108,6 +167,7 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
     return true;
   }
 
+  @Override
   public String toString() {
     return MoreObjects.toStringHelper(this).add("hardware", hardware).add("image", image)
         .add("location", location).add("price", price).toString();
@@ -116,22 +176,6 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
   @Override
   public int compareTo(NodeCandidate o) {
     return this.getPrice().compareTo(o.getPrice());
-  }
-
-  public Hardware getHardware() {
-    return hardware;
-  }
-
-  public Image getImage() {
-    return image;
-  }
-
-  public Location getLocation() {
-    return location;
-  }
-
-  public Cloud getCloud() {
-    return cloud;
   }
 
   public static class NodeCandidateFactory {
@@ -143,11 +187,14 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
       return new NodeCandidateFactory();
     }
 
-    public NodeCandidate of(Cloud cloud, Hardware hardware, Image image, Location location,
-        @Nullable Double price) {
+    public NodeCandidate of(Cloud cloud, Hardware hardware, Image image,
+        Location location, @Nullable Double price) {
       return new NodeCandidate(cloud, hardware, image, location, price);
     }
+
+    public NodeCandidate of(Cloud cloud, Location location, Hardware hardware,
+        double pricePerInvocation, double memoryPrice, Environment environment) {
+      return new NodeCandidate(cloud, location, hardware, pricePerInvocation, memoryPrice, environment);
+    }
   }
-
-
 }
