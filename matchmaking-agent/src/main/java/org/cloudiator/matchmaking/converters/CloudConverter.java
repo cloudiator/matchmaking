@@ -4,6 +4,7 @@ import cloudiator.Api;
 import cloudiator.Cloud;
 import cloudiator.CloudConfiguration;
 import cloudiator.CloudCredential;
+import cloudiator.CloudState;
 import cloudiator.CloudType;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorPackage;
@@ -13,7 +14,6 @@ import de.uniulm.omi.cloudiator.util.TwoWayConverter;
 import java.util.stream.Collectors;
 import org.cloudiator.messages.entities.IaasEntities;
 import org.cloudiator.messages.entities.IaasEntities.Cloud.Builder;
-import org.cloudiator.messages.entities.IaasEntities.CloudState;
 import org.cloudiator.messages.entities.IaasEntities.Configuration;
 import org.cloudiator.messages.entities.IaasEntities.Credential;
 
