@@ -19,6 +19,7 @@ public class OclTestCsp {
     add("nodes->select(n | n.hardware.cores >= 4)->size() = 2");
     add("nodes.hardware.cores->sum() >= 15");
     add("nodes->forAll(n | Set{'ulm','stuttgart','freiburg'}->includes(n.location.geoLocation.country))");
+    add("nodes->forAll(n | Set{'IE'}->includes(n.location.geoLocation.country))");
   }};
 
 }
