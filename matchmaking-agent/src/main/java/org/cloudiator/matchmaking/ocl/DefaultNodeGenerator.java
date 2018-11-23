@@ -1,23 +1,20 @@
 package org.cloudiator.matchmaking.ocl;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import cloudiator.*;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import cloudiator.Runtime;
-import cloudiator.impl.HardwareImpl;
-import com.google.common.collect.ImmutableSet;
+import com.typesafe.config.Config;
+import de.uniulm.omi.cloudiator.util.configuration.Configuration;
 import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator.PriceCache.PriceKey;
 
+import java.util.*;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class DefaultNodeGenerator implements NodeGenerator {
 
+  private static final Config config = Configuration.conf().getConfig("matchmaking.nodeGenerator");
   private static final PriceCache PRICE_CACHE = new PriceCache();
   private final NodeCandidateFactory nodeCandidateFactory;
   private final CloudiatorModel cloudiatorModel;
@@ -95,26 +92,44 @@ public class DefaultNodeGenerator implements NodeGenerator {
           }
         }
       }
-      // TODO create valid Faas node candidates
-      for (Location location : cloud.getLocations()) {
-        int memory = 128;
-        Hardware hardware = CloudiatorFactory.eINSTANCE.createHardware();
-        hardware.setId(cloud.getId() + memory);
-        hardware.setName(String.format("%s-%s", cloud.getApi().getProviderName(), memory));
-        hardware.setProviderId(hardware.getName());
-        hardware.setRam(memory);
-        hardware.setCores(1);
-        hardware.setDisk(512.);
-
-        Environment environment = CloudiatorFactory.eINSTANCE.createEnvironment();
-        environment.setRuntime(Runtime.NODEJS);
-        nodeCandidates.add(nodeCandidateFactory.of(
-            cloud, location, hardware, 0, 0, environment));
+      if (config.hasPath(cloud.getApi().getProviderName())) {
+        nodeCandidates.addAll(generateFaasNodeCandidates(cloud));
       }
     }
     System.out
         .println(String.format("%s generated all possible nodes: %s", this, nodeCandidates.size()));
     return NodeCandidates.of(nodeCandidates);
+  }
+
+  private Set<NodeCandidate> generateFaasNodeCandidates(Cloud cloud) {
+    Set<NodeCandidate> nodeCandidates = new HashSet<>();
+    // Get cloud-specific properties
+    Config cloudConfig = config.getConfig(cloud.getApi().getProviderName());
+    int memMin = cloudConfig.getInt("memoryMin");
+    int memMax = cloudConfig.getInt("memoryMax");
+    int memInc = cloudConfig.getInt("memoryIncrement");
+    List<String> runtimes = cloudConfig.getStringList("runtimes");
+    // Get every combination of location/memory/runtime
+    for (Location location : cloud.getLocations()) {
+      for (int memory = memMin; memory <= memMax; memory += memInc) {
+        for (String runtime : runtimes) {
+          // Build hardware object
+          Hardware hardware = CloudiatorFactory.eINSTANCE.createHardware();
+          hardware.setId(cloud.getId() + memory);
+          hardware.setName(String.format("%s-%s", cloud.getApi().getProviderName(), memory));
+          hardware.setProviderId(hardware.getName());
+          hardware.setRam(memory);
+          hardware.setCores(1);
+          hardware.setDisk(512.);
+
+          Environment environment = CloudiatorFactory.eINSTANCE.createEnvironment();
+          environment.setRuntime(Runtime.get(runtime));
+          nodeCandidates.add(nodeCandidateFactory.of(
+              cloud, location, hardware, 0, 0, environment));
+        }
+      }
+    }
+    return nodeCandidates;
   }
 
   static class PriceCache {
