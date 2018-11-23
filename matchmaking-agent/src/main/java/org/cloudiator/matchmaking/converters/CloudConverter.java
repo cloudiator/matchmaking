@@ -4,10 +4,12 @@ import cloudiator.Api;
 import cloudiator.Cloud;
 import cloudiator.CloudConfiguration;
 import cloudiator.CloudCredential;
+import cloudiator.CloudState;
 import cloudiator.CloudType;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorPackage;
 import cloudiator.Property;
+import com.google.common.base.Strings;
 import de.uniulm.omi.cloudiator.util.TwoWayConverter;
 import java.util.stream.Collectors;
 import org.cloudiator.messages.entities.IaasEntities;
@@ -23,7 +25,7 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
   private static final ApiConverter API_CONVERTER = new ApiConverter();
   private static final CloudCredentialConverter CLOUD_CREDENTIAL_CONVERTER = new CloudCredentialConverter();
   private static final CloudConfigurationConverter CLOUD_CONFIGURATION_CONVERTER = new CloudConfigurationConverter();
-
+  private static final CloudStateConverter CLOUD_STATE_CONVERTER = new CloudStateConverter();
 
   @Override
   public Cloud applyBack(IaasEntities.Cloud cloud) {
@@ -35,6 +37,8 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
     modelCloud.setApi(API_CONVERTER.applyBack(cloud.getApi()));
     modelCloud
         .setConfiguration(CLOUD_CONFIGURATION_CONVERTER.applyBack(cloud.getConfiguration()));
+    modelCloud.setState(CLOUD_STATE_CONVERTER.applyBack(cloud.getState()));
+    modelCloud.setDiagnostic(cloud.getDiagnostic());
 
     modelCloud.setCloudcredential(CLOUD_CREDENTIAL_CONVERTER.applyBack(cloud.getCredential()));
     return modelCloud;
@@ -50,7 +54,12 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
         .setEndpoint(cloud.getEndpoint())
         .setCloudType(TYPE_CONVERTER.apply(cloud.getType()))
         .setApi(API_CONVERTER.apply(cloud.getApi()))
-        .setCredential(CLOUD_CREDENTIAL_CONVERTER.apply(cloud.getCloudcredential()));
+        .setCredential(CLOUD_CREDENTIAL_CONVERTER.apply(cloud.getCloudcredential()))
+        .setState(CLOUD_STATE_CONVERTER.apply(cloud.getState()));
+
+    if (!Strings.isNullOrEmpty(cloud.getDiagnostic())) {
+      builder.setDiagnostic(cloud.getDiagnostic());
+    }
 
     return builder.build();
 
@@ -89,6 +98,37 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
     }
   }
 
+  private static class CloudStateConverter implements
+      TwoWayConverter<CloudState, IaasEntities.CloudState> {
+
+    @Override
+    public CloudState applyBack(IaasEntities.CloudState cloudState) {
+      switch (cloudState) {
+        case CLOUD_STATE_OK:
+          return CloudState.OK;
+        case CLOUD_STATE_ERROR:
+          return CloudState.ERROR;
+        case CLOUD_STATE_DELETED:
+        case CLOUD_STATE_NEW:
+        case UNRECOGNIZED:
+        default:
+          throw new AssertionError("Illegal or unknown cloudState " + cloudState);
+      }
+    }
+
+    @Override
+    public IaasEntities.CloudState apply(CloudState cloudState) {
+      switch (cloudState) {
+        case OK:
+          return IaasEntities.CloudState.CLOUD_STATE_OK;
+        case ERROR:
+          return IaasEntities.CloudState.CLOUD_STATE_ERROR;
+        default:
+          throw new AssertionError("Illegal or unknown cloudState " + cloudState);
+      }
+    }
+  }
+
   private static class CloudConfigurationConverter implements
       TwoWayConverter<CloudConfiguration, IaasEntities.Configuration> {
 
@@ -117,6 +157,7 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
           .build();
     }
   }
+
 
   private static class CloudTypeConverter implements
       TwoWayConverter<CloudType, IaasEntities.CloudType> {

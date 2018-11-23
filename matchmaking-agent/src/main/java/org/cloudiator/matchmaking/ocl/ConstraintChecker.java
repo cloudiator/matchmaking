@@ -10,6 +10,7 @@ import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.eclipse.ocl.pivot.ExpressionInOCL;
 import org.eclipse.ocl.pivot.utilities.ParserException;
 import org.eclipse.ocl.pivot.utilities.Query;
+import org.eclipse.ocl.pivot.values.InvalidValueException;
 
 public class ConstraintChecker {
 
@@ -49,7 +50,7 @@ public class ConstraintChecker {
       component.getNodes().clear();
       component.getNodes().add(node.getNode());
 
-      return forAllQueries.stream().parallel().allMatch(t -> t.checkEcore(component));
+      return forAllQueries.stream().parallel().allMatch(t -> check(t, component));
     }
   }
 
@@ -61,7 +62,15 @@ public class ConstraintChecker {
         component.getNodes().add(node.getNode());
       }
 
-      return (int) otherQueries.stream().parallel().filter(q -> !q.checkEcore(component)).count();
+      return (int) otherQueries.stream().parallel().filter(q -> !check(q, component)).count();
+    }
+  }
+
+  private static boolean check(Query query, Component component) {
+    try {
+      return query.checkEcore(component);
+    } catch (InvalidValueException e) {
+      return false;
     }
   }
 
