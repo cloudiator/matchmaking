@@ -16,10 +16,16 @@ public class HardwareConverter implements TwoWayConverter<IaasEntities.HardwareF
 
   @Override
   public HardwareFlavor applyBack(Hardware hardware) {
+    if (hardware == null) {
+      return null;
+    }
 
-    final Builder builder = HardwareFlavor.newBuilder().setCores(hardware.getCores())
-        .setId(hardware.getId()).setProviderId(hardware.getProviderId())
-        .setRam(hardware.getRam()).setName(hardware.getName());
+    final Builder builder = HardwareFlavor.newBuilder()
+        .setId(hardware.getId())
+        .setName(hardware.getName())
+        .setProviderId(hardware.getProviderId())
+        .setRam(hardware.getRam())
+        .setCores(hardware.getCores());
     if (hardware.getLocation() != null) {
       builder.setLocation(LOCATION_CONVERTER.applyBack(hardware.getLocation()));
     }
@@ -32,6 +38,9 @@ public class HardwareConverter implements TwoWayConverter<IaasEntities.HardwareF
 
   @Override
   public Hardware apply(HardwareFlavor hardwareFlavor) {
+    if (hardwareFlavor == null) {
+      return null;
+    }
     final Hardware hardware = CLOUDIATOR_FACTORY.createHardware();
     if (hardwareFlavor.hasLocation()) {
       hardware.setLocation(LOCATION_CONVERTER.apply(hardwareFlavor.getLocation()));

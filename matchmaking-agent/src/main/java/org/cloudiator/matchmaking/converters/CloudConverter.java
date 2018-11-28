@@ -46,6 +46,10 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
 
   @Override
   public IaasEntities.Cloud apply(Cloud cloud) {
+    if (cloud == null) {
+      return null;
+    }
+
     final Builder builder = IaasEntities.Cloud.newBuilder().setId(cloud.getId())
         .setEndpoint(cloud.getEndpoint())
         .setCloudType(TYPE_CONVERTER.apply(cloud.getType()))
