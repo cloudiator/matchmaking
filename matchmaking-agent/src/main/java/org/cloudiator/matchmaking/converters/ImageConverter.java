@@ -28,7 +28,8 @@ public class ImageConverter implements TwoWayConverter<IaasEntities.Image, Image
 
     final Builder builder = IaasEntities.Image.newBuilder().setId(image.getId())
         .setProviderId(image.getProviderId())
-        .setOperationSystem(OS_CONVERTER.applyBack(image.getOperatingSystem())).setName(image.getName());
+        .setOperationSystem(OS_CONVERTER.applyBack(image.getOperatingSystem()))
+        .setName(image.getName());
 
     if (image.getLocation() != null) {
       builder.setLocation(LOCATION_CONVERTER.applyBack(image.getLocation()));
@@ -131,11 +132,9 @@ public class ImageConverter implements TwoWayConverter<IaasEntities.Image, Image
       final CommonEntities.OperatingSystem.Builder builder = CommonEntities.OperatingSystem
           .newBuilder().setOperatingSystemArchitecture(
               OS_ARCH_CONVERTER.applyBack(operatingSystem.getArchitecture()))
+          .setOperatingSystemVersion(operatingSystem.getVersion())
           .setOperatingSystemFamily(OS_FAMILY_CONVERTER.applyBack(operatingSystem.getFamily()));
 
-      if (operatingSystem.getVersion() != null) {
-        builder.setOperatingSystemVersion(operatingSystem.getVersion());
-      }
       return builder.build();
     }
 

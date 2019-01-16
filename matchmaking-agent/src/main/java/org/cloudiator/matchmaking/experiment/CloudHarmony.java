@@ -80,7 +80,7 @@ public class CloudHarmony implements ModelGenerator {
     OperatingSystem windows2008Os = CLOUDIATOR_FACTORY.createOperatingSystem();
     CLOUDIATOR_MODEL.getOperatingsystems().add(windows2008Os);
     windows2008Os.setFamily(OSFamily.WINDOWS);
-    windows2008Os.setVersion("2008");
+    windows2008Os.setVersion(2008);
     windows2008.setOperatingSystem(windows2008Os);
     images.put(windows2008.getId(), windows2008);
 
@@ -111,7 +111,7 @@ public class CloudHarmony implements ModelGenerator {
     OperatingSystem windows2012Os = CLOUDIATOR_FACTORY.createOperatingSystem();
     CLOUDIATOR_MODEL.getOperatingsystems().add(windows2012Os);
     windows2012Os.setFamily(OSFamily.WINDOWS);
-    windows2012Os.setVersion("2012");
+    windows2012Os.setVersion(2012);
     windows2012.setOperatingSystem(windows2012Os);
     images.put(windows2012.getId(), windows2012);
 

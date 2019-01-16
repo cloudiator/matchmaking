@@ -68,7 +68,7 @@ public class ExampleModel {
     final OperatingSystem operatingSystem = CLOUDIATOR_FACTORY.createOperatingSystem();
     operatingSystem.setArchitecture(OSArchitecture.AMD64);
     operatingSystem.setFamily(OSFamily.UBUNTU);
-    operatingSystem.setVersion("18.04");
+    operatingSystem.setVersion(1804);
     return operatingSystem;
   }
 
