@@ -216,7 +216,7 @@ public class LargeModelGenerator implements ModelGenerator {
                 () -> {
                   OperatingSystem newOs = CLOUDIATOR_FACTORY.createOperatingSystem();
                   newOs.setFamily(entry.getValue());
-                  newOs.setVersion("1");
+                  newOs.setVersion(1);
                   newOs.setArchitecture(OSArchitecture.AMD64);
                   CLOUDIATOR_MODEL.getOperatingsystems().add(newOs);
                   return newOs;
