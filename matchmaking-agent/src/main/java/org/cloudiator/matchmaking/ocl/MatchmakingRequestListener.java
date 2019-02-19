@@ -1,10 +1,11 @@
 package org.cloudiator.matchmaking.ocl;
 
 import com.google.common.base.MoreObjects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
-import org.cloudiator.matchmaking.converters.NodeCandidateConverter;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
+import org.cloudiator.matchmaking.converters.SolutionConverter;
 import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.entities.Matchmaking.MatchmakingRequest;
@@ -21,12 +22,15 @@ public class MatchmakingRequestListener implements Runnable {
   private final MessageInterface messageInterface;
   private final MetaSolver metaSolver;
   private static final RequirementConverter REQUIREMENT_CONVERTER = RequirementConverter.INSTANCE;
-  private static final NodeCandidateConverter NODE_CANDIDATE_CONVERTER = NodeCandidateConverter.INSTANCE;
+  private static final SolutionConverter SOLUTION_CONVERTER = SolutionConverter.INSTANCE;
+  private final SolutionCache solutionCache;
 
   @Inject
-  public MatchmakingRequestListener(MessageInterface messageInterface, MetaSolver metaSolver) {
+  public MatchmakingRequestListener(MessageInterface messageInterface, MetaSolver metaSolver,
+      SolutionCache solutionCache) {
     this.messageInterface = messageInterface;
     this.metaSolver = metaSolver;
+    this.solutionCache = solutionCache;
   }
 
   @Override
@@ -54,8 +58,23 @@ public class MatchmakingRequestListener implements Runnable {
 
                 LOGGER.info(
                     String
-                        .format("%s has generated the constraint problem %s. Calling solver.", this,
+                        .format("%s has generated the constraint problem %s.", this,
                             oclCsp));
+
+                final Optional<Solution> existingSolution = solutionCache.retrieve(userId, oclCsp);
+
+                if (existingSolution.isPresent() && existingSolution.get().isValid()) {
+
+                  LOGGER.info(
+                      String
+                          .format("%s found existing solution %s for the constraint problem %s.",
+                              this, existingSolution.get(),
+                              oclCsp));
+
+                  replyWithSolution(id, existingSolution.get());
+
+                  return;
+                }
 
                 Solution solution = metaSolver.solve(oclCsp, userId);
 
@@ -72,17 +91,14 @@ public class MatchmakingRequestListener implements Runnable {
                   return;
                 }
 
+                solutionCache.storeSolution(userId, oclCsp, solution);
+
                 LOGGER.info(String
-                    .format("%s found a solution %s for the csp %s. Replying.", this, solution,
+                    .format("%s found a solution %s for the csp %s.", this, solution,
                         oclCsp));
 
-                Builder matchmakingResponseBuilder = MatchmakingResponse.newBuilder();
+                replyWithSolution(id, solution);
 
-                solution.getList().forEach(
-                    nodeCandidate -> matchmakingResponseBuilder
-                        .addCandidates(NODE_CANDIDATE_CONVERTER.apply(nodeCandidate)));
-
-                messageInterface.reply(id, matchmakingResponseBuilder.build());
 
               } catch (Exception e) {
                 LOGGER.error(String.format("Error while solving the problem: %s.", e.getMessage()),
@@ -98,4 +114,11 @@ public class MatchmakingRequestListener implements Runnable {
 
             });
   }
+
+  private void replyWithSolution(String requestId, Solution solution) {
+    Builder matchmakingResponseBuilder = MatchmakingResponse.newBuilder();
+    matchmakingResponseBuilder.setSolution(SOLUTION_CONVERTER.apply(solution));
+    messageInterface.reply(requestId, matchmakingResponseBuilder.build());
+  }
+
 }

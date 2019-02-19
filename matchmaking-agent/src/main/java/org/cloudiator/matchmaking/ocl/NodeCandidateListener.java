@@ -1,10 +1,13 @@
 package org.cloudiator.matchmaking.ocl;
 
 import cloudiator.CloudiatorModel;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.cloudiator.matchmaking.converters.NodeCandidateConverter;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
+import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.entities.Matchmaking.NodeCandidateRequestMessage;
@@ -43,21 +46,33 @@ public class NodeCandidateListener implements Runnable {
             final DefaultNodeGenerator defaultNodeGenerator = new DefaultNodeGenerator(
                 NodeCandidateFactory.create(), cloudiatorModel);
 
-            OclCsp oclCsp = OclCsp
-                .ofRequirements(
-                    content.getRequirementsList().stream()
-                        .map(REQUIREMENT_CONVERTER).collect(Collectors.toList())
-                );
+            final NodeCandidates nodeCandidates;
+            if (Strings.isNullOrEmpty(content.getId())) {
+              OclCsp oclCsp = OclCsp
+                  .ofRequirements(
+                      content.getRequirementsList().stream()
+                          .map(REQUIREMENT_CONVERTER).collect(Collectors.toList())
+                  );
 
-            LOGGER.info(String.format("%s generated the csp %s.", this, oclCsp));
+              LOGGER.info(String.format("%s generated the csp %s.", this, oclCsp));
 
-            final ConsistentNodeGenerator consistentNodeGenerator = new ConsistentNodeGenerator(
-                defaultNodeGenerator, ConstraintChecker.create(oclCsp));
+              final ConsistentNodeGenerator consistentNodeGenerator = new ConsistentNodeGenerator(
+                  defaultNodeGenerator, ConstraintChecker.create(oclCsp));
 
-            final NodeCandidates nodeCandidates = consistentNodeGenerator.get();
+              nodeCandidates = consistentNodeGenerator.get();
+            } else {
 
-            LOGGER.info(String.format("%s found %s nodes for csp %s. Replying.", this,
-                nodeCandidates.size(), oclCsp));
+              nodeCandidates = defaultNodeGenerator.get().stream()
+                  .filter(new Predicate<NodeCandidate>() {
+                    @Override
+                    public boolean test(NodeCandidate nodeCandidate) {
+                      return nodeCandidate.id().equals(content.getId());
+                    }
+                  }).findAny().map(NodeCandidates::single).orElseGet(NodeCandidates::empty);
+            }
+
+            LOGGER.info(String.format("%s found %s nodes for request. Replying.", this,
+                nodeCandidates.size()));
 
             messageInterface
                 .reply(id, NodeCandidateRequestResponse.newBuilder().addAllCandidates(

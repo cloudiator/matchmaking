@@ -3,14 +3,14 @@ package org.cloudiator.matchmaking;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import de.uniulm.omi.cloudiator.util.configuration.Configuration;
-import org.cloudiator.messaging.kafka.KafkaContext;
-import org.cloudiator.messaging.kafka.KafkaMessagingModule;
-import org.cloudiator.messaging.services.MessageServiceModule;
 import org.cloudiator.matchmaking.ocl.MatchmakingRequestListener;
 import org.cloudiator.matchmaking.ocl.NodeCandidateListener;
 import org.cloudiator.matchmaking.ocl.OclContext;
 import org.cloudiator.matchmaking.ocl.OclServiceModule;
-import org.eclipse.ocl.pivot.utilities.ParserException;
+import org.cloudiator.matchmaking.ocl.SolutionRequestListener;
+import org.cloudiator.messaging.kafka.KafkaContext;
+import org.cloudiator.messaging.kafka.KafkaMessagingModule;
+import org.cloudiator.messaging.services.MessageServiceModule;
 
 public class MatchmakingAgent {
 
@@ -24,9 +24,10 @@ public class MatchmakingAgent {
 
   }
 
-  public static void main(String[] args) throws ParserException {
+  public static void main(String[] args) {
     injector.getInstance(MatchmakingRequestListener.class).run();
     injector.getInstance(NodeCandidateListener.class).run();
+    injector.getInstance(SolutionRequestListener.class).run();
   }
 
 }

@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 import org.cloudiator.matchmaking.domain.RepresentAsOCL;
 import org.cloudiator.matchmaking.domain.Requirement;
@@ -76,5 +77,22 @@ public class OclCsp {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this).add("constraints", constraints).toString();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof OclCsp)) {
+      return false;
+    }
+    OclCsp oclCsp = (OclCsp) o;
+    return unparsedConstraints.equals(oclCsp.unparsedConstraints);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(unparsedConstraints);
   }
 }

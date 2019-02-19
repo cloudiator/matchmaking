@@ -2,6 +2,7 @@ package org.cloudiator.matchmaking.ocl;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Spliterator;
@@ -20,6 +21,14 @@ public class NodeCandidates implements Set<NodeCandidate>, NodeGenerator {
 
   public static NodeCandidates of(Set<NodeCandidate> nodeCandidates) {
     return new NodeCandidates(nodeCandidates);
+  }
+
+  public static NodeCandidates single(NodeCandidate nodeCandidate) {
+    return new NodeCandidates(Collections.singleton(nodeCandidate));
+  }
+
+  public static NodeCandidates empty() {
+    return new NodeCandidates(Collections.emptySet());
   }
 
   @Override

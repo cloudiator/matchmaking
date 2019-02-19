@@ -1,27 +1,48 @@
 package org.cloudiator.matchmaking.domain;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.MoreObjects;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
+import javax.annotation.Nullable;
 
 public class Solution implements Comparable<Solution> {
 
   public static final Solution EMPTY_SOLUTION = Solution.of(Collections.emptyList());
 
+  private final String id;
   private final List<NodeCandidate> nodeCandidates;
   private Double costs = null;
   private Float time = null;
-  private Boolean isOptimal = false;
+  private boolean isOptimal = false;
+  private boolean valid = true;
 
-  private Solution(Collection<NodeCandidate> candidates) {
+  private Solution(Collection<NodeCandidate> candidates, @Nullable String id) {
     this.nodeCandidates = new ArrayList<>(candidates);
+    if (id != null) {
+      this.id = id;
+    } else {
+      this.id = UUID.randomUUID().toString();
+    }
   }
 
   public static Solution of(Collection<NodeCandidate> candidates) {
-    return new Solution(candidates);
+    return new Solution(candidates, null);
+  }
+
+  public static Solution of(String id, Collection<NodeCandidate> candidates) {
+    checkNotNull(id, "id is null");
+    return new Solution(candidates, id);
+  }
+
+  public void expire() {
+    this.valid = false;
   }
 
   public List<NodeCandidate> getList() {
@@ -73,34 +94,27 @@ public class Solution implements Comparable<Solution> {
   }
 
   @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((nodeCandidates == null) ? 0 : nodeCandidates.hashCode());
-    return result;
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Solution solution = (Solution) o;
+    return Objects.equals(nodeCandidates, solution.nodeCandidates);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    Solution other = (Solution) obj;
-    if (nodeCandidates == null) {
-      if (other.nodeCandidates != null) {
-        return false;
-      }
-    } else if (!nodeCandidates.equals(other.nodeCandidates)) {
-      return false;
-    }
-    return true;
+  public int hashCode() {
+    return Objects.hash(nodeCandidates);
   }
 
+  public boolean isValid() {
+    return valid;
+  }
 
+  public String getId() {
+    return id;
+  }
 }
