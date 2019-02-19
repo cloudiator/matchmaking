@@ -13,6 +13,10 @@ public class HardwareBasedPriceFunction implements PriceFunction {
     price += hardware.getCores();
     price += hardware.getRam() / 1000;
 
+    if (hardware.getDisk() != null) {
+      price += hardware.getDisk() / 100;
+    }
+    
     return price;
   }
 }
