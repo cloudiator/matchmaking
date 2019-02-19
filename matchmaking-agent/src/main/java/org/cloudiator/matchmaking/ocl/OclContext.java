@@ -25,4 +25,8 @@ public class OclContext {
     return config.getInt("cacheTime");
   }
 
+  public int solvingTime() {
+    return config.getInt("solvingTime");
+  }
+
 }

@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import javax.inject.Named;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.domain.Solver;
@@ -40,14 +41,16 @@ public class MetaSolver {
   private final Set<Solver> solvers;
   private final ListeningExecutorService executorService;
   private final ModelGenerator modelGenerator;
+  private final int solvingTime;
 
   @Inject
   public MetaSolver(
-      ModelGenerator modelGenerator, Set<Solver> solvers) {
+      ModelGenerator modelGenerator, Set<Solver> solvers, @Named("solvingTime") int solvingTime) {
     this.modelGenerator = modelGenerator;
     this.solvers = solvers;
     executorService = MoreExecutors
         .listeningDecorator(Executors.newFixedThreadPool(solvers.size()));
+    this.solvingTime = solvingTime;
     MoreExecutors.addDelayedShutdownHook(executorService, 1, TimeUnit.MINUTES);
   }
 
@@ -102,7 +105,7 @@ public class MetaSolver {
     try {
 
       final List<Future<Solution>> futures = executorService
-          .invokeAll(solverCallables, 5, TimeUnit.MINUTES);
+          .invokeAll(solverCallables, solvingTime, TimeUnit.MINUTES);
 
       //get all solutions and filter failed ones
       final List<Solution> initialSolutions = futures.stream().map(future -> {
