@@ -25,7 +25,8 @@ public class SolutionConverter implements OneWayConverter<Solution, MatchmakingE
 
     final Builder builder = MatchmakingEntities.Solution.newBuilder().setId(solution.getId())
         .setIsOptimal(solution.isOptimal())
-        .setCosts(solution.getCosts()).setTime(solution.getTime().orElse(0F));
+        .setCosts(solution.getCosts()).setTime(solution.getTime().orElse(0F))
+        .setIsValid(solution.isValid());
 
     solution.getList().forEach(
         nodeCandidate -> builder.addNodeCandidates(NODE_CANDIDATE_CONVERTER.apply(nodeCandidate)));
