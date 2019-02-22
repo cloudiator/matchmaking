@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import org.cloudiator.matchmaking.Expirable;
 import org.cloudiator.matchmaking.choco.ChocoSolver;
 import org.cloudiator.matchmaking.domain.Solver;
 import org.slf4j.Logger;
@@ -27,6 +28,11 @@ public class OclServiceModule extends AbstractModule {
     solverBinder.addBinding().to(ChocoSolver.class);
     solverBinder.addBinding().to(BestFitSolver.class);
 
+    //expire binder
+    Multibinder<Expirable> expireBinder = Multibinder
+        .newSetBinder(binder(), Expirable.class);
+    expireBinder.addBinding().to(SolutionCacheImpl.class);
+
     bind(PriceFunction.class).to(HardwareBasedPriceFunction.class);
 
     LOGGER.info(String.format("Using %s as model generator.",
@@ -42,6 +48,11 @@ public class OclServiceModule extends AbstractModule {
       LOGGER.info(String.format("Using cache %s for model generator.",
           oclContext.modelGenerator().cacheClass().get().getName()));
       bind(ModelGenerator.class).to(oclContext.modelGenerator().cacheClass().get());
+      if (Expirable.class.isAssignableFrom(oclContext.modelGenerator().cacheClass().get())) {
+        //noinspection unchecked
+        expireBinder.addBinding().to(
+            (Class<? extends Expirable>) oclContext.modelGenerator().cacheClass().get());
+      }
     } else {
       bind(ModelGenerator.class).to(oclContext.modelGenerator().modelGeneratorClass());
     }

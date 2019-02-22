@@ -10,9 +10,10 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import org.cloudiator.matchmaking.Expirable;
 
 @Singleton
-public class MemoryCachedModelGenerator implements ModelGenerator {
+public class MemoryCachedModelGenerator implements ModelGenerator, Expirable {
 
   private final Cache<String, CloudiatorModel> modelCache;
   private final ModelGenerator delegate;
@@ -44,5 +45,10 @@ public class MemoryCachedModelGenerator implements ModelGenerator {
       throw new IllegalStateException("Unexpected exception during generation of model.",
           e.getCause());
     }
+  }
+
+  @Override
+  public void expire(String userId) {
+    modelCache.invalidate(userId);
   }
 }

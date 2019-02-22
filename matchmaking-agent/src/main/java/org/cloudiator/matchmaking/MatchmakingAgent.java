@@ -28,6 +28,7 @@ public class MatchmakingAgent {
     injector.getInstance(MatchmakingRequestListener.class).run();
     injector.getInstance(NodeCandidateListener.class).run();
     injector.getInstance(SolutionRequestListener.class).run();
+    injector.getInstance(DiscoveryListener.class).run();
   }
 
 }
