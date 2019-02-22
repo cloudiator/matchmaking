@@ -13,6 +13,7 @@ public class HardwareConverter implements TwoWayConverter<IaasEntities.HardwareF
   private static final LocationConverter LOCATION_CONVERTER = new LocationConverter();
   private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorPackage.eINSTANCE
       .getCloudiatorFactory();
+  private static final DiscoveryItemStateConverter DISCOVERY_ITEM_STATE_CONVERTER = DiscoveryItemStateConverter.INSTANCE;
 
   @Override
   public HardwareFlavor applyBack(Hardware hardware) {
@@ -25,7 +26,9 @@ public class HardwareConverter implements TwoWayConverter<IaasEntities.HardwareF
         .setName(hardware.getName())
         .setProviderId(hardware.getProviderId())
         .setRam(hardware.getRam())
-        .setCores(hardware.getCores());
+        .setCores(hardware.getCores())
+        .setState(DISCOVERY_ITEM_STATE_CONVERTER.apply(hardware.getState()))
+        .setUserId(hardware.getOwner());
     if (hardware.getLocation() != null) {
       builder.setLocation(LOCATION_CONVERTER.applyBack(hardware.getLocation()));
     }
@@ -41,17 +44,19 @@ public class HardwareConverter implements TwoWayConverter<IaasEntities.HardwareF
     if (hardwareFlavor == null) {
       return null;
     }
-    final Hardware hardware = CLOUDIATOR_FACTORY.createHardware();
+    final Hardware hardwareModel = CLOUDIATOR_FACTORY.createHardware();
     if (hardwareFlavor.hasLocation()) {
-      hardware.setLocation(LOCATION_CONVERTER.apply(hardwareFlavor.getLocation()));
+      hardwareModel.setLocation(LOCATION_CONVERTER.apply(hardwareFlavor.getLocation()));
     }
-    hardware.setProviderId(hardwareFlavor.getProviderId());
-    hardware.setName(hardwareFlavor.getName());
-    hardware.setId(hardwareFlavor.getId());
-    hardware.setCores(hardwareFlavor.getCores());
-    hardware.setRam((int) hardwareFlavor.getRam());
-    hardware.setDisk(hardwareFlavor.getDisk());
+    hardwareModel.setProviderId(hardwareFlavor.getProviderId());
+    hardwareModel.setName(hardwareFlavor.getName());
+    hardwareModel.setId(hardwareFlavor.getId());
+    hardwareModel.setCores(hardwareFlavor.getCores());
+    hardwareModel.setRam((int) hardwareFlavor.getRam());
+    hardwareModel.setDisk(hardwareFlavor.getDisk());
+    hardwareModel.setState(DISCOVERY_ITEM_STATE_CONVERTER.applyBack(hardwareFlavor.getState()));
+    hardwareModel.setOwner(hardwareFlavor.getUserId());
 
-    return hardware;
+    return hardwareModel;
   }
 }

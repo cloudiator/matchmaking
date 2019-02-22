@@ -14,6 +14,7 @@ public class LocationConverter implements
   private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorFactory.eINSTANCE;
   private static final GeoLocationConverter GEO_LOCATION_CONVERTER = new GeoLocationConverter();
   private static final LocationScopeConverter LOCATION_SCOPE_CONVERTER = LocationScopeConverter.INSTANCE;
+  private static final DiscoveryItemStateConverter DISCOVERY_ITEM_STATE_CONVERTER = DiscoveryItemStateConverter.INSTANCE;
 
   @Nullable
   @Override
@@ -26,7 +27,9 @@ public class LocationConverter implements
         .setProviderId(location.getProviderId())
         .setId(location.getId()).setName(location.getName())
         .setIsAssignable(location.isAssignable())
-        .setLocationScope(LOCATION_SCOPE_CONVERTER.applyBack(location.getLocationScope()));
+        .setLocationScope(LOCATION_SCOPE_CONVERTER.applyBack(location.getLocationScope()))
+        .setState(DISCOVERY_ITEM_STATE_CONVERTER.apply(location.getState()))
+        .setUserId(location.getOwner());
 
     if (location.getParent() != null) {
       builder.setParent(applyBack(location.getParent()));
@@ -51,6 +54,8 @@ public class LocationConverter implements
     modelLocation.setName(location.getName());
     modelLocation.setAssignable(location.getIsAssignable());
     modelLocation.setLocationScope(LOCATION_SCOPE_CONVERTER.apply(location.getLocationScope()));
+    modelLocation.setState(DISCOVERY_ITEM_STATE_CONVERTER.applyBack(location.getState()));
+    modelLocation.setOwner(location.getUserId());
 
     if (location.hasParent()) {
       modelLocation.setParent(apply(location.getParent()));

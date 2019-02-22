@@ -1,16 +1,27 @@
 package org.cloudiator.matchmaking.ocl;
 
-import cloudiator.*;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import cloudiator.Cloud;
+import cloudiator.CloudiatorFactory;
+import cloudiator.CloudiatorModel;
+import cloudiator.DiscoveryItemState;
+import cloudiator.Environment;
+import cloudiator.Hardware;
+import cloudiator.Image;
+import cloudiator.Location;
+import cloudiator.Price;
 import cloudiator.Runtime;
 import com.typesafe.config.Config;
 import de.uniulm.omi.cloudiator.util.configuration.Configuration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator.PriceCache.PriceKey;
-
-import java.util.*;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DefaultNodeGenerator implements NodeGenerator {
 
@@ -121,6 +132,8 @@ public class DefaultNodeGenerator implements NodeGenerator {
           hardware.setRam(memory);
           hardware.setCores(1);
           hardware.setDisk(512.);
+          hardware.setState(DiscoveryItemState.OK);
+          hardware.setOwner(cloud.getOwner());
 
           Environment environment = CloudiatorFactory.eINSTANCE.createEnvironment();
           environment.setRuntime(Runtime.get(runtime));
