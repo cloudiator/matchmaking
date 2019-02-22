@@ -1,4 +1,4 @@
-package org.cloudiator.matchmaking;
+package org.cloudiator.matchmaking.ocl;
 
 public interface Expirable {
 

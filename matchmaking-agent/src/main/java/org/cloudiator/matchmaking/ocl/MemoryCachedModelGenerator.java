@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import org.cloudiator.matchmaking.Expirable;
 
 @Singleton
 public class MemoryCachedModelGenerator implements ModelGenerator, Expirable {

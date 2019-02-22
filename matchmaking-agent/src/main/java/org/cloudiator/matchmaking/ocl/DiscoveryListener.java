@@ -1,4 +1,4 @@
-package org.cloudiator.matchmaking;
+package org.cloudiator.matchmaking.ocl;
 
 import com.google.inject.Inject;
 import java.util.Set;

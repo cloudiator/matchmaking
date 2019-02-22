@@ -2,7 +2,6 @@ package org.cloudiator.matchmaking.ocl;
 
 import com.google.inject.ImplementedBy;
 import java.util.Optional;
-import org.cloudiator.matchmaking.Expirable;
 import org.cloudiator.matchmaking.domain.Solution;
 
 @ImplementedBy(SolutionCacheImpl.class)

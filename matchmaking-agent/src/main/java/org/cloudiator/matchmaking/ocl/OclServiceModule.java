@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
-import org.cloudiator.matchmaking.Expirable;
 import org.cloudiator.matchmaking.choco.ChocoSolver;
 import org.cloudiator.matchmaking.domain.Solver;
 import org.slf4j.Logger;
