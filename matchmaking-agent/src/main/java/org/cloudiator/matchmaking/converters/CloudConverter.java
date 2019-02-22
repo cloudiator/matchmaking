@@ -39,8 +39,8 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
         .setConfiguration(CLOUD_CONFIGURATION_CONVERTER.applyBack(cloud.getConfiguration()));
     modelCloud.setState(CLOUD_STATE_CONVERTER.applyBack(cloud.getState()));
     modelCloud.setDiagnostic(cloud.getDiagnostic());
-
     modelCloud.setCloudcredential(CLOUD_CREDENTIAL_CONVERTER.applyBack(cloud.getCredential()));
+    modelCloud.setOwner(cloud.getUserId());
     return modelCloud;
   }
 
@@ -55,7 +55,8 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
         .setCloudType(TYPE_CONVERTER.apply(cloud.getType()))
         .setApi(API_CONVERTER.apply(cloud.getApi()))
         .setCredential(CLOUD_CREDENTIAL_CONVERTER.apply(cloud.getCloudcredential()))
-        .setState(CLOUD_STATE_CONVERTER.apply(cloud.getState()));
+        .setState(CLOUD_STATE_CONVERTER.apply(cloud.getState()))
+        .setUserId(cloud.getOwner());
 
     if (!Strings.isNullOrEmpty(cloud.getDiagnostic())) {
       builder.setDiagnostic(cloud.getDiagnostic());
