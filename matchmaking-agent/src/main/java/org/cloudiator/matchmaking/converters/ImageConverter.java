@@ -151,7 +151,12 @@ public class ImageConverter implements TwoWayConverter<IaasEntities.Image, Image
     public OperatingSystem apply(CommonEntities.OperatingSystem operatingSystem) {
       OperatingSystem os = CLOUDIATOR_FACTORY.createOperatingSystem();
       os.setFamily(OS_FAMILY_CONVERTER.apply(operatingSystem.getOperatingSystemFamily()));
-      os.setVersion(operatingSystem.getOperatingSystemVersion());
+
+      if (!operatingSystem.hasOperatingSystemVersion()) {
+        os.setVersion(null);
+      } else {
+        os.setVersion(operatingSystem.getOperatingSystemVersion().getVersion());
+      }
       os.setArchitecture(OS_ARCH_CONVERTER.apply(operatingSystem.getOperatingSystemArchitecture()));
       return os;
 
