@@ -167,17 +167,25 @@ public class ClassAttributeHandler {
       }
 
       final IntVar intVar;
-      if (domain.size() == 1) {
-        intVar = modelGenerationContext.getModel()
-            .intVar(generateVariableName(eAttribute, i),
-                domain.stream().findFirst().orElseThrow(
-                    (Supplier<IllegalStateException>) () -> new IllegalStateException(String.format(
-                        "Expected domain of attribute %s to contain only one value. Got %s values.",
-                        eAttribute, domain.size()))));
+
+      if (!modelGenerationContext.hasExistingValue(i, eAttribute)) {
+        if (domain.size() == 1) {
+          intVar = modelGenerationContext.getModel()
+              .intVar(generateVariableName(eAttribute, i),
+                  domain.stream().findFirst().orElseThrow(
+                      (Supplier<IllegalStateException>) () -> new IllegalStateException(
+                          String.format(
+                              "Expected domain of attribute %s to contain only one value. Got %s values.",
+                              eAttribute, domain.size()))));
+        } else {
+          intVar = modelGenerationContext.getModel()
+              .intVar(generateVariableName(eAttribute, i),
+                  domain.stream().mapToInt(Integer::intValue).toArray());
+        }
       } else {
-        intVar = modelGenerationContext.getModel()
-            .intVar(generateVariableName(eAttribute, i),
-                domain.stream().mapToInt(Integer::intValue).toArray());
+        intVar = modelGenerationContext.getModel().intVar(generateVariableName(eAttribute, i),
+            modelGenerationContext
+                .mapValue(modelGenerationContext.getExistingValue(i, eAttribute), eAttribute));
       }
 
       modelGenerationContext.getVariableStore().storeVariable(i, eAttribute, intVar);

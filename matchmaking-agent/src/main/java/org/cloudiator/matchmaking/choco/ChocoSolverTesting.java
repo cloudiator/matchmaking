@@ -400,7 +400,7 @@ public class ChocoSolverTesting {
 
     //generate constants for already existing nodes
     int e = 0;
-    for (NodeCandidate nc : existingSolution.getList()) {
+    for (NodeCandidate nc : existingSolution.getNodeCandidates()) {
       //hardware variables
       IntVar cores = model
           .intVar("Cores Existing Node " + e, nc.getHardware().getCores().intValue());

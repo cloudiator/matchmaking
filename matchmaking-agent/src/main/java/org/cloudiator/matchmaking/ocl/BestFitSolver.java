@@ -3,13 +3,14 @@ package org.cloudiator.matchmaking.ocl;
 import com.google.common.base.MoreObjects;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.domain.Solver;
 
 public class BestFitSolver implements Solver {
 
   @Override
-  public Solution solve(OclCsp oclCsp, NodeCandidates nodeCandidates) {
+  public Solution solve(OclCsp oclCsp, NodeCandidates nodeCandidates, @Nullable Solution existingSolution) {
 
     SolutionGenerator solutionGenerator = new SolutionGenerator(nodeCandidates);
     ConstraintChecker constraintChecker = ConstraintChecker.create(oclCsp);
@@ -50,9 +51,9 @@ public class BestFitSolver implements Solver {
 
       while (!generation.isEmpty() && !Thread.currentThread().isInterrupted()) {
         List<Solution> nextGeneration = new ArrayList<>();
-        int nodeSize = generation.stream().findFirst().get().getList().size();
+        int nodeSize = generation.stream().findFirst().get().getNodeCandidates().size();
         for (Solution solution : generation) {
-          int violations = constraintChecker.check(solution.getList());
+          int violations = constraintChecker.check(solution.getNodeCandidates());
           if (violations == 0) {
             if (targetNodeSize <= nodeSize) {
               return solution;

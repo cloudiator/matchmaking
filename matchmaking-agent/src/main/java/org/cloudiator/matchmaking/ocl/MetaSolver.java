@@ -5,10 +5,13 @@ import static com.google.common.base.Preconditions.checkState;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorPackage;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import de.uniulm.omi.cloudiator.util.StreamUtil;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,9 +28,11 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.inject.Named;
+import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.domain.Solver;
+import org.cloudiator.messages.NodeEntities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,12 +59,41 @@ public class MetaSolver {
     MoreExecutors.addDelayedShutdownHook(executorService, 1, TimeUnit.MINUTES);
   }
 
+  private Optional<Solution> generateExistingSolution(List<NodeEntities.Node> existingNodes,
+      NodeCandidates nodeCandidates) throws ModelGenerationException {
+
+    if (existingNodes.isEmpty()) {
+      return Optional.empty();
+    }
+
+    List<NodeCandidate> candidates = new ArrayList<>(existingNodes.size());
+    for (NodeEntities.Node existingNode : existingNodes) {
+      if (Strings.isNullOrEmpty(existingNode.getNodeCandidate())) {
+        throw new ModelGenerationException(
+            String.format("NodeCandidate for node %s is unknown.", existingNode));
+      }
+      final Optional<NodeCandidate> existingNodeCandidate = nodeCandidates.stream()
+          .filter(nodeCandidate -> nodeCandidate.id().equals(existingNode.getNodeCandidate()))
+          .collect(StreamUtil.getOnly());
+
+      candidates.add(existingNodeCandidate.orElseThrow(() -> new ModelGenerationException(String
+          .format("NodeCandidate with id %s is no longer valid.",
+              existingNode.getNodeCandidate()))));
+
+    }
+
+    return Optional.of(Solution.of(candidates));
+  }
+
   @Nullable
-  public Solution solve(OclCsp csp, String userId) throws ModelGenerationException {
+  public Solution solve(OclCsp csp, List<NodeEntities.Node> existingNodes, String userId)
+      throws ModelGenerationException {
 
     ConstraintChecker cc = ConstraintChecker.create(csp);
 
-    LOGGER.debug(String.format("%s is solving CSP %s for user %s", this, csp, userId));
+    LOGGER.debug(String
+        .format("%s is solving CSP %s for user %s with existing nodes %s.", this, csp, userId,
+            existingNodes));
 
     NodeGenerator nodeGenerator =
         new ConsistentNodeGenerator(
@@ -81,6 +115,8 @@ public class MetaSolver {
       return Solution.EMPTY_SOLUTION;
     }
 
+    Optional<Solution> existingSolution = generateExistingSolution(existingNodes, possibleNodes);
+
     long generationTime = System.currentTimeMillis() - startGeneration;
     LOGGER.info(
         String.format("Possible candidate generation for CSP %s took %s", csp, generationTime));
@@ -94,7 +130,7 @@ public class MetaSolver {
     for (Solver solver : solvers) {
       solverCallables.add(() -> {
         try {
-          return solver.solve(csp, possibleNodes);
+          return solver.solve(csp, possibleNodes, existingSolution.orElse(null));
         } catch (Exception e) {
           LOGGER.error(String.format("Error while executing solver %s on CSP %s", solver, csp), e);
           return null;

@@ -8,7 +8,6 @@ import com.google.common.collect.Table;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import javax.annotation.Nullable;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.variables.Variable;
@@ -28,8 +27,7 @@ public class ModelGenerationContext {
   private final VariableStore variableStore;
   private final ObjectIdentifierGenerator oidGenerator;
   private final OclCsp oclCsp;
-  @Nullable
-  private final Solution existingSolution;
+  private Map<Integer, Map<EAttribute, Object>> existingValues;
 
 
   public ModelGenerationContext(CloudiatorModel cloudiatorModel, Model model, int numberOfNodes,
@@ -41,8 +39,22 @@ public class ModelGenerationContext {
     this.variableStore = new VariableStore();
     this.oidGenerator = ObjectIdentifierGenerator.create();
     this.oclCsp = oclCsp;
-    this.existingSolution = existingSolution;
+    existingValues = new ExistingSolutionImporter(existingSolution).handle();
   }
+
+  public boolean hasExistingValue(int node, EAttribute eAttribute) {
+    if (!existingValues.containsKey(node)) {
+      return false;
+    }
+    return existingValues.get(node).containsKey(eAttribute);
+  }
+
+  public Object getExistingValue(int node, EAttribute eAttribute) {
+    checkState(hasExistingValue(node, eAttribute),
+        String.format("Has no initial value for node %s and attribute %s.", node, eAttribute));
+    return existingValues.get(node).get(eAttribute);
+  }
+
 
   public ObjectIdentifierGenerator getOidGenerator() {
     return oidGenerator;
@@ -114,10 +126,6 @@ public class ModelGenerationContext {
 
   public int nodeSize() {
     return numberOfNodes;
-  }
-
-  public Optional<Solution> getExistingSolution() {
-    return Optional.ofNullable(existingSolution);
   }
 
   public static class VariableStore {

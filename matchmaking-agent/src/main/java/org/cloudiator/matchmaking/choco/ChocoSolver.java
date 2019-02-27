@@ -11,7 +11,6 @@ import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.search.loop.monitors.IMonitorContradiction;
 import org.chocosolver.solver.search.strategy.Search;
 import org.chocosolver.solver.variables.IntVar;
-import org.chocosolver.util.criteria.Criterion;
 import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.ocl.NodeCandidates;
 import org.cloudiator.matchmaking.ocl.OclCsp;
@@ -64,15 +63,8 @@ public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
 
       final LinkedList<ContradictionException> contradictions = new LinkedList<>();
 
-      solver.plugMonitor((IMonitorContradiction) e -> {
-        contradictions.add(e);
-      });
-      solver.limitSearch(new Criterion() {
-        @Override
-        public boolean isMet() {
-          return Thread.currentThread().isInterrupted();
-        }
-      });
+      solver.plugMonitor((IMonitorContradiction) contradictions::add);
+      solver.limitSearch(() -> Thread.currentThread().isInterrupted());
 
       while (solver.solve()) {
         solution.record();
@@ -105,7 +97,8 @@ public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
   }
 
 
-  public Solution solve(OclCsp oclCsp, NodeCandidates nodeCandidates) {
+  public Solution solve(OclCsp oclCsp, NodeCandidates nodeCandidates,
+      @Nullable Solution existingSolution) {
 
     CloudiatorModel solverModel = generateSolvingModel(nodeCandidates);
 
@@ -114,7 +107,7 @@ public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
     while (!Thread.currentThread().isInterrupted()) {
       final ChocoSolverInternal chocoSolverInternal = new ChocoSolverInternal(oclCsp,
           solverModel, nodeCandidates);
-      Solution solution = chocoSolverInternal.solve(i, null);
+      Solution solution = chocoSolverInternal.solve(i, existingSolution);
       if (!solution.noSolution()) {
         return solution;
       }

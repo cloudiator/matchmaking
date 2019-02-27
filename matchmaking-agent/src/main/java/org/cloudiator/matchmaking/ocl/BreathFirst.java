@@ -25,7 +25,7 @@ public class BreathFirst {
     int minViolations = Integer.MAX_VALUE;
     while (!solutions.isEmpty()) {
       Solution solution = solutions.poll();
-      int violations = constraintChecker.check(solution.getList());
+      int violations = constraintChecker.check(solution.getNodeCandidates());
       if (violations == 0 && solution.nodeSize() >= targetNodeSize) {
         return solution;
       }

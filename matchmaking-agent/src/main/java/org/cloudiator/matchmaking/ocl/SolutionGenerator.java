@@ -41,7 +41,7 @@ public class SolutionGenerator {
     List<Solution> solutions = new ArrayList<>(nodeCandidates.size());
     for (NodeCandidate nodeCandiate : nodeCandidates) {
       solutions.add(Solution.of(Lists.asList(nodeCandiate,
-          solution.getList().toArray(new NodeCandidate[solution.getList().size()]))));
+          solution.getNodeCandidates().toArray(new NodeCandidate[solution.getNodeCandidates().size()]))));
     }
     return solutions;
   }

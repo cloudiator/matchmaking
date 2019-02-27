@@ -45,12 +45,12 @@ public class Solution implements Comparable<Solution> {
     this.valid = false;
   }
 
-  public List<NodeCandidate> getList() {
+  public List<NodeCandidate> getNodeCandidates() {
     return nodeCandidates;
   }
 
   public int nodeSize() {
-    return getList().size();
+    return getNodeCandidates().size();
   }
 
   public void setIsOptimal(boolean isOptimal) {

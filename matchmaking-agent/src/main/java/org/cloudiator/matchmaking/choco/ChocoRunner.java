@@ -33,7 +33,7 @@ public class ChocoRunner {
             instance.generateModel("dummy_user_id")),
         ConstraintChecker.create(ExperimentCSP.CSP));
 
-    new ChocoSolver().solve(ExperimentCSP.CSP, nodeGenerator.get());
+    new ChocoSolver().solve(ExperimentCSP.CSP, nodeGenerator.get(), null);
   }
 
 }
