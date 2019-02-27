@@ -10,6 +10,7 @@ import de.uniulm.omi.cloudiator.util.TwoWayConverter;
 import org.cloudiator.messages.entities.CommonEntities;
 import org.cloudiator.messages.entities.CommonEntities.OperatingSystemArchitecture;
 import org.cloudiator.messages.entities.CommonEntities.OperatingSystemFamily;
+import org.cloudiator.messages.entities.CommonEntities.OperatingSystemVersion;
 import org.cloudiator.messages.entities.IaasEntities;
 import org.cloudiator.messages.entities.IaasEntities.Image.Builder;
 
@@ -137,9 +138,12 @@ public class ImageConverter implements TwoWayConverter<IaasEntities.Image, Image
       final CommonEntities.OperatingSystem.Builder builder = CommonEntities.OperatingSystem
           .newBuilder().setOperatingSystemArchitecture(
               OS_ARCH_CONVERTER.applyBack(operatingSystem.getArchitecture()))
-          .setOperatingSystemVersion(operatingSystem.getVersion())
           .setOperatingSystemFamily(OS_FAMILY_CONVERTER.applyBack(operatingSystem.getFamily()));
 
+      if (operatingSystem.getVersion() != null) {
+        builder.setOperatingSystemVersion(
+            OperatingSystemVersion.newBuilder().setVersion(operatingSystem.getVersion()).build());
+      }
       return builder.build();
     }
 
