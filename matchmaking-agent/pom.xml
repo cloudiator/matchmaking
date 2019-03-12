@@ -40,7 +40,7 @@
   </profiles>
 
   <build>
-    <finalName>matchmaking-agent</finalName>
+
     <plugins>
       <plugin>
         <groupId>com.google.cloud.tools</groupId>
@@ -60,7 +60,7 @@
           <descriptors>
             <descriptor>src/assembly/src.xml</descriptor>
           </descriptors>
-
+          <finalName>matchmaking-agent</finalName>
           <appendAssemblyId>false</appendAssemblyId>
           <archive>
             <manifest>
