@@ -61,19 +61,22 @@ public class MatchmakingRequestListener implements Runnable {
                         .format("%s has generated the constraint problem %s.", this,
                             oclCsp));
 
-                final Optional<Solution> cachedSolution = solutionCache.retrieve(userId, oclCsp);
+                if (matchmakingRequest.getExistingNodesList().isEmpty()) {
 
-                if (cachedSolution.isPresent() && cachedSolution.get().isValid()) {
+                  final Optional<Solution> cachedSolution = solutionCache.retrieve(userId, oclCsp);
 
-                  LOGGER.info(
-                      String
-                          .format("%s found existing solution %s for the constraint problem %s.",
-                              this, cachedSolution.get(),
-                              oclCsp));
+                  if (cachedSolution.isPresent() && cachedSolution.get().isValid()) {
 
-                  replyWithSolution(id, cachedSolution.get());
+                    LOGGER.info(
+                        String
+                            .format("%s found existing solution %s for the constraint problem %s.",
+                                this, cachedSolution.get(),
+                                oclCsp));
 
-                  return;
+                    replyWithSolution(id, cachedSolution.get());
+
+                    return;
+                  }
                 }
 
                 Solution solution = metaSolver
