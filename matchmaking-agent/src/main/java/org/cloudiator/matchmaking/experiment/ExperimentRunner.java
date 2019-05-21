@@ -12,9 +12,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.cloudiator.matchmaking.choco.ChocoSolverTesting;
 import org.cloudiator.matchmaking.choco.TimeLimit;
+import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.experiment.Experiment.CloudiatorModelType;
 import org.cloudiator.matchmaking.ocl.OclCsp;
-import org.cloudiator.matchmaking.domain.Solution;
 import org.eclipse.ocl.pivot.utilities.ParserException;
 
 public class ExperimentRunner {
@@ -26,7 +26,7 @@ public class ExperimentRunner {
 
     Set<String> constraints = new HashSet<>();
 
-    OclCsp csp = OclCsp.ofConstraints(constraints);
+    OclCsp csp = OclCsp.ofConstraints(constraints, 1);
 
     final Data data = new Data();
 
@@ -63,9 +63,11 @@ public class ExperimentRunner {
       for (int rep = 0; rep < experiment.getRepetitions(); rep++) {
         Solution solution = null;
         if (!experiment.isIterative()) {
-          solution = chocoSolverTesting.solveDirect(experiment.getNodeSize(), experiment.getLimit());
+          solution = chocoSolverTesting
+              .solveDirect(experiment.getNodeSize(), experiment.getLimit());
         } else {
-          solution = chocoSolverTesting.solveIteratively(experiment.getNodeSize(), experiment.getLimit());
+          solution = chocoSolverTesting
+              .solveIteratively(experiment.getNodeSize(), experiment.getLimit());
         }
         if (solution != null) {
           experiment.addSolution(solution);

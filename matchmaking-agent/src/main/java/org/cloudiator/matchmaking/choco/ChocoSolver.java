@@ -96,22 +96,24 @@ public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
     return solvingModelGenerator.apply(nodeCandidates);
   }
 
-
+  @Override
   public Solution solve(OclCsp oclCsp, NodeCandidates nodeCandidates,
-      @Nullable Solution existingSolution) {
+      @Nullable Solution existingSolution, @Nullable Integer targetNodeSize) {
 
     CloudiatorModel solverModel = generateSolvingModel(nodeCandidates);
 
-    int i = 1;
+    if (targetNodeSize == null) {
+      targetNodeSize = 1;
+    }
 
     while (!Thread.currentThread().isInterrupted()) {
       final ChocoSolverInternal chocoSolverInternal = new ChocoSolverInternal(oclCsp,
           solverModel, nodeCandidates);
-      Solution solution = chocoSolverInternal.solve(i, existingSolution);
+      Solution solution = chocoSolverInternal.solve(targetNodeSize, existingSolution);
       if (!solution.noSolution()) {
         return solution;
       }
-      i++;
+      targetNodeSize++;
     }
     return Solution.EMPTY_SOLUTION;
   }

@@ -48,13 +48,20 @@ public class MatchmakingRequestListener implements Runnable {
                   .format("%s received new matchmaking request %s.", this, matchmakingRequest));
 
               String userId = matchmakingRequest.getUserId();
+              Integer targetNodeSize;
+              if (matchmakingRequest.getMinimumNodeSize() == 0) {
+                targetNodeSize = null;
+              } else {
+                targetNodeSize = matchmakingRequest.getMinimumNodeSize();
+              }
 
               try {
 
                 OclCsp oclCsp = OclCsp
                     .ofRequirements(
                         matchmakingRequest.getNodeRequirements().getRequirementsList().stream()
-                            .map(REQUIREMENT_CONVERTER).collect(Collectors.toList()));
+                            .map(REQUIREMENT_CONVERTER).collect(Collectors.toList()),
+                        targetNodeSize);
 
                 LOGGER.info(
                     String

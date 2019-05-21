@@ -9,6 +9,7 @@ import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.cloudiator.matchmaking.domain.RepresentAsOCL;
 import org.cloudiator.matchmaking.domain.Requirement;
 import org.eclipse.ocl.pivot.ExpressionInOCL;
@@ -18,27 +19,18 @@ import org.slf4j.LoggerFactory;
 
 public class OclCsp {
 
-  //Set<String> constraints = new HashSet<>();
-  //constraints.add("nodes->exists(location.name = 'RegionOne')");
-  //constraints.add("nodes->forAll(n | n.hardware.cores >= 2)");
-  //constraints.add("nodes->isUnique(n | n.location.name)");
-  //constraints.add("nodes->forAll(n | n.hardware.ram >= 1024)");
-  //constraints.add("nodes->forAll(n | n.hardware.cores >= 4 implies n.hardware.ram >= 4096)");
-  //constraints.add("nodes->forAll(n | n.image.operatingSystem.family = OSFamily::UBUNTU)");
-  //constraints.add("nodes->forAll(n | n.image.operatingSystem.version = '1')");
-  //constraints
-  //    .add("nodes->forAll(n | n.image.operatingSystem.architecture = OSArchitecture::AMD64)");
-  //constraints.add("nodes->select(n | n.hardware.cores > 4)->size() >= 2");
-  //constraints.add("nodes.hardware.cores->sum() >= 15");
-
   private Set<String> unparsedConstraints;
   private Set<ExpressionInOCL> constraints;
   private static final Logger LOGGER = LoggerFactory.getLogger(OclCsp.class);
+  @Nullable
+  private final Integer minimumNodeSize;
 
 
-  private OclCsp(Iterable<String> constraints) throws ParserException {
+  private OclCsp(Iterable<String> constraints, @Nullable Integer minimumNodeSize)
+      throws ParserException {
 
     this.unparsedConstraints = Sets.newHashSet(constraints);
+    this.minimumNodeSize = minimumNodeSize;
     final Builder<ExpressionInOCL> builder = ImmutableSet.<ExpressionInOCL>builder();
     for (String c : constraints) {
 
@@ -52,18 +44,21 @@ public class OclCsp {
     this.constraints = builder.build();
   }
 
-  public static OclCsp ofConstraints(Iterable<String> constraints) throws ParserException {
-    return new OclCsp(constraints);
+  public static OclCsp ofConstraints(Iterable<String> constraints,
+      @Nullable Integer minimumNodeSize)
+      throws ParserException {
+    return new OclCsp(constraints, minimumNodeSize);
   }
 
 
-  public static OclCsp ofRequirements(Collection<Requirement> requirements) throws ParserException {
+  public static OclCsp ofRequirements(Collection<Requirement> requirements,
+      @Nullable Integer minimumNodeSize) throws ParserException {
 
     Collection<String> constraints = Lists.newArrayList();
     for (Requirement requirement : requirements) {
       constraints.addAll(RepresentAsOCL.INSTANCE.apply(requirement).getOCLConstraints());
     }
-    return new OclCsp(constraints);
+    return new OclCsp(constraints, minimumNodeSize);
   }
 
   public Set<String> getUnparsedConstraints() {
@@ -76,7 +71,8 @@ public class OclCsp {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("constraints", constraints).toString();
+    return MoreObjects.toStringHelper(this).add("constraints", constraints)
+        .add("minimumNodeSize", minimumNodeSize).toString();
   }
 
   @Override
@@ -84,15 +80,21 @@ public class OclCsp {
     if (this == o) {
       return true;
     }
-    if (!(o instanceof OclCsp)) {
+    if (o == null || getClass() != o.getClass()) {
       return false;
     }
     OclCsp oclCsp = (OclCsp) o;
-    return unparsedConstraints.equals(oclCsp.unparsedConstraints);
+    return unparsedConstraints.equals(oclCsp.unparsedConstraints) &&
+        Objects.equals(minimumNodeSize, oclCsp.minimumNodeSize);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(unparsedConstraints);
+    return Objects.hash(unparsedConstraints, minimumNodeSize);
+  }
+
+  @Nullable
+  public Integer getMinimumNodeSize() {
+    return minimumNodeSize;
   }
 }

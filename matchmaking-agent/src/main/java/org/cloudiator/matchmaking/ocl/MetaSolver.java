@@ -85,15 +85,26 @@ public class MetaSolver {
     return Optional.of(Solution.of(candidates));
   }
 
+  private int deriveNodeSize(List<NodeEntities.Node> existingNodes,
+      @Nullable Integer minimumNodeSize) {
+    if (minimumNodeSize == null) {
+      return existingNodes.size() + 1;
+    }
+    return minimumNodeSize;
+  }
+
   @Nullable
   public Solution solve(OclCsp csp, List<NodeEntities.Node> existingNodes, String userId)
       throws ModelGenerationException {
 
+    final int nodeSize = deriveNodeSize(existingNodes, csp.getMinimumNodeSize());
+
     ConstraintChecker cc = ConstraintChecker.create(csp);
 
     LOGGER.debug(String
-        .format("%s is solving CSP %s for user %s with existing nodes %s.", this, csp, userId,
-            existingNodes));
+        .format("%s is solving CSP %s for user %s with existing nodes %s for target node size %s.",
+            this, csp, userId,
+            existingNodes, nodeSize));
 
     NodeGenerator nodeGenerator =
         new ConsistentNodeGenerator(
@@ -130,7 +141,7 @@ public class MetaSolver {
     for (Solver solver : solvers) {
       solverCallables.add(() -> {
         try {
-          return solver.solve(csp, possibleNodes, existingSolution.orElse(null));
+          return solver.solve(csp, possibleNodes, existingSolution.orElse(null), nodeSize);
         } catch (Exception e) {
           LOGGER.error(String.format("Error while executing solver %s on CSP %s", solver, csp), e);
           return null;

@@ -17,7 +17,7 @@ public class ConsistentNodeGeneratorTest {
 
     CloudiatorModel testModel = ExampleModel.testModel();
     final String forAllCountry = "nodes->forAll(location.geoLocation.country = 'DE')";
-    final OclCsp oclCsp = OclCsp.ofConstraints(Collections.singleton(forAllCountry));
+    final OclCsp oclCsp = OclCsp.ofConstraints(Collections.singleton(forAllCountry),1);
     NodeGenerator nodeGenerator = new DefaultNodeGenerator(NodeCandidateFactory.create(),
         testModel);
     ConstraintChecker constraintChecker = ConstraintChecker.create(oclCsp);

@@ -24,7 +24,7 @@ public class ExperimentCSP {
             add("nodes->forAll(n | n.image.operatingSystem.family = OSFamily::UBUNTU)");
             add("nodes->select(n | n.hardware.cores >= 4)->size() = 2");
             add("nodes.hardware.cores->sum() >= 15");
-          }}
+          }},1
       );
     } catch (ParserException e) {
       throw new ExceptionInInitializerError(e);

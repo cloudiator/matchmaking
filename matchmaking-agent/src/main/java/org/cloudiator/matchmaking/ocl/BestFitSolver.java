@@ -10,12 +10,20 @@ import org.cloudiator.matchmaking.domain.Solver;
 public class BestFitSolver implements Solver {
 
   @Override
-  public Solution solve(OclCsp oclCsp, NodeCandidates nodeCandidates, @Nullable Solution existingSolution) {
+  public Solution solve(OclCsp oclCsp, NodeCandidates nodeCandidates,
+      @Nullable Solution existingSolution, @Nullable Integer targetNodeSize) {
+
+    if (existingSolution != null) {
+      throw new UnsupportedOperationException(
+          String.format("%s currently does not support importing existing solutions.", this));
+    }
 
     SolutionGenerator solutionGenerator = new SolutionGenerator(nodeCandidates);
     ConstraintChecker constraintChecker = ConstraintChecker.create(oclCsp);
 
-    int targetNodeSize = 1;
+    if (targetNodeSize == null) {
+      targetNodeSize = 1;
+    }
     while (true) {
       final BestFitInternal bestFitInternal = new BestFitInternal(solutionGenerator,
           constraintChecker, 100, targetNodeSize);
@@ -25,6 +33,7 @@ public class BestFitSolver implements Solver {
       }
       targetNodeSize++;
     }
+
   }
 
   private static class BestFitInternal {

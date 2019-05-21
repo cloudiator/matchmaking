@@ -51,7 +51,7 @@ public class NodeCandidateListener implements Runnable {
               OclCsp oclCsp = OclCsp
                   .ofRequirements(
                       content.getRequirementsList().stream()
-                          .map(REQUIREMENT_CONVERTER).collect(Collectors.toList())
+                          .map(REQUIREMENT_CONVERTER).collect(Collectors.toList()), 1
                   );
 
               LOGGER.info(String.format("%s generated the csp %s.", this, oclCsp));
