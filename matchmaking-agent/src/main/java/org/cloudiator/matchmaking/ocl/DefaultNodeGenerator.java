@@ -14,6 +14,7 @@ import cloudiator.Price;
 import cloudiator.Runtime;
 import com.typesafe.config.Config;
 import de.uniulm.omi.cloudiator.util.configuration.Configuration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -106,6 +107,7 @@ public class DefaultNodeGenerator implements NodeGenerator {
       if (config.hasPath(cloud.getApi().getProviderName())) {
         nodeCandidates.addAll(generateFaasNodeCandidates(cloud));
       }
+      nodeCandidates.addAll(generateByon());
     }
     System.out
         .println(String.format("%s generated all possible nodes: %s", this, nodeCandidates.size()));
@@ -143,6 +145,10 @@ public class DefaultNodeGenerator implements NodeGenerator {
       }
     }
     return nodeCandidates;
+  }
+
+  private Set<NodeCandidate> generateByon() {
+    return Collections.emptySet();
   }
 
   static class PriceCache {
