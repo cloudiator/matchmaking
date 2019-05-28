@@ -24,7 +24,7 @@ public class NodeToNodeCandidate {
 
     Hardware hardware = CloudiatorFactory.eINSTANCE.createHardware();
     hardware.setId("BYON"+ UUID.randomUUID().toString());
-    hardware.getProviderId("BYON"+ UUID.randomUUID().toString())
+    hardware.setProviderId("BYON"+ UUID.randomUUID().toString());
     hardware.setCores(4);
     BYON_CLOUD.getHardwareList().add(hardware);
 
