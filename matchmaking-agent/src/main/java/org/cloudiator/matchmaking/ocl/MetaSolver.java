@@ -108,7 +108,8 @@ public class MetaSolver {
 
     NodeGenerator nodeGenerator =
         new ConsistentNodeGenerator(
-            new DefaultNodeGenerator(nodeCandidateFactory, modelGenerator.generateModel(userId)),
+            NodeCandidateCache.cache(userId, new DefaultNodeGenerator(nodeCandidateFactory,
+                modelGenerator.generateModel(userId))),
             cc);
 
     long startGeneration = System.currentTimeMillis();

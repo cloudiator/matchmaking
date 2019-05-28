@@ -3,12 +3,11 @@ package org.cloudiator.matchmaking.ocl;
 import cloudiator.CloudiatorModel;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.cloudiator.matchmaking.converters.NodeCandidateConverter;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
-import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
+import org.cloudiator.matchmaking.ocl.NodeCandidateCache.CachedNodeGenerator;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.entities.Matchmaking.NodeCandidateRequestMessage;
 import org.cloudiator.messages.entities.Matchmaking.NodeCandidateRequestResponse;
@@ -43,8 +42,10 @@ public class NodeCandidateListener implements Runnable {
           try {
             final CloudiatorModel cloudiatorModel = modelGenerator
                 .generateModel(content.getUserId());
-            final DefaultNodeGenerator defaultNodeGenerator = new DefaultNodeGenerator(
-                NodeCandidateFactory.create(), cloudiatorModel);
+
+            final CachedNodeGenerator cachedNodeGenerator = NodeCandidateCache
+                .cache(content.getUserId(), new DefaultNodeGenerator(
+                    NodeCandidateFactory.create(), cloudiatorModel));
 
             final NodeCandidates nodeCandidates;
             if (Strings.isNullOrEmpty(content.getId())) {
@@ -57,18 +58,11 @@ public class NodeCandidateListener implements Runnable {
               LOGGER.info(String.format("%s generated the csp %s.", this, oclCsp));
 
               final ConsistentNodeGenerator consistentNodeGenerator = new ConsistentNodeGenerator(
-                  defaultNodeGenerator, ConstraintChecker.create(oclCsp));
+                  cachedNodeGenerator, ConstraintChecker.create(oclCsp));
 
               nodeCandidates = consistentNodeGenerator.get();
             } else {
-
-              nodeCandidates = defaultNodeGenerator.get().stream()
-                  .filter(new Predicate<NodeCandidate>() {
-                    @Override
-                    public boolean test(NodeCandidate nodeCandidate) {
-                      return nodeCandidate.id().equals(content.getId());
-                    }
-                  }).findAny().map(NodeCandidates::single).orElseGet(NodeCandidates::empty);
+              nodeCandidates = NodeCandidates.single(cachedNodeGenerator.get(content.getId()));
             }
 
             LOGGER.info(String.format("%s found %s nodes for request. Replying.", this,
