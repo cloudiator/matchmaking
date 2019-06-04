@@ -31,6 +31,7 @@ public class OclServiceModule extends AbstractModule {
     Multibinder<Expirable> expireBinder = Multibinder
         .newSetBinder(binder(), Expirable.class);
     expireBinder.addBinding().to(SolutionCacheImpl.class);
+    expireBinder.addBinding().to(NodeCandidateCache.class);
 
     bind(PriceFunction.class).to(HardwareBasedPriceFunction.class);
 
