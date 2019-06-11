@@ -56,5 +56,7 @@ public class OclServiceModule extends AbstractModule {
     } else {
       bind(ModelGenerator.class).to(oclContext.modelGenerator().modelGeneratorClass());
     }
+
+    bind(ByonUpdater.class).asEagerSingleton();
   }
 }
