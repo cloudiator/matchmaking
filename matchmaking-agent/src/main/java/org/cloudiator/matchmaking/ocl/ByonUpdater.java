@@ -78,7 +78,7 @@ public class ByonUpdater {
     Location location = CloudiatorFactory.eINSTANCE.createLocation();
     //todo: setting is mandatory? location.setName(...);
     //todo: setting is mandatory? location.setProviderId(...);
-    //todo: setting is mandatory? location.setId(...)
+    location.setId(String.format("BYON_LOCATION_ID_%s", byonNode.getId()));
     location.setGeoLocation(GEO_LOCATION_CONVERTER.apply(byonNode.getNodeData().
         getProperties().getGeoLocation()));
     location.setParent(null);
