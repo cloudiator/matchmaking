@@ -19,7 +19,7 @@ public class ConsistentNodeGeneratorTest {
     final String forAllCountry = "nodes->forAll(location.geoLocation.country = 'DE')";
     final OclCsp oclCsp = OclCsp.ofConstraints(Collections.singleton(forAllCountry),1);
     NodeGenerator nodeGenerator = new DefaultNodeGenerator(NodeCandidateFactory.create(),
-        testModel);
+        testModel, new ByonUpdater());
     ConstraintChecker constraintChecker = ConstraintChecker.create(oclCsp);
     ConsistentNodeGenerator consistentNodeGenerator = new ConsistentNodeGenerator(nodeGenerator,
         constraintChecker);

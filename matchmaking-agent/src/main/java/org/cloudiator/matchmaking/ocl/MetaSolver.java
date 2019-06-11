@@ -109,7 +109,7 @@ public class MetaSolver {
     NodeGenerator nodeGenerator =
         new ConsistentNodeGenerator(
             NodeCandidateCache.cache(userId, new DefaultNodeGenerator(nodeCandidateFactory,
-                modelGenerator.generateModel(userId))),
+                modelGenerator.generateModel(userId), new ByonUpdater())),
             cc);
 
     long startGeneration = System.currentTimeMillis();

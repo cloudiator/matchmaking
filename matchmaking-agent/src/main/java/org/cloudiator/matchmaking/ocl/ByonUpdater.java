@@ -4,26 +4,18 @@ import cloudiator.Cloud;
 import cloudiator.CloudiatorFactory;
 import cloudiator.Hardware;
 import cloudiator.Image;
-import cloudiator.OSArchitecture;
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import de.uniulm.omi.cloudiator.util.OneWayConverter;
-import cloudiator.GeoLocation;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
-import java.util.function.Supplier;
-import javax.annotation.Nullable;
 import org.cloudiator.matchmaking.converters.GeoLocationConverter;
 import org.cloudiator.matchmaking.converters.OperatingSystemConverter;
-import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.messages.Byon.ByonNode;
-import org.cloudiator.messages.entities.CommonEntities.OperatingSystem;
 import cloudiator.Location;
 
 @Singleton
 public class ByonUpdater {
 
-  private static final Cloud BYON_CLOUD;
+  public static final Cloud BYON_CLOUD;
   private static final OperatingSystemConverter OS_CONVERTER = new OperatingSystemConverter();
   private static final GeoLocationConverter GEO_LOCATION_CONVERTER = new GeoLocationConverter();
 
@@ -35,25 +27,25 @@ public class ByonUpdater {
   public synchronized void update(ByonNodeCache cache) {
     final Set<ByonNode> byonNodes = cache.readAll();
 
-    /* updateImages(byonNodes); */
+    updateImages(byonNodes);
     updateHardwares(byonNodes);
-    /* updateLocations(byonNodes); */
+    updateLocations(byonNodes);
   }
 
   private synchronized void updateImages(Set<ByonNode> byonNodes) {
     BYON_CLOUD.getImages().clear();
 
     for (ByonNode byonNode : byonNodes) {
-      /* Image image = CloudiatorFactory.eINSTANCE.createImage();
-      //todo: setting is mandatory? image.setProviderId(...);
+      Image image = CloudiatorFactory.eINSTANCE.createImage();
+      image.setProviderId(String.format("BYON_IMAGE_PROV_ID_%s", byonNode.getId()));
       final int osFamilyVal = byonNode.getNodeData().getProperties().getOperationSystem().getOperatingSystemFamilyValue();
       final int osVersionVal = byonNode.getNodeData().getProperties().getOperationSystem().getOperatingSystemVersion().getVersion();
       final int osArchVal = byonNode.getNodeData().getProperties().getOperationSystem().getOperatingSystemArchitectureValue();
       image.setName(String.format("BYON_IMAGE_%s_%s_%s", osFamilyVal, osVersionVal, osArchVal));
       image.setId(String.format("BYON_IMAGE_ID_%s", byonNode.getId()));
-      //todo: setting is mandatory? image.setLocation(...);
+      image.setLocation(buildLocation(byonNode));
       image.setOperatingSystem(OS_CONVERTER.apply(byonNode.getNodeData().getProperties().getOperationSystem()));
-      BYON_CLOUD.getImages().add(image); */
+      BYON_CLOUD.getImages().add(image);
     }
   }
 
@@ -62,13 +54,13 @@ public class ByonUpdater {
 
     for (ByonNode byonNode : byonNodes) {
       Hardware hardware = CloudiatorFactory.eINSTANCE.createHardware();
-      // todo: setting is mandatory? hardware.setProviderId(...);
+      hardware.setProviderId(String.format("BYON_HW_PROV_ID_%s", byonNode.getId()));
       hardware.setId(String.format("BYON_HW_ID_%s", byonNode.getId()));
       hardware.setName(String.format("BYON_HW_%s", byonNode.getNodeData().getName()));
       hardware.setCores(byonNode.getNodeData().getProperties().getNumberOfCores());
       hardware.setRam(Math.toIntExact(byonNode.getNodeData().getProperties().getMemory()));
       hardware.setDisk(byonNode.getNodeData().getProperties().getDisk());
-      // todo: setting is mandatory? hardware.setLocation(location);
+      hardware.setLocation(buildLocation(byonNode));
       BYON_CLOUD.getHardwareList().add(hardware);
     }
   }
@@ -77,13 +69,68 @@ public class ByonUpdater {
     BYON_CLOUD.getLocations().clear();
 
     for (ByonNode byonNode : byonNodes) {
-      /* Location location = CloudiatorFactory.eINSTANCE.createLocation();
-      //todo: setting is mandatory? location.setName(...);
-      //todo: setting is mandatory? location.setProviderId(...);
-      //todo: setting is mandatory? location.setId(...)
-      location.setGeoLocation(GEO_LOCATION_CONVERTER.apply(byonNode.getNodeData().
-          getProperties().getGeoLocation()));
-      BYON_CLOUD.getLocations().add(location);*/
+      Location location = buildLocation(byonNode);
+      BYON_CLOUD.getLocations().add(location);
+    }
+  }
+
+  private synchronized Location buildLocation(ByonNode byonNode) {
+    Location location = CloudiatorFactory.eINSTANCE.createLocation();
+    //todo: setting is mandatory? location.setName(...);
+    //todo: setting is mandatory? location.setProviderId(...);
+    //todo: setting is mandatory? location.setId(...)
+    location.setGeoLocation(GEO_LOCATION_CONVERTER.apply(byonNode.getNodeData().
+        getProperties().getGeoLocation()));
+    location.setParent(null);
+    return location;
+  }
+
+  public synchronized Set<ByonTriple> getValidTriples() {
+    Set<ByonTriple> triples = new HashSet<>();
+    for (Image image : BYON_CLOUD.getImages()) {
+      for (Hardware hardware : BYON_CLOUD.getHardwareList()) {
+        for (Location location : BYON_CLOUD.getLocations()) {
+          //check if valid combination
+          if (isValidByonCombination(image, hardware, location)) {
+            triples.add(new ByonTriple(image,hardware,location));
+          }
+        }
+      }
+    }
+
+    return triples;
+  }
+
+  private synchronized boolean isValidByonCombination(Image image, Hardware hardware, Location location) {
+    String[] partsImage = image.getId().split("_");
+    String[] partsHardware = hardware.getId().split("_");
+    String[] partsLocation = location.getId().split("_");
+
+    if(partsImage.length != 4 || partsHardware.length != 4 || partsLocation.length != 4) {
+      return false;
+    }
+
+    // valid combo if id postfixes are equal
+    final String imageId = partsImage[3];
+    final String hardwareId = partsHardware[3];
+    final String locationId = partsLocation[3];
+
+    if(imageId.equals(hardwareId) && imageId.equals(locationId)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  public static class ByonTriple {
+    public final Image image;
+    public final Hardware hardware;
+    public final Location location;
+
+    private ByonTriple(Image image, Hardware hardware, Location location) {
+      this.image = image;
+      this.hardware = hardware;
+      this.location = location;
     }
   }
 }

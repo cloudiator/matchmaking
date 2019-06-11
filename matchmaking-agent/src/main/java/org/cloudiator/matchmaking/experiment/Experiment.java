@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.DoublePredicate;
 import org.cloudiator.matchmaking.choco.TimeLimit;
+import org.cloudiator.matchmaking.ocl.ByonUpdater;
 import org.cloudiator.matchmaking.ocl.ConsistentNodeGenerator;
 import org.cloudiator.matchmaking.ocl.ConstraintChecker;
 import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator;
@@ -152,7 +153,8 @@ public class Experiment {
       if (this.candidates == null) {
         this.candidates = new ConsistentNodeGenerator(
             new DefaultNodeGenerator(ExperimentCSP.NODE_CANDIDATE_FACTORY,
-                getCloudiatorModel()),
+                getCloudiatorModel(),
+                new ByonUpdater()),
             ConstraintChecker.create(ExperimentCSP.CSP)).get();
       }
       return candidates;
