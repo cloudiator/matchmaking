@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import cloudiator.CloudiatorModel;
+import de.uniulm.omi.cloudiator.sword.domain.QuotaSet;
 import java.util.Collections;
 import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
@@ -17,7 +18,8 @@ public class ConsistentNodeGeneratorTest {
 
     CloudiatorModel testModel = ExampleModel.testModel();
     final String forAllCountry = "nodes->forAll(location.geoLocation.country = 'DE')";
-    final OclCsp oclCsp = OclCsp.ofConstraints(Collections.singleton(forAllCountry),1);
+    final OclCsp oclCsp = OclCsp.ofConstraints(Collections.singleton(forAllCountry),Collections.emptyList(),
+        QuotaSet.EMPTY, 1);
     NodeGenerator nodeGenerator = new DefaultNodeGenerator(NodeCandidateFactory.create(),
         testModel);
     ConstraintChecker constraintChecker = ConstraintChecker.create(oclCsp);

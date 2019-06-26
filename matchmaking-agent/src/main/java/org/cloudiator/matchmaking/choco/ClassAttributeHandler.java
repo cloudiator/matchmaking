@@ -54,6 +54,8 @@ public class ClassAttributeHandler {
       mandatoryAttributes.forEach(eAttribute -> relevantAttributeCache.store(eAttribute));
       oclCsp.getConstraints().forEach(
           expressionInOCL -> handleOclExpression(expressionInOCL.getOwnedBody()));
+
+      //todo: check the quota
     }
 
     private void handleOclExpression(OCLExpression oclExpression) {

@@ -71,7 +71,7 @@ public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
       }
 
       if (solver.getSolutionCount() == 0) {
-        LOGGER.trace(String.format("%s could not find a solution.", contradictions.getLast()));
+        LOGGER.debug(String.format("%s could not find a solution.", contradictions.getLast()));
         return Solution.EMPTY_SOLUTION;
       }
 

@@ -16,6 +16,11 @@
       <groupId>io.github.cloudiator.common</groupId>
       <artifactId>common-messaging</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.github.cloudiator.iaas</groupId>
+      <artifactId>iaas-common</artifactId>
+      <version>0.3.0-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
 

@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import org.cloudiator.matchmaking.LocationUtil;
 import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.ocl.NodeCandidates;
 import org.eclipse.emf.ecore.util.EcoreUtil;
@@ -53,6 +54,10 @@ public class SolvingModelGenerator implements Function<NodeCandidates, Cloudiato
       for (NodeCandidate nodeCandidate : nodeCandidates) {
         imageIds.add(nodeCandidate.getImage().getId());
         locationIds.add(nodeCandidate.getLocation().getId());
+
+        LocationUtil.parents(nodeCandidate.getLocation()).stream().map(Location::getId)
+            .forEach(locationIds::add);
+
         hardwareIds.add(nodeCandidate.getHardware().getId());
       }
 

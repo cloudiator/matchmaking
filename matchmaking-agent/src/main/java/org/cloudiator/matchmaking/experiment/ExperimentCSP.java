@@ -1,5 +1,7 @@
 package org.cloudiator.matchmaking.experiment;
 
+import de.uniulm.omi.cloudiator.sword.domain.QuotaSet;
+import java.util.Collections;
 import java.util.HashSet;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.matchmaking.ocl.OclCsp;
@@ -24,7 +26,7 @@ public class ExperimentCSP {
             add("nodes->forAll(n | n.image.operatingSystem.family = OSFamily::UBUNTU)");
             add("nodes->select(n | n.hardware.cores >= 4)->size() = 2");
             add("nodes.hardware.cores->sum() >= 15");
-          }},1
+          }}, Collections.emptyList(), QuotaSet.EMPTY, 1
       );
     } catch (ParserException e) {
       throw new ExceptionInInitializerError(e);
