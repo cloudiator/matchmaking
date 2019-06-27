@@ -3,6 +3,7 @@ package org.cloudiator.matchmaking;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import de.uniulm.omi.cloudiator.util.configuration.Configuration;
+import org.cloudiator.matchmaking.ocl.ByonNodeEventSubscriber;
 import org.cloudiator.matchmaking.ocl.DiscoveryListener;
 import org.cloudiator.matchmaking.ocl.MatchmakingRequestListener;
 import org.cloudiator.matchmaking.ocl.NodeCandidateListener;
@@ -30,6 +31,7 @@ public class MatchmakingAgent {
     injector.getInstance(NodeCandidateListener.class).run();
     injector.getInstance(SolutionRequestListener.class).run();
     injector.getInstance(DiscoveryListener.class).run();
+    injector.getInstance(ByonNodeEventSubscriber.class).run();
   }
 
 }
