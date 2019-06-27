@@ -1,5 +1,7 @@
 package org.cloudiator.matchmaking.choco;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import cloudiator.CloudiatorPackage.Literals;
 import cloudiator.Location;
 import de.uniulm.omi.cloudiator.sword.domain.AttributeQuota;
@@ -44,6 +46,9 @@ public class QuotaHandler {
 
       //get the variable representing the original attribute
       final IntVar originalVariable = getVariable(attributeQuota.attribute(), node);
+
+      checkNotNull(originalVariable,
+          "Could not find variable for attribute " + attributeQuota.attribute());
 
       final Set<Integer> originalDomain = ChocoHelper.getDomainOfVariable(originalVariable);
       originalDomain.add(0);
@@ -108,7 +113,7 @@ public class QuotaHandler {
             .getCustomVariable(node, Attribute.NODES_SIZE.name());
         if (nodeSizeVariable == null) {
           final IntVar intVar = modelGenerationContext.getModel()
-              .intVar(Attribute.NODES_SIZE.name(), 1);
+              .boolVar();
           modelGenerationContext.getVariableStore()
               .storeCustomVariable(node, Attribute.NODES_SIZE.name(), intVar);
           nodeSizeVariable = intVar;

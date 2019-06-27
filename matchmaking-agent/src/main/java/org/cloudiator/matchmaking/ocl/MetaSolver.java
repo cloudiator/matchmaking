@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkState;
 import cloudiator.CloudiatorFactory;
 import cloudiator.CloudiatorPackage;
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
@@ -33,7 +32,6 @@ import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.domain.Solver;
-import org.cloudiator.messages.NodeEntities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +126,8 @@ public class MetaSolver {
       return Solution.EMPTY_SOLUTION;
     }
 
-    Optional<Solution> existingSolution = generateExistingSolution(csp.getExistingNodes(), possibleNodes);
+    Optional<Solution> existingSolution = generateExistingSolution(csp.getExistingNodes(),
+        possibleNodes);
 
     long generationTime = System.currentTimeMillis() - startGeneration;
     LOGGER.info(
@@ -144,8 +143,8 @@ public class MetaSolver {
       solverCallables.add(() -> {
         try {
           return solver.solve(csp, possibleNodes, existingSolution.orElse(null), nodeSize);
-        } catch (Exception e) {
-          LOGGER.warn(String.format("Error while executing solver %s on CSP %s", solver, csp), e);
+        } catch (Throwable t) {
+          LOGGER.warn(String.format("Error while executing solver %s on CSP %s", solver, csp), t);
           return null;
         }
       });

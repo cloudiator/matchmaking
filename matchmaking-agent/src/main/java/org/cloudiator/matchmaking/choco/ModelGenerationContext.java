@@ -165,6 +165,10 @@ public class ModelGenerationContext {
       return custom.row(node).get(s);
     }
 
+    public Collection<Variable> getCustomVariables(String s) {
+      return custom.column(s).values();
+    }
+
   }
 
 }

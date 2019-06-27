@@ -3,6 +3,8 @@ package org.cloudiator.matchmaking.choco;
 import static com.google.common.base.Preconditions.checkState;
 
 import cloudiator.CloudiatorPackage.Literals;
+import de.uniulm.omi.cloudiator.sword.domain.AttributeQuota;
+import de.uniulm.omi.cloudiator.sword.domain.Quota;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -55,7 +57,17 @@ public class ClassAttributeHandler {
       oclCsp.getConstraints().forEach(
           expressionInOCL -> handleOclExpression(expressionInOCL.getOwnedBody()));
 
-      //todo: check the quota
+      for (Quota quota : oclCsp.getQuotaSet().quotaSet()) {
+        if (quota instanceof AttributeQuota) {
+          switch (((AttributeQuota) quota).attribute()) {
+            case HARDWARE_RAM:
+              relevantAttributeCache.store(Literals.HARDWARE__RAM);
+              break;
+            case HARDWARE_CORES:
+              relevantAttributeCache.store(Literals.HARDWARE__CORES);
+          }
+        }
+      }
     }
 
     private void handleOclExpression(OCLExpression oclExpression) {
