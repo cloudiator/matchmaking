@@ -32,6 +32,17 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
     this.price = price;
   }
 
+  public NodeCandidate(Cloud cloud, Hardware hardware,
+      Image image, Location location) {
+    this.type = NodeType.BYON;
+    this.cloud = cloud;
+    this.hardware = hardware;
+    this.image = image;
+    this.location = location;
+    this.price = null;
+  }
+
+
   public NodeCandidate(Cloud cloud, Location location, Hardware hardware, double pricePerInvocation,
       double memoryPrice, Environment environment) {
     this.type = NodeType.FAAS;
@@ -190,6 +201,11 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
     public NodeCandidate of(Cloud cloud, Hardware hardware, Image image,
         Location location, @Nullable Double price) {
       return new NodeCandidate(cloud, hardware, image, location, price);
+    }
+
+    public NodeCandidate byon(Cloud cloud, Hardware hardware, Image image,
+        Location location) {
+      return new NodeCandidate(cloud, hardware, image, location);
     }
 
     public NodeCandidate of(Cloud cloud, Location location, Hardware hardware,

@@ -14,6 +14,8 @@ public class HashingNodeCandidateIdGenerator implements NodeCandidateIdGenerator
         into.putString(from.getLocation().getId(), Charsets.UTF_8);
         into.putString(from.getImage().getId(), Charsets.UTF_8);
       };
+  private static final Funnel<NodeCandidate> BYON_NODE_CANDIDATE_FUNNEL =
+      IAAS_NODE_CANDIDATE_FUNNEL;
   private static final Funnel<NodeCandidate> FAAS_NODE_CANDIDATE_FUNNEL =
       (Funnel<NodeCandidate>) (from, into) -> {
         into.putString(from.getCloud().getId(), Charsets.UTF_8);
@@ -35,6 +37,7 @@ public class HashingNodeCandidateIdGenerator implements NodeCandidateIdGenerator
         return HASH_FUNCTION.hashObject(nodeCandidate, FAAS_NODE_CANDIDATE_FUNNEL).toString();
       case PAAS:
       case BYON:
+        return HASH_FUNCTION.hashObject(nodeCandidate, BYON_NODE_CANDIDATE_FUNNEL).toString();
       default:
         throw new IllegalStateException(
             "Unsupported node candidate type: " + nodeCandidate.getType());
