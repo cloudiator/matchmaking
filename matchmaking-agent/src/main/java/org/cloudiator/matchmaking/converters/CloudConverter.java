@@ -54,8 +54,10 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
   public IaasEntities.Cloud apply(Cloud cloud) {
     final boolean checkByon = ByonCloudUtil.isByon(cloud.getId());
 
-    if (cloud == null || checkByon) {
+    if (cloud == null) {
       return null;
+    } else if (checkByon) {
+      return IaasEntities.Cloud.newBuilder().setId(cloud.getId()).build();
     }
 
     final Builder builder = IaasEntities.Cloud.newBuilder().setId(cloud.getId())
