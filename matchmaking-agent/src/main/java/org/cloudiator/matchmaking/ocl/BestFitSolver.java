@@ -18,6 +18,11 @@ public class BestFitSolver implements Solver {
           String.format("%s currently does not support importing existing solutions.", this));
     }
 
+    if (!oclCsp.getQuotaSet().quotaSet().isEmpty()) {
+      throw new UnsupportedOperationException(
+          String.format("%s currently does not support handling quotas.", this));
+    }
+
     SolutionGenerator solutionGenerator = new SolutionGenerator(nodeCandidates);
     ConstraintChecker constraintChecker = ConstraintChecker.create(oclCsp);
 

@@ -2,10 +2,12 @@ package org.cloudiator.matchmaking.experiment;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import de.uniulm.omi.cloudiator.sword.domain.QuotaSet;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +28,7 @@ public class ExperimentRunner {
 
     Set<String> constraints = new HashSet<>();
 
-    OclCsp csp = OclCsp.ofConstraints(constraints, 1);
+    OclCsp csp = OclCsp.ofConstraints(constraints, Collections.emptyList(), QuotaSet.EMPTY, 1);
 
     final Data data = new Data();
 

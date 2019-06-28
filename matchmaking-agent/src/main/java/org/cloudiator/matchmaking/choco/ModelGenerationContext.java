@@ -132,6 +132,7 @@ public class ModelGenerationContext {
 
     private Table<Integer, EAttribute, Variable> variableStore = HashBasedTable.create();
     private Table<Integer, EClass, Variable> idStore = HashBasedTable.create();
+    private Table<Integer, String, Variable> custom = HashBasedTable.create();
 
     public void storeVariable(int node, EAttribute eAttribute, Variable variable) {
       if (eAttribute.isID()) {
@@ -144,6 +145,10 @@ public class ModelGenerationContext {
       idStore.put(node, eClass, variable);
     }
 
+    public void storeCustomVariable(int node, String s, Variable variable) {
+      custom.put(node, s, variable);
+    }
+
     public Collection<Variable> getVariables(EAttribute eAttribute) {
       return variableStore.column(eAttribute).values();
     }
@@ -154,6 +159,14 @@ public class ModelGenerationContext {
 
     public Map<EClass, Variable> getIdVariables(int node) {
       return idStore.row(node);
+    }
+
+    public Variable getCustomVariable(int node, String s) {
+      return custom.row(node).get(s);
+    }
+
+    public Collection<Variable> getCustomVariables(String s) {
+      return custom.column(s).values();
     }
 
   }
