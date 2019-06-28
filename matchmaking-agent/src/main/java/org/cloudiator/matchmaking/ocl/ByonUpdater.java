@@ -7,7 +7,6 @@ import cloudiator.Image;
 import com.google.inject.Singleton;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import org.cloudiator.matchmaking.converters.GeoLocationConverter;
 import org.cloudiator.matchmaking.converters.OperatingSystemConverter;
 import org.cloudiator.messages.Byon.ByonNode;
@@ -22,7 +21,7 @@ public class ByonUpdater {
 
   static {
     final Cloud cloud = CloudiatorFactory.eINSTANCE.createCloud();
-    cloud.setId("BYON_"+ UUID.randomUUID().toString());
+    cloud.setId(ByonCloudUtil.getId());
     BYON_CLOUD = cloud;
   }
 

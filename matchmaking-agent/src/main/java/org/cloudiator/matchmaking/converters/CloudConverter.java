@@ -12,6 +12,7 @@ import cloudiator.Property;
 import com.google.common.base.Strings;
 import de.uniulm.omi.cloudiator.util.TwoWayConverter;
 import java.util.stream.Collectors;
+import org.cloudiator.matchmaking.ocl.ByonCloudUtil;
 import org.cloudiator.messages.entities.IaasEntities;
 import org.cloudiator.messages.entities.IaasEntities.Cloud.Builder;
 import org.cloudiator.messages.entities.IaasEntities.Configuration;
@@ -29,6 +30,11 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
 
   @Override
   public Cloud applyBack(IaasEntities.Cloud cloud) {
+    final boolean checkByon = ByonCloudUtil.isByon(cloud.getId());
+
+    if(checkByon) {
+      throw new IllegalStateException("Cannot process Cloud contents corresponding to byon");
+    }
 
     Cloud modelCloud = CLOUDIATOR_FACTORY.createCloud();
     modelCloud.setId(cloud.getId());
@@ -46,7 +52,9 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
 
   @Override
   public IaasEntities.Cloud apply(Cloud cloud) {
-    if (cloud == null) {
+    final boolean checkByon = ByonCloudUtil.isByon(cloud.getId());
+
+    if (cloud == null || checkByon) {
       return null;
     }
 
