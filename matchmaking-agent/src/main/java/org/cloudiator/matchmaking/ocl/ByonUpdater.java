@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.Set;
 import org.cloudiator.matchmaking.converters.GeoLocationConverter;
 import org.cloudiator.matchmaking.converters.OperatingSystemConverter;
+import org.cloudiator.matchmaking.ocl.ByonCloudUtil.ByonImage;
+import org.cloudiator.matchmaking.ocl.ByonCloudUtil.ByonLocation;
 import org.cloudiator.messages.Byon.ByonNode;
 import cloudiator.Location;
 
@@ -40,13 +42,12 @@ public class ByonUpdater {
 
     for (ByonNode byonNode : byonNodes) {
       Image image = CloudiatorFactory.eINSTANCE.createImage();
-      image.setProviderId(String.format("BYON_IMAGE_PROV_ID_%s", byonNode.getId()));
+      image.setProviderId(String.format("%s%s", ByonCloudUtil.ByonImage.PROV_ID_PREF, byonNode.getId()));
       final int osFamilyVal = byonNode.getNodeData().getProperties().getOperationSystem().getOperatingSystemFamilyValue();
       final int osVersionVal = byonNode.getNodeData().getProperties().getOperationSystem().getOperatingSystemVersion().getVersion();
       final int osArchVal = byonNode.getNodeData().getProperties().getOperationSystem().getOperatingSystemArchitectureValue();
-      image.setName(String.format("BYON_IMAGE_%s_%s_%s", osFamilyVal, osVersionVal, osArchVal));
-      image.setId(String.format("BYON_IMAGE_ID_%s", byonNode.getId()));
-      image.setLocation(buildLocation(byonNode));
+      image.setName(String.format("%s%s_%s_%s", ByonCloudUtil.ByonImage.NAME_PREF, osFamilyVal, osVersionVal, osArchVal));
+      image.setId(String.format("%s%s", ByonCloudUtil.ByonImage.ID_PREF, byonNode.getId()));
       image.setOperatingSystem(OS_CONVERTER.apply(byonNode.getNodeData().getProperties().getOperationSystem()));
       image.setOwner(byonNode.getUserId());
       image.setState(DiscoveryItemState.OK);
@@ -59,13 +60,12 @@ public class ByonUpdater {
 
     for (ByonNode byonNode : byonNodes) {
       Hardware hardware = CloudiatorFactory.eINSTANCE.createHardware();
-      hardware.setProviderId(String.format("BYON_HW_PROV_ID_%s", byonNode.getId()));
-      hardware.setId(String.format("BYON_HW_ID_%s", byonNode.getId()));
-      hardware.setName(String.format("BYON_HW_%s", byonNode.getNodeData().getName()));
+      hardware.setProviderId(String.format("%s%s", ByonCloudUtil.ByonHardware.PROV_ID_PREF, byonNode.getId()));
+      hardware.setId(String.format("%s%s", ByonCloudUtil.ByonHardware.ID_PREF, byonNode.getId()));
+      hardware.setName(String.format("%s%s", ByonCloudUtil.ByonHardware.NAME_PREF, byonNode.getNodeData().getName()));
       hardware.setCores(byonNode.getNodeData().getProperties().getNumberOfCores());
       hardware.setRam(Math.toIntExact(byonNode.getNodeData().getProperties().getMemory()));
       hardware.setDisk(byonNode.getNodeData().getProperties().getDisk());
-      hardware.setLocation(buildLocation(byonNode));
       hardware.setOwner(byonNode.getUserId());
       hardware.setState(DiscoveryItemState.OK);
       BYON_CLOUD.getHardwareList().add(hardware);
@@ -76,24 +76,19 @@ public class ByonUpdater {
     BYON_CLOUD.getLocations().clear();
 
     for (ByonNode byonNode : byonNodes) {
-      Location location = buildLocation(byonNode);
+      Location location = CloudiatorFactory.eINSTANCE.createLocation();
+      location.setName(String.format("%s", ByonCloudUtil.ByonLocation.NAME_PREF));
+      location.setProviderId(String.format("%s%s", ByonCloudUtil.ByonLocation.PROV_ID_PREF, byonNode.getId()));
+      location.setId(String.format("%s%s", ByonCloudUtil.ByonLocation.ID_PREF, byonNode.getId()));
+      location.setGeoLocation(GEO_LOCATION_CONVERTER.apply(byonNode.getNodeData().
+          getProperties().getGeoLocation()));
+      location.setParent(null);
+      location.isAssignable();
+      location.setLocationScope(LocationScope.HOST);
+      location.setOwner(byonNode.getUserId());
+      location.setState(DiscoveryItemState.OK);
       BYON_CLOUD.getLocations().add(location);
     }
-  }
-
-  private synchronized Location buildLocation(ByonNode byonNode) {
-    Location location = CloudiatorFactory.eINSTANCE.createLocation();
-    //todo: setting is mandatory? location.setName(...);
-    //todo: setting is mandatory? location.setProviderId(...);
-    location.setId(String.format("BYON_LOCATION_ID_%s", byonNode.getId()));
-    location.setGeoLocation(GEO_LOCATION_CONVERTER.apply(byonNode.getNodeData().
-        getProperties().getGeoLocation()));
-    location.setParent(null);
-    location.isAssignable();
-    location.setLocationScope(LocationScope.HOST);
-    location.setOwner(byonNode.getUserId());
-    location.setState(DiscoveryItemState.OK);
-    return location;
   }
 
   public synchronized Set<ByonTriple> getValidTriples() {
@@ -102,7 +97,7 @@ public class ByonUpdater {
       for (Hardware hardware : BYON_CLOUD.getHardwareList()) {
         for (Location location : BYON_CLOUD.getLocations()) {
           //check if valid combination
-          if (isValidByonCombination(image, hardware, location)) {
+          if (ByonCloudUtil.isValidByonCombination(image, hardware, location)) {
             triples.add(new ByonTriple(image,hardware,location));
           }
         }
@@ -112,26 +107,6 @@ public class ByonUpdater {
     return triples;
   }
 
-  private synchronized boolean isValidByonCombination(Image image, Hardware hardware, Location location) {
-    String[] partsImage = image.getId().split("_");
-    String[] partsHardware = hardware.getId().split("_");
-    String[] partsLocation = location.getId().split("_");
-
-    if(partsImage.length != 4 || partsHardware.length != 4 || partsLocation.length != 4) {
-      return false;
-    }
-
-    // valid combo if id postfixes are equal
-    final String imageId = partsImage[3];
-    final String hardwareId = partsHardware[3];
-    final String locationId = partsLocation[3];
-
-    if(imageId.equals(hardwareId) && imageId.equals(locationId)) {
-      return true;
-    }
-
-    return false;
-  }
 
   public static class ByonTriple {
     public final Image image;
