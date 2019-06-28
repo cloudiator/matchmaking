@@ -2,8 +2,10 @@ package org.cloudiator.matchmaking.ocl;
 
 import cloudiator.Cloud;
 import cloudiator.CloudiatorFactory;
+import cloudiator.DiscoveryItemState;
 import cloudiator.Hardware;
 import cloudiator.Image;
+import cloudiator.LocationScope;
 import com.google.inject.Singleton;
 import java.util.HashSet;
 import java.util.Set;
@@ -46,6 +48,8 @@ public class ByonUpdater {
       image.setId(String.format("BYON_IMAGE_ID_%s", byonNode.getId()));
       image.setLocation(buildLocation(byonNode));
       image.setOperatingSystem(OS_CONVERTER.apply(byonNode.getNodeData().getProperties().getOperationSystem()));
+      image.setOwner(byonNode.getUserId());
+      image.setState(DiscoveryItemState.OK);
       BYON_CLOUD.getImages().add(image);
     }
   }
@@ -62,6 +66,8 @@ public class ByonUpdater {
       hardware.setRam(Math.toIntExact(byonNode.getNodeData().getProperties().getMemory()));
       hardware.setDisk(byonNode.getNodeData().getProperties().getDisk());
       hardware.setLocation(buildLocation(byonNode));
+      hardware.setOwner(byonNode.getUserId());
+      hardware.setState(DiscoveryItemState.OK);
       BYON_CLOUD.getHardwareList().add(hardware);
     }
   }
@@ -83,6 +89,10 @@ public class ByonUpdater {
     location.setGeoLocation(GEO_LOCATION_CONVERTER.apply(byonNode.getNodeData().
         getProperties().getGeoLocation()));
     location.setParent(null);
+    location.isAssignable();
+    location.setLocationScope(LocationScope.HOST);
+    location.setOwner(byonNode.getUserId());
+    location.setState(DiscoveryItemState.OK);
     return location;
   }
 
