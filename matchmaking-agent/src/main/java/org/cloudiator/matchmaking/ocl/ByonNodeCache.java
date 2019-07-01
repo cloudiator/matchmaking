@@ -20,11 +20,13 @@ public final class ByonNodeCache {
   private static final Logger LOGGER = LoggerFactory
       .getLogger(ByonNodeCache.class);
   private final ByonUpdater updater;
+  private final NodeCandidateCache ncCache;
   private volatile Map<ByonCacheKey,ByonNode> byonNodeCache = new HashMap<>();
 
   @Inject
-  public ByonNodeCache(ByonUpdater updater) {
+  public ByonNodeCache(ByonUpdater updater, NodeCandidateCache ncCache) {
     this.updater = updater;
+    this.ncCache = ncCache;
   }
 
   public synchronized Optional<ByonNode> add(ByonNode node) {
@@ -36,6 +38,8 @@ public final class ByonNodeCache {
 
     ByonNode origByonNode = byonNodeCache.put(key, node);
     publishUpdate();
+    //invalidate ncCache
+    ncCache.expire(node.getUserId());
 
     return Optional.ofNullable(origByonNode);
   }
@@ -48,9 +52,11 @@ public final class ByonNodeCache {
     }
 
     ByonNode evictNode = byonNodeCache.get(key);
-    publishUpdate();
-
     byonNodeCache.remove(key);
+    publishUpdate();
+    //invalidate ncCache
+    ncCache.expire(key.getUserId());
+
     return Optional.of(evictNode);
   }
 
