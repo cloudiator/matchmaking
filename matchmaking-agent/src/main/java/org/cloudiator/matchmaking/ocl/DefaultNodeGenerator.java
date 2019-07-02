@@ -121,7 +121,7 @@ public class DefaultNodeGenerator implements NodeGenerator {
     Set<ByonTriple> triples = byonUpdater.getValidTriples();
 
     for (ByonTriple triple: triples) {
-      nodeCandidates.add(nodeCandidateFactory.byon(ByonUpdater.BYON_CLOUD, triple.hardware, triple.image, triple.location));
+      nodeCandidates.add(nodeCandidateFactory.byon(triple.hardware, triple.image, triple.location));
     }
 
     return nodeCandidates;
