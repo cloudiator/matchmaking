@@ -35,14 +35,16 @@ public class MatchmakingRequestListener implements Runnable {
   private static final QuotaConverter QUOTA_CONVERTER = QuotaConverter.INSTANCE;
   private final SolutionCache solutionCache;
   private final CloudService cloudService;
+  private final ByonNodeCache byonCache;
 
   @Inject
   public MatchmakingRequestListener(MessageInterface messageInterface, MetaSolver metaSolver,
-      SolutionCache solutionCache, CloudService cloudService) {
+      SolutionCache solutionCache, CloudService cloudService, ByonNodeCache byonCache) {
     this.messageInterface = messageInterface;
     this.metaSolver = metaSolver;
     this.solutionCache = solutionCache;
     this.cloudService = cloudService;
+    this.byonCache = byonCache;
   }
 
   @Override
@@ -79,6 +81,7 @@ public class MatchmakingRequestListener implements Runnable {
                 final QuotaSet quotaSet = new QuotaSet(
                     quotaQueryResponse.getQuotasList().stream().map(QUOTA_CONVERTER)
                         .collect(Collectors.toSet()));
+                quotaSet.addAll(byonCache.readAllCorrespondingQuotas());
 
                 OclCsp oclCsp = OclCsp
                     .ofRequirements(

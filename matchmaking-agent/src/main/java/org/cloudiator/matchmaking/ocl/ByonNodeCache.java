@@ -4,6 +4,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import de.uniulm.omi.cloudiator.sword.domain.OfferQuota;
+import de.uniulm.omi.cloudiator.sword.domain.OfferQuota.OfferType;
+import de.uniulm.omi.cloudiator.sword.domain.Quota;
+import de.uniulm.omi.cloudiator.sword.domain.Quotas;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -83,6 +88,13 @@ public final class ByonNodeCache {
   public synchronized Set<ByonNode> readAll() {
     return byonNodeCache.values().stream().collect(
         Collectors.toSet());
+  }
+
+  public synchronized Set<Quota> readAllCorrespondingQuotas() {
+    return byonNodeCache.entrySet().stream().map(
+        Map.Entry::getValue).map(s -> Quotas.offerQuota(s.getId(),
+        OfferType.HARDWARE, BigDecimal.valueOf(1), null))
+        .collect(Collectors.toSet());
   }
 
   private static class ByonCacheKey {
