@@ -2,8 +2,7 @@ package org.cloudiator.matchmaking.ocl;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import cloudiator.CloudiatorFactory;
-import cloudiator.CloudiatorPackage;
+import cloudiator.CloudiatorModel;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -38,8 +37,6 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class MetaSolver {
 
-  private static final CloudiatorFactory cloudiatorFactory = CloudiatorPackage.eINSTANCE
-      .getCloudiatorFactory();
   private static final NodeCandidateFactory nodeCandidateFactory = NodeCandidateFactory.create();
   private static final Logger LOGGER = LoggerFactory.getLogger(MetaSolver.class);
   private final Set<Solver> solvers;
@@ -53,7 +50,7 @@ public class MetaSolver {
     this.modelGenerator = modelGenerator;
     this.solvers = solvers;
     executorService = MoreExecutors
-        .listeningDecorator(Executors.newFixedThreadPool(solvers.size()));
+        .listeningDecorator(Executors.newCachedThreadPool());
     this.solvingTime = solvingTime;
     MoreExecutors.addDelayedShutdownHook(executorService, 1, TimeUnit.MINUTES);
   }
@@ -105,11 +102,15 @@ public class MetaSolver {
             this, csp, userId,
             nodeSize));
 
+    final CloudiatorModel cloudiatorModel = modelGenerator.generateModel(userId);
+
     NodeGenerator nodeGenerator =
-        new ConsistentNodeGenerator(
-            NodeCandidateCache.cache(userId, new DefaultNodeGenerator(nodeCandidateFactory,
-                modelGenerator.generateModel(userId))),
-            cc);
+        new QuotaFilter(
+            cloudiatorModel, new ConsistentNodeGenerator(
+            NodeCandidateCache
+                .cache(userId, new DefaultNodeGenerator(nodeCandidateFactory, cloudiatorModel
+                )),
+            cc), csp.getQuotaSet());
 
     long startGeneration = System.currentTimeMillis();
 
@@ -142,7 +143,11 @@ public class MetaSolver {
     for (Solver solver : solvers) {
       solverCallables.add(() -> {
         try {
-          return solver.solve(csp, possibleNodes, existingSolution.orElse(null), nodeSize);
+          final Solution solve = solver
+              .solve(csp, possibleNodes, existingSolution.orElse(null), nodeSize);
+          long solvingTime = System.currentTimeMillis() - startSolving;
+          solve.setTime(solvingTime);
+          return solve;
         } catch (Throwable t) {
           LOGGER.warn(String.format("Error while executing solver %s on CSP %s", solver, csp), t);
           return null;
@@ -165,8 +170,6 @@ public class MetaSolver {
         }
       }).collect(Collectors.toList());
 
-      long solvingTime = System.currentTimeMillis() - startSolving;
-
       LOGGER.info(
           String.format("Finished solving of csp: %s.", csp));
 
@@ -182,7 +185,6 @@ public class MetaSolver {
           }).findAny();
       if (anyOptimalSolution.isPresent()) {
         final Solution optimalSolution = anyOptimalSolution.get();
-        optimalSolution.setTime(solvingTime);
 
         LOGGER.info(
             String.format("Found optimal solution %s for csp: %s.", optimalSolution, csp));

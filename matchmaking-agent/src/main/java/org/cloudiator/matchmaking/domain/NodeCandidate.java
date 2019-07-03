@@ -1,8 +1,14 @@
 package org.cloudiator.matchmaking.domain;
 
-import cloudiator.*;
+import cloudiator.Cloud;
+import cloudiator.CloudiatorFactory;
+import cloudiator.Environment;
+import cloudiator.Hardware;
+import cloudiator.Image;
+import cloudiator.Location;
+import cloudiator.Node;
+import cloudiator.NodeType;
 import com.google.common.base.MoreObjects;
-
 import javax.annotation.Nullable;
 
 public class NodeCandidate implements Comparable<NodeCandidate> {
@@ -45,6 +51,7 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
 
   private Node toNode() {
     Node node = CLOUDIATOR_FACTORY.createNode();
+    node.setId(id());
     node.setType(type);
     node.setImage(image);
     node.setHardware(hardware);
@@ -194,7 +201,8 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
 
     public NodeCandidate of(Cloud cloud, Location location, Hardware hardware,
         double pricePerInvocation, double memoryPrice, Environment environment) {
-      return new NodeCandidate(cloud, location, hardware, pricePerInvocation, memoryPrice, environment);
+      return new NodeCandidate(cloud, location, hardware, pricePerInvocation, memoryPrice,
+          environment);
     }
   }
 }

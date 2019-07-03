@@ -26,19 +26,20 @@ public class ClassStructureHandler {
   }
 
   public void handle() {
+
+    handleInternalStructure(Literals.NODE);
+
     handleInternalStructure(Literals.CLOUD);
-    handleInternalStructure(Literals.API);
-    handleInternalStructure(Literals.CLOUD_CREDENTIAL);
+    //handleInternalStructure(Literals.API);
+    //handleInternalStructure(Literals.CLOUD_CREDENTIAL);
 
     handleInternalStructure(Literals.HARDWARE);
 
     handleInternalStructure(Literals.IMAGE);
-    handleInternalStructure(Literals.OPERATING_SYSTEM);
+    //handleInternalStructure(Literals.OPERATING_SYSTEM);
 
     handleInternalStructure(Literals.LOCATION);
-    handleInternalStructure(Literals.GEO_LOCATION);
-
-    handleInternalStructure(Literals.PRICE);
+    //handleInternalStructure(Literals.GEO_LOCATION);
   }
 
   public void handleInternalStructure(EClass eClass) {

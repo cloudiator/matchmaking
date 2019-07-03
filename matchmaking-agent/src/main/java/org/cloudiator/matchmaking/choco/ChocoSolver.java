@@ -3,7 +3,11 @@ package org.cloudiator.matchmaking.choco;
 import cloudiator.CloudiatorModel;
 import cloudiator.CloudiatorPackage.Literals;
 import com.google.common.base.MoreObjects;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
@@ -41,13 +45,21 @@ public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
           cloudiatorModel,
           new Model(), numberOfNodes, oclCsp, existingSolution);
 
+      final long startGeneration = System.currentTimeMillis();
+
       ChocoModelGeneration.visit(modelGenerationContext);
+
+      final long stopGeneration = System.currentTimeMillis();
+
+      LOGGER.debug(
+          "Generation of choco solver model took " + (stopGeneration - startGeneration) + " ms for "
+              + numberOfNodes + " nodes.");
 
       final Solver solver = modelGenerationContext.getModel().getSolver();
       org.chocosolver.solver.Solution solution = new org.chocosolver.solver.Solution(
           modelGenerationContext.getModel());
 
-      final EAttribute price = (EAttribute) Literals.PRICE.getEStructuralFeature("price");
+      final EAttribute price = (EAttribute) Literals.NODE.getEStructuralFeature("price");
 
       IntVar[] priceVariables = modelGenerationContext.getVariableStore().getVariables(price)
           .toArray(new IntVar[modelGenerationContext.nodeSize()]);
@@ -58,8 +70,24 @@ public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
       modelGenerationContext.getModel().setObjective(Model.MINIMIZE, objectiveFunction);
 
       //solver.setSearch(Search.defaultSearch(modelGenerationContext.getModel()));
-      solver.setSearch(
+
+      solver.setSearch(Search.intVarSearch(variables -> {
+
+            List<IntVar> uninstantiatedVariables = Arrays.stream(variables)
+                .filter(v -> !v.isInstantiated())
+                .collect(Collectors.toList());
+
+            if (uninstantiatedVariables.isEmpty()) {
+              return null;
+            }
+
+            return uninstantiatedVariables.stream().min(
+                Comparator.comparingInt(IntVar::getValue)).get();
+          }, IntVar::getLB, priceVariables),
           Search.activityBasedSearch(modelGenerationContext.getModel().retrieveIntVars(true)));
+
+      //solver.setSearch(
+      //    Search.activityBasedSearch(modelGenerationContext.getModel().retrieveIntVars(true)));
 
       final LinkedList<ContradictionException> contradictions = new LinkedList<>();
 
@@ -71,12 +99,16 @@ public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
       }
 
       if (solver.getSolutionCount() == 0) {
-        LOGGER.debug(String.format("%s could not find a solution.", contradictions.getLast()));
+        LOGGER.debug(String.format("%s could not find a solution.", this));
+        if (!contradictions.isEmpty()) {
+          LOGGER.debug("Last contradiction " + contradictions.getLast());
+        }
         return Solution.EMPTY_SOLUTION;
       }
 
       final Solution ret = ChocoSolutionToSolution.create(nodeCandidates, modelGenerationContext)
           .apply(solution);
+      ret.setSolver(ChocoSolver.class);
 
       if (solver.isObjectiveOptimal()) {
         ret.setIsOptimal(true);
@@ -100,7 +132,13 @@ public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
   public Solution solve(OclCsp oclCsp, NodeCandidates nodeCandidates,
       @Nullable Solution existingSolution, @Nullable Integer targetNodeSize) {
 
+    final long start = System.currentTimeMillis();
+
     CloudiatorModel solverModel = generateSolvingModel(nodeCandidates);
+
+    final long stop = System.currentTimeMillis();
+
+    LOGGER.debug("Generation of solving model took " + (stop - start) + " ms");
 
     if (targetNodeSize == null) {
       targetNodeSize = 1;

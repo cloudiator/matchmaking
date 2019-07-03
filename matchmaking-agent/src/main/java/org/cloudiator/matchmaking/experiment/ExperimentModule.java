@@ -14,5 +14,7 @@ public class ExperimentModule extends AbstractModule {
         .to(LargeModelGenerator.class);
     bind(ModelGenerator.class).to(MemoryCachedModelGenerator.class);
     bind(PriceFunction.class).to(ExperimentModelPriceFunction.class);
+    bindConstant().annotatedWith(Names.named("cacheTime"))
+        .to(MemoryCachedModelGenerator.CACHE_INFINITE);
   }
 }

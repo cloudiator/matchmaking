@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.inject.Named;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
 import org.cloudiator.matchmaking.converters.SolutionConverter;
 import org.cloudiator.matchmaking.domain.Solution;
@@ -35,14 +36,17 @@ public class MatchmakingRequestListener implements Runnable {
   private static final QuotaConverter QUOTA_CONVERTER = QuotaConverter.INSTANCE;
   private final SolutionCache solutionCache;
   private final CloudService cloudService;
+  private final boolean considerQuota;
 
   @Inject
   public MatchmakingRequestListener(MessageInterface messageInterface, MetaSolver metaSolver,
-      SolutionCache solutionCache, CloudService cloudService) {
+      SolutionCache solutionCache, CloudService cloudService,
+      @Named("considerQuota") boolean considerQuota) {
     this.messageInterface = messageInterface;
     this.metaSolver = metaSolver;
     this.solutionCache = solutionCache;
     this.cloudService = cloudService;
+    this.considerQuota = considerQuota;
   }
 
   @Override
@@ -72,13 +76,19 @@ public class MatchmakingRequestListener implements Runnable {
 
               try {
 
-                final QuotaQueryResponse quotaQueryResponse = cloudService.queryQuota(
-                    QuotaQueryRequest.newBuilder().setUserId(matchmakingRequest.getUserId())
-                        .build());
+                QuotaSet quotaSet;
 
-                final QuotaSet quotaSet = new QuotaSet(
-                    quotaQueryResponse.getQuotasList().stream().map(QUOTA_CONVERTER)
-                        .collect(Collectors.toSet()));
+                if (considerQuota) {
+                  final QuotaQueryResponse quotaQueryResponse = cloudService.queryQuota(
+                      QuotaQueryRequest.newBuilder().setUserId(matchmakingRequest.getUserId())
+                          .build());
+
+                  quotaSet = new QuotaSet(
+                      quotaQueryResponse.getQuotasList().stream().map(QUOTA_CONVERTER)
+                          .collect(Collectors.toSet()));
+                } else {
+                  quotaSet = QuotaSet.EMPTY;
+                }
 
                 OclCsp oclCsp = OclCsp
                     .ofRequirements(

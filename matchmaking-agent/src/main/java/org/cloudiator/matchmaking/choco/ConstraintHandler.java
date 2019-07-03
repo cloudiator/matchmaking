@@ -88,7 +88,8 @@ public class ConstraintHandler {
   }
 
   public void generate() {
-    for (ExpressionInOCL expressionInOCL : modelGenerationContext.getOclCsp().getConstraints()) {
+    for (ExpressionInOCL expressionInOCL : modelGenerationContext.getOclCsp()
+        .getRelevantConstraints()) {
       checkState(context.isEmpty(), "Expected empty context");
       LOGGER.trace("Handling ExpressionInOCL " + expressionInOCL);
       final ConstraintOrVariable constraintOrVariable = this
@@ -359,6 +360,10 @@ public class ConstraintHandler {
     if (this.context.hasNode()) {
       final Variable variableForEAttribute = getVariableForEAttribute(
           attributeForPropertyCallExpression, context.getNode());
+      checkState(variableForEAttribute != null,
+          String.format("Variable for attribute %s of class %s is null",
+              attributeForPropertyCallExpression,
+              attributeForPropertyCallExpression.getEContainingClass()));
       return ConstraintOrVariable.fromVariable(variableForEAttribute);
     } else {
       final Collection<Variable> variablesForEAttribute = getVariablesForEAttribute(
@@ -650,11 +655,13 @@ public class ConstraintHandler {
 
     switch (type) {
       case "forAll":
-        return ConstraintOrVariable
+        final ConstraintOrVariable forAllConstraint = ConstraintOrVariable
             .fromConstraint(modelGenerationContext.getModel().and(array));
+        return forAllConstraint;
       case "exists":
-        return ConstraintOrVariable
+        final ConstraintOrVariable existsConstraint = ConstraintOrVariable
             .fromConstraint(modelGenerationContext.getModel().or(array));
+        return existsConstraint;
       case "select":
         int i = 1;
         Collection<BoolVar> boolVars = new HashSet<>();
