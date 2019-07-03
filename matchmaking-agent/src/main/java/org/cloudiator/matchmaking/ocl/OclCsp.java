@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.cloudiator.matchmaking.domain.RepresentAsOCL;
 import org.cloudiator.matchmaking.domain.Requirement;
@@ -78,6 +79,11 @@ public class OclCsp {
 
   public Set<ExpressionInOCL> getConstraints() {
     return constraints;
+  }
+
+  public Set<ExpressionInOCL> getRelevantConstraints() {
+    return constraints.stream().filter(c -> !c.getBody().contains("forAll"))
+        .collect(Collectors.toSet());
   }
 
 

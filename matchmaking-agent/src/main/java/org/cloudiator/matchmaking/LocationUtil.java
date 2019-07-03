@@ -75,6 +75,10 @@ public class LocationUtil {
         location -> location.getId().equals(id)).collect(StreamUtil.getOnly());
   }
 
+  public static boolean inHierarchy(String id, Location location) {
+    return parents(location).stream().anyMatch(l -> l.getId().equals(id));
+  }
+
   public static Set<Location> subLocations(Location location, CloudiatorModel cloudiatorModel) {
 
     final Set<Location> allLocations = cloudiatorModel.getClouds()

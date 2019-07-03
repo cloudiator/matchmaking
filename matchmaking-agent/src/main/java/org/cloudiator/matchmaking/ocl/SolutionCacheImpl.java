@@ -30,7 +30,7 @@ public class SolutionCacheImpl implements SolutionCache {
         return;
       }
       Solution expired = removal.getValue();
-      expired.expire();
+      expired.expired();
       EXPIRED_CACHE.put(removal.getKey(), expired);
     }
   };

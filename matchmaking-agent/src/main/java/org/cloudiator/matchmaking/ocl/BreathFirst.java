@@ -7,12 +7,12 @@ import org.cloudiator.matchmaking.domain.Solution;
 
 public class BreathFirst {
 
-  private final SolutionGenerator solutionGenerator;
+  private final BaseSolutionGenerator solutionGenerator;
   private final ConstraintChecker constraintChecker;
   private final Queue<Solution> solutions = new ArrayDeque<>();
   private final int targetNodeSize;
 
-  public BreathFirst(SolutionGenerator solutionGenerator, ConstraintChecker constraintChecker,
+  public BreathFirst(BaseSolutionGenerator solutionGenerator, ConstraintChecker constraintChecker,
       int targetNodeSize) {
     this.solutionGenerator = solutionGenerator;
     this.constraintChecker = constraintChecker;

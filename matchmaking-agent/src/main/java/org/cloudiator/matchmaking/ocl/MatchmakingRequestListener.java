@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.inject.Named;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
 import org.cloudiator.matchmaking.converters.SolutionConverter;
 import org.cloudiator.matchmaking.domain.Solution;
@@ -36,15 +37,18 @@ public class MatchmakingRequestListener implements Runnable {
   private final SolutionCache solutionCache;
   private final CloudService cloudService;
   private final ByonNodeCache byonCache;
+  private final boolean considerQuota;
 
   @Inject
   public MatchmakingRequestListener(MessageInterface messageInterface, MetaSolver metaSolver,
-      SolutionCache solutionCache, CloudService cloudService, ByonNodeCache byonCache) {
+      SolutionCache solutionCache, CloudService cloudService,
+      @Named("considerQuota") boolean considerQuota, ByonNodeCache byonCache) {
     this.messageInterface = messageInterface;
     this.metaSolver = metaSolver;
     this.solutionCache = solutionCache;
     this.cloudService = cloudService;
     this.byonCache = byonCache;
+    this.considerQuota = considerQuota;
   }
 
   @Override
@@ -74,14 +78,20 @@ public class MatchmakingRequestListener implements Runnable {
 
               try {
 
-                final QuotaQueryResponse quotaQueryResponse = cloudService.queryQuota(
-                    QuotaQueryRequest.newBuilder().setUserId(matchmakingRequest.getUserId())
-                        .build());
+                QuotaSet quotaSet;
 
-                final QuotaSet quotaSet = new QuotaSet(
+                if (considerQuota) {
+                  final QuotaQueryResponse quotaQueryResponse = cloudService.queryQuota(
+                      QuotaQueryRequest.newBuilder().setUserId(matchmakingRequest.getUserId())
+                          .build());
+
+                quotaSet = new QuotaSet(
                     quotaQueryResponse.getQuotasList().stream().map(QUOTA_CONVERTER)
                         .collect(Collectors.toSet()));
                 quotaSet.addAll(byonCache.readAllCorrespondingQuotas());
+                } else {
+                  quotaSet = QuotaSet.EMPTY;
+                }
 
                 OclCsp oclCsp = OclCsp
                     .ofRequirements(
