@@ -1,6 +1,9 @@
 package org.cloudiator.matchmaking.ocl;
 
+import cloudiator.Api;
 import cloudiator.Cloud;
+import cloudiator.CloudConfiguration;
+import cloudiator.CloudCredential;
 import cloudiator.CloudiatorFactory;
 import cloudiator.DiscoveryItemState;
 import cloudiator.Hardware;
@@ -22,10 +25,21 @@ public class ByonUpdater {
   public static final Cloud BYON_CLOUD;
   private static final OperatingSystemConverter OS_CONVERTER = new OperatingSystemConverter();
   private static final GeoLocationConverter GEO_LOCATION_CONVERTER = new GeoLocationConverter();
+  private static final Api BYON_API = CloudiatorFactory.eINSTANCE.createApi();
+  private static final CloudConfiguration BYON_CC = CloudiatorFactory.eINSTANCE.createCloudConfiguration();
+  private static final CloudCredential BYON_CREDENTIAL = CloudiatorFactory.eINSTANCE.createCloudCredential();
 
   static {
+
+    BYON_API.setProviderName("BYON");
+    BYON_CC.setNodeGroup("byon");
+    BYON_CREDENTIAL.setUser("byon");
+    BYON_CREDENTIAL.setSecret("byon");
     final Cloud cloud = CloudiatorFactory.eINSTANCE.createCloud();
     cloud.setId(ByonCloudUtil.getId());
+    cloud.setCloudcredential(BYON_CREDENTIAL);
+    cloud.setConfiguration(BYON_CC);
+    cloud.setApi(BYON_API);
     BYON_CLOUD = cloud;
   }
 
