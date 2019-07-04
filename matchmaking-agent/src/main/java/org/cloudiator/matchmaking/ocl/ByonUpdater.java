@@ -32,6 +32,7 @@ public class ByonUpdater {
     cloud.setCloudcredential(ByonCloudUtil.getByonCredential());
     cloud.setConfiguration(ByonCloudUtil.getByonCloudConfiguration());
     cloud.setApi(ByonCloudUtil.getByonApi());
+    cloud.setOwner(ByonCloudUtil.getByonOwner());
     BYON_CLOUD = cloud;
   }
 

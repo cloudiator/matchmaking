@@ -10,8 +10,9 @@ import cloudiator.CloudConfiguration;
 import cloudiator.CloudCredential;
 
 public class ByonCloudUtil {
-  public static String BYON_PREFIX = "BYON_";
-  private static String id = BYON_PREFIX + UUID.randomUUID().toString();
+  public static final String BYON_PREFIX = "BYON_";
+  private static final String id = BYON_PREFIX + UUID.randomUUID().toString();
+  private static final  String owner = "byon";
   private static final Api BYON_API = CloudiatorFactory.eINSTANCE.createApi();
   private static final CloudConfiguration BYON_CC = CloudiatorFactory.eINSTANCE.createCloudConfiguration();
   private static final CloudCredential BYON_CREDENTIAL = CloudiatorFactory.eINSTANCE.createCloudCredential();
@@ -29,6 +30,10 @@ public class ByonCloudUtil {
 
   public static String getId() {
     return id;
+  }
+
+  public static String getByonOwner() {
+    return owner;
   }
 
   public static boolean isByon(String checkedId) {

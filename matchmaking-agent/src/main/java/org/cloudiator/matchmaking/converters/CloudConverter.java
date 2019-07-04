@@ -52,28 +52,28 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
 
   @Override
   public IaasEntities.Cloud apply(Cloud cloud) {
-    final boolean checkByon = ByonCloudUtil.isByon(cloud.getId());
-
     if (cloud == null) {
       return null;
-    } else if (checkByon) {
-      return IaasEntities.Cloud.newBuilder().setId(cloud.getId()).build();
     }
 
     final Builder builder = IaasEntities.Cloud.newBuilder().setId(cloud.getId())
-        .setEndpoint(cloud.getEndpoint())
-        .setCloudType(TYPE_CONVERTER.apply(cloud.getType()))
         .setApi(API_CONVERTER.apply(cloud.getApi()))
         .setCredential(CLOUD_CREDENTIAL_CONVERTER.apply(cloud.getCloudcredential()))
-        .setState(CLOUD_STATE_CONVERTER.apply(cloud.getState()))
         .setUserId(cloud.getOwner());
+
+    final boolean checkByon = ByonCloudUtil.isByon(cloud.getId());
+
+    if (!checkByon) {
+      builder.setEndpoint(cloud.getEndpoint())
+      .setCloudType(TYPE_CONVERTER.apply(cloud.getType()))
+      .setState(CLOUD_STATE_CONVERTER.apply(cloud.getState()));
+    }
 
     if (!Strings.isNullOrEmpty(cloud.getDiagnostic())) {
       builder.setDiagnostic(cloud.getDiagnostic());
     }
 
     return builder.build();
-
   }
 
   private static class ApiConverter implements TwoWayConverter<Api, IaasEntities.Api> {
