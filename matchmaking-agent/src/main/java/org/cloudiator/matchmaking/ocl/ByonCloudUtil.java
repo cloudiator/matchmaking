@@ -4,10 +4,24 @@ import cloudiator.Hardware;
 import cloudiator.Image;
 import cloudiator.Location;
 import java.util.UUID;
+import cloudiator.CloudiatorFactory;
+import cloudiator.Api;
+import cloudiator.CloudConfiguration;
+import cloudiator.CloudCredential;
 
 public class ByonCloudUtil {
   public static String BYON_PREFIX = "BYON_";
   private static String id = BYON_PREFIX + UUID.randomUUID().toString();
+  private static final Api BYON_API = CloudiatorFactory.eINSTANCE.createApi();
+  private static final CloudConfiguration BYON_CC = CloudiatorFactory.eINSTANCE.createCloudConfiguration();
+  private static final CloudCredential BYON_CREDENTIAL = CloudiatorFactory.eINSTANCE.createCloudCredential();
+
+  static {
+    BYON_API.setProviderName("BYON");
+    BYON_CC.setNodeGroup("byon");
+    BYON_CREDENTIAL.setUser("byon");
+    BYON_CREDENTIAL.setSecret("byon");
+  }
 
   private ByonCloudUtil() {
     throw new IllegalStateException("Do not instantiate.");
@@ -19,6 +33,18 @@ public class ByonCloudUtil {
 
   public static boolean isByon(String checkedId) {
     return id.equals(checkedId);
+  }
+
+  public static Api getByonApi() {
+    return BYON_API;
+  }
+
+  public static CloudConfiguration getByonCloudConfiguration() {
+    return BYON_CC;
+  }
+
+  public static CloudCredential getByonCredential() {
+    return BYON_CREDENTIAL;
   }
 
   public static boolean isValidByonCombination(Image image, Hardware hardware, Location location) {
