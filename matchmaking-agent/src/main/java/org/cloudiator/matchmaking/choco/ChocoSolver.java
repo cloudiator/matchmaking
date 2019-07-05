@@ -3,12 +3,14 @@ package org.cloudiator.matchmaking.choco;
 import cloudiator.CloudiatorModel;
 import cloudiator.CloudiatorPackage.Literals;
 import com.google.common.base.MoreObjects;
+
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.exception.ContradictionException;
@@ -84,7 +86,7 @@ public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
             return uninstantiatedVariables.stream().min(
                 Comparator.comparingInt(IntVar::getValue)).get();
           }, IntVar::getLB, priceVariables),
-          Search.activityBasedSearch(modelGenerationContext.getModel().retrieveIntVars(true)));
+          Search.defaultSearch(modelGenerationContext.getModel()));
 
       //solver.setSearch(
       //    Search.activityBasedSearch(modelGenerationContext.getModel().retrieveIntVars(true)));
