@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
+import org.cloudiator.matchmaking.ocl.ByonUpdater.ByonTriple;
 import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator.PriceCache.PriceKey;
 
 public class DefaultNodeGenerator implements NodeGenerator {
@@ -29,14 +30,16 @@ public class DefaultNodeGenerator implements NodeGenerator {
   private static final PriceCache PRICE_CACHE = new PriceCache();
   private final NodeCandidateFactory nodeCandidateFactory;
   private final CloudiatorModel cloudiatorModel;
+  private final ByonUpdater byonUpdater;
 
   public DefaultNodeGenerator(NodeCandidateFactory nodeCandidateFactory,
-      CloudiatorModel cloudiatorModel) {
+      CloudiatorModel cloudiatorModel, ByonUpdater byonUpdater) {
     this.nodeCandidateFactory = nodeCandidateFactory;
     this.cloudiatorModel = cloudiatorModel;
     if (!PRICE_CACHE.exists(cloudiatorModel)) {
       PRICE_CACHE.load(cloudiatorModel);
     }
+    this.byonUpdater = byonUpdater;
   }
 
   private static boolean isValidCombination(Image image, Hardware hardware, Location location) {
@@ -107,9 +110,21 @@ public class DefaultNodeGenerator implements NodeGenerator {
         nodeCandidates.addAll(generateFaasNodeCandidates(cloud));
       }
     }
+    nodeCandidates.addAll(generateByonNodeCandidates());
     System.out
         .println(String.format("%s generated all possible nodes: %s", this, nodeCandidates.size()));
     return NodeCandidates.of(nodeCandidates);
+  }
+
+  private Set<NodeCandidate> generateByonNodeCandidates() {
+    Set<NodeCandidate> nodeCandidates = new HashSet<>();
+    Set<ByonTriple> triples = byonUpdater.getValidTriples();
+
+    for (ByonTriple triple: triples) {
+      nodeCandidates.add(nodeCandidateFactory.byon(triple.hardware, triple.image, triple.location));
+    }
+
+    return nodeCandidates;
   }
 
   private Set<NodeCandidate> generateFaasNodeCandidates(Cloud cloud) {

@@ -30,8 +30,9 @@ public class NodeCandidateConverter implements
         return applyIaas(nodeCandidate);
       case FAAS:
         return applyFaas(nodeCandidate);
-      case PAAS:
       case BYON:
+        return applyByon(nodeCandidate);
+      case PAAS:
       default:
         throw new IllegalStateException("Unsupported node candidate type: " + nodeCandidate.getType());
     }
@@ -46,6 +47,17 @@ public class NodeCandidateConverter implements
         .setImage(IMAGE_CONVERTER.applyBack(nodeCandidate.getImage()))
         .setLocation(LOCATION_CONVERTER.applyBack(nodeCandidate.getLocation()))
         .setPrice(nodeCandidate.getPrice())
+        .build();
+  }
+
+  private MatchmakingEntities.NodeCandidate applyByon(NodeCandidate nodeCandidate) {
+    return MatchmakingEntities.NodeCandidate.newBuilder()
+        .setId(nodeCandidate.id())
+        .setType(convertType(nodeCandidate.getType()))
+        .setCloud(CLOUD_CONVERTER.apply(nodeCandidate.getCloud()))
+        .setHardwareFlavor(HARDWARE_CONVERTER.applyBack(nodeCandidate.getHardware()))
+        .setImage(IMAGE_CONVERTER.applyBack(nodeCandidate.getImage()))
+        .setLocation(LOCATION_CONVERTER.applyBack(nodeCandidate.getLocation()))
         .build();
   }
 

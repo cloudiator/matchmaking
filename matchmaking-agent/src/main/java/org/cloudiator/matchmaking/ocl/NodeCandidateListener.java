@@ -47,7 +47,7 @@ public class NodeCandidateListener implements Runnable {
 
             final CachedNodeGenerator cachedNodeGenerator = NodeCandidateCache
                 .cache(content.getUserId(), new DefaultNodeGenerator(
-                    NodeCandidateFactory.create(), cloudiatorModel));
+                    NodeCandidateFactory.create(), cloudiatorModel, new ByonUpdater()));
 
             final NodeCandidates nodeCandidates;
             if (Strings.isNullOrEmpty(content.getId())) {

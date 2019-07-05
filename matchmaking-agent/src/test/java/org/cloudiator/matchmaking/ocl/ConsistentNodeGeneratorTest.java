@@ -21,7 +21,7 @@ public class ConsistentNodeGeneratorTest {
     final OclCsp oclCsp = OclCsp.ofConstraints(Collections.singleton(forAllCountry),Collections.emptyList(),
         QuotaSet.EMPTY, 1);
     NodeGenerator nodeGenerator = new DefaultNodeGenerator(NodeCandidateFactory.create(),
-        testModel);
+        testModel, new ByonUpdater());
     ConstraintChecker constraintChecker = ConstraintChecker.create(oclCsp);
     ConsistentNodeGenerator consistentNodeGenerator = new ConsistentNodeGenerator(nodeGenerator,
         constraintChecker);

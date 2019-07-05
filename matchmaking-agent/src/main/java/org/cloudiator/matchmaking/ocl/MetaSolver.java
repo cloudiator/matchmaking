@@ -103,12 +103,11 @@ public class MetaSolver {
             nodeSize));
 
     final CloudiatorModel cloudiatorModel = modelGenerator.generateModel(userId);
-
     NodeGenerator nodeGenerator =
         new QuotaFilter(
             cloudiatorModel, new ConsistentNodeGenerator(
             NodeCandidateCache
-                .cache(userId, new DefaultNodeGenerator(nodeCandidateFactory, cloudiatorModel
+                .cache(userId, new DefaultNodeGenerator(nodeCandidateFactory, cloudiatorModel, new ByonUpdater()
                 )),
             cc), csp.getQuotaSet());
 

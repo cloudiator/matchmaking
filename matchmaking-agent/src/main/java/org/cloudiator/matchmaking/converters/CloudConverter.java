@@ -12,6 +12,7 @@ import cloudiator.Property;
 import com.google.common.base.Strings;
 import de.uniulm.omi.cloudiator.util.TwoWayConverter;
 import java.util.stream.Collectors;
+import org.cloudiator.matchmaking.ocl.ByonCloudUtil;
 import org.cloudiator.messages.entities.IaasEntities;
 import org.cloudiator.messages.entities.IaasEntities.Cloud.Builder;
 import org.cloudiator.messages.entities.IaasEntities.Configuration;
@@ -29,6 +30,11 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
 
   @Override
   public Cloud applyBack(IaasEntities.Cloud cloud) {
+    final boolean checkByon = ByonCloudUtil.isByon(cloud.getId());
+
+    if(checkByon) {
+      throw new IllegalStateException("Cannot process Cloud contents corresponding to byon");
+    }
 
     Cloud modelCloud = CLOUDIATOR_FACTORY.createCloud();
     modelCloud.setId(cloud.getId());
@@ -51,19 +57,23 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
     }
 
     final Builder builder = IaasEntities.Cloud.newBuilder().setId(cloud.getId())
-        .setEndpoint(cloud.getEndpoint())
-        .setCloudType(TYPE_CONVERTER.apply(cloud.getType()))
         .setApi(API_CONVERTER.apply(cloud.getApi()))
         .setCredential(CLOUD_CREDENTIAL_CONVERTER.apply(cloud.getCloudcredential()))
-        .setState(CLOUD_STATE_CONVERTER.apply(cloud.getState()))
         .setUserId(cloud.getOwner());
+
+    final boolean checkByon = ByonCloudUtil.isByon(cloud.getId());
+
+    if (!checkByon) {
+      builder.setEndpoint(cloud.getEndpoint())
+      .setCloudType(TYPE_CONVERTER.apply(cloud.getType()))
+      .setState(CLOUD_STATE_CONVERTER.apply(cloud.getState()));
+    }
 
     if (!Strings.isNullOrEmpty(cloud.getDiagnostic())) {
       builder.setDiagnostic(cloud.getDiagnostic());
     }
 
     return builder.build();
-
   }
 
   private static class ApiConverter implements TwoWayConverter<Api, IaasEntities.Api> {

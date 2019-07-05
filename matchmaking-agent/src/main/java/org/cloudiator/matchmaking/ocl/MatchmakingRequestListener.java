@@ -36,16 +36,18 @@ public class MatchmakingRequestListener implements Runnable {
   private static final QuotaConverter QUOTA_CONVERTER = QuotaConverter.INSTANCE;
   private final SolutionCache solutionCache;
   private final CloudService cloudService;
+  private final ByonNodeCache byonCache;
   private final boolean considerQuota;
 
   @Inject
   public MatchmakingRequestListener(MessageInterface messageInterface, MetaSolver metaSolver,
       SolutionCache solutionCache, CloudService cloudService,
-      @Named("considerQuota") boolean considerQuota) {
+      @Named("considerQuota") boolean considerQuota, ByonNodeCache byonCache) {
     this.messageInterface = messageInterface;
     this.metaSolver = metaSolver;
     this.solutionCache = solutionCache;
     this.cloudService = cloudService;
+    this.byonCache = byonCache;
     this.considerQuota = considerQuota;
   }
 
@@ -83,9 +85,10 @@ public class MatchmakingRequestListener implements Runnable {
                       QuotaQueryRequest.newBuilder().setUserId(matchmakingRequest.getUserId())
                           .build());
 
-                  quotaSet = new QuotaSet(
-                      quotaQueryResponse.getQuotasList().stream().map(QUOTA_CONVERTER)
-                          .collect(Collectors.toSet()));
+                quotaSet = new QuotaSet(
+                    quotaQueryResponse.getQuotasList().stream().map(QUOTA_CONVERTER)
+                        .collect(Collectors.toSet()));
+                quotaSet.addAll(byonCache.readAllCorrespondingQuotas());
                 } else {
                   quotaSet = QuotaSet.EMPTY;
                 }

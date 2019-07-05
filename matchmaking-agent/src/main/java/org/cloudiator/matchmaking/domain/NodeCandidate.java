@@ -10,6 +10,7 @@ import cloudiator.Node;
 import cloudiator.NodeType;
 import com.google.common.base.MoreObjects;
 import javax.annotation.Nullable;
+import org.cloudiator.matchmaking.ocl.ByonUpdater;
 
 public class NodeCandidate implements Comparable<NodeCandidate> {
 
@@ -37,6 +38,17 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
     this.location = location;
     this.price = price;
   }
+
+  public NodeCandidate(Hardware hardware,
+      Image image, Location location) {
+    this.type = NodeType.BYON;
+    this.cloud = ByonUpdater.BYON_CLOUD;
+    this.hardware = hardware;
+    this.image = image;
+    this.location = location;
+    this.price = 0.0;
+  }
+
 
   public NodeCandidate(Cloud cloud, Location location, Hardware hardware, double pricePerInvocation,
       double memoryPrice, Environment environment) {
@@ -197,6 +209,11 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
     public NodeCandidate of(Cloud cloud, Hardware hardware, Image image,
         Location location, @Nullable Double price) {
       return new NodeCandidate(cloud, hardware, image, location, price);
+    }
+
+    public NodeCandidate byon(Hardware hardware, Image image,
+        Location location) {
+      return new NodeCandidate(hardware, image, location);
     }
 
     public NodeCandidate of(Cloud cloud, Location location, Hardware hardware,
