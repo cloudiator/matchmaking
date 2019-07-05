@@ -35,9 +35,9 @@ public class HashingNodeCandidateIdGenerator implements NodeCandidateIdGenerator
         return HASH_FUNCTION.hashObject(nodeCandidate, IAAS_NODE_CANDIDATE_FUNNEL).toString();
       case FAAS:
         return HASH_FUNCTION.hashObject(nodeCandidate, FAAS_NODE_CANDIDATE_FUNNEL).toString();
-      case PAAS:
       case BYON:
         return HASH_FUNCTION.hashObject(nodeCandidate, BYON_NODE_CANDIDATE_FUNNEL).toString();
+      case PAAS:
       default:
         throw new IllegalStateException(
             "Unsupported node candidate type: " + nodeCandidate.getType());

@@ -30,9 +30,9 @@ public class NodeCandidateConverter implements
         return applyIaas(nodeCandidate);
       case FAAS:
         return applyFaas(nodeCandidate);
-      case PAAS:
       case BYON:
         return applyByon(nodeCandidate);
+      case PAAS:
       default:
         throw new IllegalStateException("Unsupported node candidate type: " + nodeCandidate.getType());
     }
