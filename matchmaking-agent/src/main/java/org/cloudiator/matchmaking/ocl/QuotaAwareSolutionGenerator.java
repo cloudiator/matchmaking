@@ -4,6 +4,7 @@ import de.uniulm.omi.cloudiator.sword.domain.AttributeQuota;
 import de.uniulm.omi.cloudiator.sword.domain.OfferQuota;
 import de.uniulm.omi.cloudiator.sword.domain.Quota;
 import de.uniulm.omi.cloudiator.sword.domain.QuotaSet;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.cloudiator.matchmaking.LocationUtil;
@@ -50,8 +51,18 @@ public class QuotaAwareSolutionGenerator implements SolutionGenerator {
 
   private static boolean checkSolutionForOfferQuota(Solution solution, OfferQuota offerQuota) {
 
-    return true;
+    long count;
+    switch (offerQuota.type()) {
+      case HARDWARE:
+        count = solution.getNodeCandidates().stream()
+            .filter(nc -> LocationUtil.inHierarchy(offerQuota.locationId().get(), nc.getLocation()))
+            .filter(nc -> nc.getHardware().getId().equals(offerQuota.id())).count();
+        break;
+      default:
+        throw new AssertionError("Unsupported offer quota type " + offerQuota.type());
+    }
 
+    return offerQuota.remaining().compareTo(BigDecimal.valueOf(count)) >= 0;
   }
 
   private static boolean checkSolutionForAttributeQuota(Solution solution,
