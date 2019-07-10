@@ -91,7 +91,7 @@ public final class ByonNodeCache {
     tempCache.invalidate(key);
 
     if (!hit(key.getNodeId(), key.getUserId()).isPresent()) {
-      LOGGER.error(
+      LOGGER.info(
           String.format(
               "Cannot evict node with key %s in cache %s as key is not present", key, this));
       return Optional.empty();
