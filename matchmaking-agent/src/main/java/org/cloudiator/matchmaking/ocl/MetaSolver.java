@@ -43,12 +43,15 @@ public class MetaSolver {
   private final ListeningExecutorService executorService;
   private final ModelGenerator modelGenerator;
   private final int solvingTime;
+  private final ByonNodeCache byonNodeCache;
 
   @Inject
   public MetaSolver(
-      ModelGenerator modelGenerator, Set<Solver> solvers, @Named("solvingTime") int solvingTime) {
+      ModelGenerator modelGenerator, Set<Solver> solvers, @Named("solvingTime") int solvingTime,
+      ByonNodeCache byonNodeCache) {
     this.modelGenerator = modelGenerator;
     this.solvers = solvers;
+    this.byonNodeCache = byonNodeCache;
     executorService = MoreExecutors
         .listeningDecorator(Executors.newCachedThreadPool());
     this.solvingTime = solvingTime;
@@ -90,7 +93,7 @@ public class MetaSolver {
   }
 
   @Nullable
-  public Solution solve(OclCsp csp, String userId)
+  public synchronized Solution solve(OclCsp csp, String userId)
       throws ModelGenerationException {
 
     final int nodeSize = deriveNodeSize(csp.getExistingNodes(), csp.getMinimumNodeSize());
@@ -146,6 +149,7 @@ public class MetaSolver {
               .solve(csp, possibleNodes, existingSolution.orElse(null), nodeSize);
           long solvingTime = System.currentTimeMillis() - startSolving;
           solve.setTime(solvingTime);
+          byonNodeCache.evictBySolution(solve,userId);
           return solve;
         } catch (Throwable t) {
           LOGGER.warn(String.format("Error while executing solver %s on CSP %s", solver, csp), t);
