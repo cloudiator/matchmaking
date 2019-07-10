@@ -5,8 +5,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import cloudiator.NodeType;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalCause;
 import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import de.uniulm.omi.cloudiator.sword.domain.OfferQuota.OfferType;
@@ -33,15 +33,16 @@ public final class ByonNodeCache {
   private final ByonUpdater updater;
   private final Set<Expirable> expirableSet;
   private volatile Map<ByonCacheKey, ByonNode> byonNodeCache = new HashMap<>();
+  @SuppressWarnings("UnstableApiUsage")
   private final Cache<ByonCacheKey, ByonNode> tempCache =
       CacheBuilder.newBuilder()
           .expireAfterWrite(5, TimeUnit.MINUTES)
           .removalListener(
-              new RemovalListener<ByonCacheKey, ByonNode>() {
-                @Override
-                public void onRemoval(
-                    RemovalNotification<ByonCacheKey, ByonNode> removalNotification) {
-                  add(removalNotification.getValue());
+              (RemovalListener<ByonCacheKey, ByonNode>) removalNotification -> {
+                if (removalNotification.getCause().equals(RemovalCause.EXPIRED)) {
+                  if (removalNotification.getValue() != null) {
+                    add(removalNotification.getValue());
+                  }
                 }
               })
           .build();
