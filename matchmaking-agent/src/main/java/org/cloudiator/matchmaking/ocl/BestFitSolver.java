@@ -17,12 +17,14 @@ public class BestFitSolver implements Solver {
   public Solution solve(OclCsp oclCsp, NodeCandidates nodeCandidates,
       @Nullable Solution existingSolution, @Nullable Integer targetNodeSize) {
 
+    SolutionGenerator solutionGenerator;
     if (existingSolution != null) {
-      throw new UnsupportedOperationException(
-          String.format("%s currently does not support importing existing solutions.", this));
+      solutionGenerator = new ExistingSolutionGenerator(existingSolution,
+          new BaseSolutionGenerator(nodeCandidates));
+    } else {
+      solutionGenerator = new BaseSolutionGenerator(nodeCandidates);
     }
 
-    SolutionGenerator solutionGenerator = new BaseSolutionGenerator(nodeCandidates);
     if (!oclCsp.getQuotaSet().quotaSet().isEmpty()) {
       solutionGenerator = new QuotaAwareSolutionGenerator(oclCsp.getQuotaSet(), solutionGenerator);
     }
