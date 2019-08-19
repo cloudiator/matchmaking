@@ -14,13 +14,13 @@ import org.cloudiator.matchmaking.experiment.Experiment.CloudiatorModelType;
 public class ExperimentParser {
 
   public static void main(String[] args) throws IOException {
-    File input = new File("solutionsCloudHarmony");
-    File output = new File("dataCloudHarmony");
+    File input = new File("solutionsSmall");
+    File output = new File("dataSmall");
 
     PrintWriter writer = new PrintWriter(output);
 
     writer.println(
-        "# NodeSize BestFitLimit1MinTime BestFitLimit1MinCosts BestFitLimit5MinTime BestFitLimit5MinCosts BestFitLimit10MinTime BestFitLimit10MinCosts");
+        "# NodeSize CbcTime CbcCosts");
 
     List<ExperimentLine> lines = parse(input);
 

@@ -73,9 +73,6 @@ public class FileCachedModelGenerator implements ModelGenerator {
   public CloudiatorModel generateModel(String userId) throws ModelGenerationException {
     try {
       final CloudiatorModel load = load();
-      //make all locations assignable
-      load.getClouds().stream().flatMap(c -> c.getLocations().stream())
-          .forEach(l -> l.setAssignable(true));
       return load;
     } catch (Exception e) {
       LOGGER.warn("Error while loading cached file. Regenerating.", e);

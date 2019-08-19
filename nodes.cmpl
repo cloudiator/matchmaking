@@ -1,4 +1,4 @@
-%data : NODES set, nodeSize, largerOrEqual4Cores[NODES], costs[NODES], cores[NODES],
+%data : NODES set, LOCATIONS set, nodeSize, largerOrEqual4Cores[NODES], costs[NODES], cores[NODES], inLocation[LOCATIONS, NODES]
 
 variables:
  x[NODES]: integer[0..];
@@ -10,3 +10,4 @@ constraints:
   $1$: cores[]T * x[] >= 15;
   $2$: largerOrEqual4Cores[]T * x[] = 2;
   $3$: sum{n in NODES : x[n]} = nodeSize;
+  $4$: inLocation[,] * x[] <= 1;

@@ -107,7 +107,10 @@ public class DefaultNodeGenerator implements NodeGenerator {
               if (price == null) {
                 price = Double.MAX_VALUE;
               }
-              nodeCandidates.add(nodeCandidateFactory.of(cloud, hardware, image, location, price));
+              if (!price.equals(Double.MAX_VALUE)) {
+                nodeCandidates
+                    .add(nodeCandidateFactory.of(cloud, hardware, image, location, price));
+              }
             }
           }
         }
@@ -117,7 +120,7 @@ public class DefaultNodeGenerator implements NodeGenerator {
           nodeCandidates.addAll(generateFaasNodeCandidates(cloud));
         }
       } catch (Exception e) {
-        LOGGER.warn("Exception while generating faas candidates. Ignoring.", e);
+        LOGGER.trace("Exception while generating faas candidates. Ignoring.", e);
       }
     }
     nodeCandidates.addAll(generateByonNodeCandidates());

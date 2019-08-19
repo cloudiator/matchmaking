@@ -36,7 +36,7 @@ public class ExperimentRunner {
     for (int i = 2; i <= 15; i++) {
       for (CloudiatorModelType cloudiatorModelType : CloudiatorModelType.values()) {
         experiments.add(
-            new Experiment(new TimeLimit(TimeUnit.MINUTES, 1), i, 10, false,
+            new Experiment(new TimeLimit(TimeUnit.MINUTES, 1), i, 20, false,
                 cloudiatorModelType)
         );
       }
