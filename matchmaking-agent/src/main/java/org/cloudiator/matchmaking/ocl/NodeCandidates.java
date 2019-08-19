@@ -1,9 +1,10 @@
 package org.cloudiator.matchmaking.ocl;
 
-import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
@@ -13,10 +14,12 @@ import org.cloudiator.matchmaking.domain.NodeCandidate;
 
 public class NodeCandidates implements Set<NodeCandidate>, NodeGenerator {
 
-  private final Set<NodeCandidate> nodeCandidates;
+  private final Map<String, NodeCandidate> nodeCandidates = new HashMap<>();
 
   private NodeCandidates(Set<NodeCandidate> nodeCandidates) {
-    this.nodeCandidates = ImmutableSet.copyOf(nodeCandidates);
+    for (NodeCandidate nodeCandidate : nodeCandidates) {
+      this.nodeCandidates.put(nodeCandidate.id(), nodeCandidate);
+    }
   }
 
   public static NodeCandidates of(Set<NodeCandidate> nodeCandidates) {
@@ -43,52 +46,55 @@ public class NodeCandidates implements Set<NodeCandidate>, NodeGenerator {
 
   @Override
   public boolean contains(Object o) {
-    return nodeCandidates.contains(o);
+    return nodeCandidates.containsValue(o);
   }
 
   @Override
   public Iterator<NodeCandidate> iterator() {
-    return nodeCandidates.iterator();
+    return nodeCandidates.values().iterator();
   }
 
   @Override
   public Object[] toArray() {
-    return nodeCandidates.toArray();
+    return nodeCandidates.values().toArray();
   }
 
   @Override
   public <T> T[] toArray(T[] ts) {
-    return nodeCandidates.toArray(ts);
+    return nodeCandidates.values().toArray(ts);
   }
 
   @Override
   public boolean add(NodeCandidate nodeCandidate) {
-    return nodeCandidates.add(nodeCandidate);
+    return nodeCandidates.put(nodeCandidate.id(), nodeCandidate) == null;
   }
 
   @Override
   public boolean remove(Object o) {
-    return nodeCandidates.remove(o);
+    return nodeCandidates.values().remove(o);
   }
 
   @Override
   public boolean containsAll(Collection<?> collection) {
-    return nodeCandidates.containsAll(collection);
+    return nodeCandidates.values().containsAll(collection);
   }
 
   @Override
   public boolean addAll(Collection<? extends NodeCandidate> collection) {
-    return nodeCandidates.addAll(collection);
+    for (NodeCandidate nodeCandidate : collection) {
+      nodeCandidates.put(nodeCandidate.id(), nodeCandidate);
+    }
+    return true;
   }
 
   @Override
   public boolean retainAll(Collection<?> collection) {
-    return nodeCandidates.retainAll(collection);
+    return nodeCandidates.values().retainAll(collection);
   }
 
   @Override
   public boolean removeAll(Collection<?> collection) {
-    return nodeCandidates.removeAll(collection);
+    return nodeCandidates.values().removeAll(collection);
   }
 
   @Override
@@ -108,31 +114,36 @@ public class NodeCandidates implements Set<NodeCandidate>, NodeGenerator {
 
   @Override
   public Spliterator<NodeCandidate> spliterator() {
-    return nodeCandidates.spliterator();
+    return nodeCandidates.values().spliterator();
   }
 
   @Override
   public boolean removeIf(Predicate<? super NodeCandidate> predicate) {
-    return nodeCandidates.removeIf(predicate);
+
+    return nodeCandidates.values().remove(predicate);
   }
 
   @Override
   public Stream<NodeCandidate> stream() {
-    return nodeCandidates.stream();
+    return nodeCandidates.values().stream();
   }
 
   @Override
   public Stream<NodeCandidate> parallelStream() {
-    return nodeCandidates.parallelStream();
+    return nodeCandidates.values().parallelStream();
   }
 
   @Override
   public void forEach(Consumer<? super NodeCandidate> consumer) {
-    nodeCandidates.forEach(consumer);
+    nodeCandidates.values().forEach(consumer);
   }
 
   @Override
   public NodeCandidates get() {
     return this;
+  }
+
+  public NodeCandidate getById(String string) {
+    return nodeCandidates.get(string);
   }
 }

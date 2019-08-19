@@ -9,14 +9,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.DoublePredicate;
 import org.cloudiator.matchmaking.choco.TimeLimit;
-import org.cloudiator.matchmaking.ocl.ByonUpdater;
+import org.cloudiator.matchmaking.domain.NodeCandidate;
+import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.ocl.ConsistentNodeGenerator;
 import org.cloudiator.matchmaking.ocl.ConstraintChecker;
 import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator;
 import org.cloudiator.matchmaking.ocl.ModelGenerationException;
 import org.cloudiator.matchmaking.ocl.ModelGenerator;
-import org.cloudiator.matchmaking.domain.NodeCandidate;
-import org.cloudiator.matchmaking.domain.Solution;
+import org.cloudiator.matchmaking.ocl.NodeCandidates;
 
 public class Experiment {
 
@@ -149,15 +149,16 @@ public class Experiment {
       return model;
     }
 
-    public Set<NodeCandidate> getCandidates() {
+    public NodeCandidates getCandidates() {
       if (this.candidates == null) {
         this.candidates = new ConsistentNodeGenerator(
             new DefaultNodeGenerator(ExperimentCSP.NODE_CANDIDATE_FACTORY,
                 getCloudiatorModel(),
-                new ByonUpdater()),
+                null),
             ConstraintChecker.create(ExperimentCSP.CSP)).get();
       }
-      return candidates;
+
+      return NodeCandidates.of(candidates);
     }
   }
 

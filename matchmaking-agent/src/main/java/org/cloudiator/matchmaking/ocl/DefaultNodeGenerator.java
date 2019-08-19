@@ -14,26 +14,32 @@ import cloudiator.Price;
 import cloudiator.Runtime;
 import com.typesafe.config.Config;
 import de.uniulm.omi.cloudiator.util.configuration.Configuration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.matchmaking.ocl.ByonUpdater.ByonTriple;
 import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator.PriceCache.PriceKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DefaultNodeGenerator implements NodeGenerator {
 
   private static final Config config = Configuration.conf().getConfig("matchmaking.nodeGenerator");
+  private static final Logger LOGGER = LoggerFactory.getLogger(DefaultNodeGenerator.class);
   private static final PriceCache PRICE_CACHE = new PriceCache();
   private final NodeCandidateFactory nodeCandidateFactory;
   private final CloudiatorModel cloudiatorModel;
+  @Nullable
   private final ByonUpdater byonUpdater;
 
   public DefaultNodeGenerator(NodeCandidateFactory nodeCandidateFactory,
-      CloudiatorModel cloudiatorModel, ByonUpdater byonUpdater) {
+      CloudiatorModel cloudiatorModel, @Nullable ByonUpdater byonUpdater) {
     this.nodeCandidateFactory = nodeCandidateFactory;
     this.cloudiatorModel = cloudiatorModel;
     if (!PRICE_CACHE.exists(cloudiatorModel)) {
@@ -106,8 +112,12 @@ public class DefaultNodeGenerator implements NodeGenerator {
           }
         }
       }
-      if (config.hasPath(cloud.getApi().getProviderName())) {
-        nodeCandidates.addAll(generateFaasNodeCandidates(cloud));
+      try {
+        if (config.hasPath(cloud.getApi().getProviderName())) {
+          nodeCandidates.addAll(generateFaasNodeCandidates(cloud));
+        }
+      } catch (Exception e) {
+        LOGGER.warn("Exception while generating faas candidates. Ignoring.", e);
       }
     }
     nodeCandidates.addAll(generateByonNodeCandidates());
@@ -117,10 +127,15 @@ public class DefaultNodeGenerator implements NodeGenerator {
   }
 
   private Set<NodeCandidate> generateByonNodeCandidates() {
+
+    if (byonUpdater == null) {
+      return Collections.emptySet();
+    }
+
     Set<NodeCandidate> nodeCandidates = new HashSet<>();
     Set<ByonTriple> triples = byonUpdater.getValidTriples();
 
-    for (ByonTriple triple: triples) {
+    for (ByonTriple triple : triples) {
       nodeCandidates.add(nodeCandidateFactory.byon(triple.hardware, triple.image, triple.location));
     }
 

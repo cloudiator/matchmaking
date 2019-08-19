@@ -1,0 +1,12 @@
+%data : NODES set, nodeSize, largerOrEqual4Cores[NODES], costs[NODES], cores[NODES],
+
+variables:
+ x[NODES]: integer[0..];
+
+objectives:
+ cost: costs[]T * x[]->min;
+
+constraints:
+  $1$: cores[]T * x[] >= 15;
+  $2$: largerOrEqual4Cores[]T * x[] = 2;
+  $3$: sum{n in NODES : x[n]} = nodeSize;

@@ -247,6 +247,7 @@ public class CloudHarmony implements ModelGenerator {
           location.setId(cloud.getId() + serviceRegion.getProviderCode());
           location.setName(serviceRegion.getProviderCode());
           location.setProviderId(serviceRegion.getProviderCode());
+          location.setAssignable(true);
           cloud.getLocations().add(location);
 
           ComputeProperties computeProperties = computePropertiesForCloudServiceAndRegion(

@@ -19,7 +19,7 @@ public class ExperimentCSP {
           new HashSet<String>() {{
             //add("nodes->exists(location.geoLocation.country = 'DE')");
             add("nodes->forAll(n | n.hardware.cores >= 2)");
-            //add("nodes->isUnique(n | n.location.geoLocation.country)");
+            add("nodes->isUnique(n | n.location.geoLocation.country)");
             add("nodes->forAll(n | n.hardware.ram >= 1024)");
             add("nodes->forAll(n | n.hardware.ram < 8000)");
             add("nodes->forAll(n | n.hardware.cores >= 4 implies n.hardware.ram >= 4096)");

@@ -126,6 +126,7 @@ public class LargeModelGenerator implements ModelGenerator {
         geoLocation.setLatitude(5.1234);
         geoLocation.setLongitude(5.1234);
         location.setGeoLocation(geoLocation);
+        location.setAssignable(true);
         locations.add(location);
       }
       return locations;

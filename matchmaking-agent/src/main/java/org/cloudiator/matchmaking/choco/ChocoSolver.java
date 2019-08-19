@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import org.chocosolver.solver.Model;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.exception.ContradictionException;
+import org.chocosolver.solver.search.loop.lns.INeighborFactory;
 import org.chocosolver.solver.search.loop.monitors.IMonitorContradiction;
 import org.chocosolver.solver.search.strategy.Search;
 import org.chocosolver.solver.variables.IntVar;
@@ -73,20 +74,23 @@ public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
 
       //solver.setSearch(Search.defaultSearch(modelGenerationContext.getModel()));
 
-      solver.setSearch(Search.intVarSearch(variables -> {
+      solver.setLNS(INeighborFactory.propagationGuided());
 
-            List<IntVar> uninstantiatedVariables = Arrays.stream(variables)
-                .filter(v -> !v.isInstantiated())
-                .collect(Collectors.toList());
 
-            if (uninstantiatedVariables.isEmpty()) {
-              return null;
-            }
+      //solver.setSearch(Search.intVarSearch(variables -> {
 
-            return uninstantiatedVariables.stream().min(
-                Comparator.comparingInt(IntVar::getValue)).get();
-          }, IntVar::getLB, priceVariables),
-          Search.defaultSearch(modelGenerationContext.getModel()));
+      //      List<IntVar> uninstantiatedVariables = Arrays.stream(variables)
+      //          .filter(v -> !v.isInstantiated())
+      //          .collect(Collectors.toList());
+
+      //      if (uninstantiatedVariables.isEmpty()) {
+      //        return null;
+      //      }
+
+      //      return uninstantiatedVariables.stream().min(
+      //          Comparator.comparingInt(IntVar::getValue)).get();
+      //    }, IntVar::getLB, priceVariables),
+      //    Search.defaultSearch(modelGenerationContext.getModel()));
 
       //solver.setSearch(
       //    Search.activityBasedSearch(modelGenerationContext.getModel().retrieveIntVars(true)));
@@ -99,6 +103,8 @@ public class ChocoSolver implements org.cloudiator.matchmaking.domain.Solver {
       while (solver.solve()) {
         solution.record();
       }
+
+      solver.printStatistics();
 
       if (solver.getSolutionCount() == 0) {
         LOGGER.debug(String.format("%s could not find a solution.", this));
