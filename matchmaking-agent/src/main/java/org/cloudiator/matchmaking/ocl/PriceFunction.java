@@ -7,6 +7,6 @@ import cloudiator.Location;
 
 public interface PriceFunction {
 
-  double calculatePricing(Cloud cloud, Hardware hardware, Location location, Image image);
+  double calculatePricing(Cloud cloud, Hardware hardware, Location location, Image image, String userId);
 
 }

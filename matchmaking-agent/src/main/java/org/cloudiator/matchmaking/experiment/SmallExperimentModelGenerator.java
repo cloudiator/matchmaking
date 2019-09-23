@@ -70,7 +70,7 @@ public class SmallExperimentModelGenerator implements ModelGenerator {
             price.setHardware(hardware);
             price.setImage(image);
             price.setLocation(location);
-            price.setPrice(PRICE_FUNCTION.calculatePricing(cloud, hardware, location, image));
+            price.setPrice(PRICE_FUNCTION.calculatePricing(cloud, hardware, location, image, null));
             cloud.getPrices().add(price);
           }
         }
