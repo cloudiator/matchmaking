@@ -45,8 +45,7 @@ public class PricingSupplier implements Supplier<Map<Long, IaasEntities.Price>> 
                             .append(price.getCloudAPIProviderName()), StandardCharsets.UTF_8);
             return sha256PriceKey.asLong();}, price -> price));
         } catch (ResponseException e) {
-            throw new IllegalStateException(String
-                    .format("Could not retrieve price due to communication error: %s", e.getMessage()), e);
+            throw new IllegalStateException("Could not retrieve price due to communication error: %s", e);
         }
     }
 }
