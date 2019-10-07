@@ -29,4 +29,8 @@ public class OclContext {
     return config.getInt("solvingTime");
   }
 
+  public boolean considerQuotas() {
+    return config.getBoolean("considerQuota");
+  }
+
 }

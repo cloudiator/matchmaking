@@ -2,16 +2,18 @@ package org.cloudiator.matchmaking.experiment;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import de.uniulm.omi.cloudiator.sword.domain.QuotaSet;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import org.cloudiator.matchmaking.choco.ChocoSolverTesting;
 import org.cloudiator.matchmaking.choco.TimeLimit;
+import org.cloudiator.matchmaking.cmpl.CmplTesting;
 import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.experiment.Experiment.CloudiatorModelType;
 import org.cloudiator.matchmaking.ocl.OclCsp;
@@ -26,7 +28,7 @@ public class ExperimentRunner {
 
     Set<String> constraints = new HashSet<>();
 
-    OclCsp csp = OclCsp.ofConstraints(constraints, 1);
+    OclCsp csp = OclCsp.ofConstraints(constraints, Collections.emptyList(), QuotaSet.EMPTY, 1);
 
     final Data data = new Data();
 
@@ -34,21 +36,9 @@ public class ExperimentRunner {
     for (int i = 2; i <= 15; i++) {
       for (CloudiatorModelType cloudiatorModelType : CloudiatorModelType.values()) {
         experiments.add(
-            new Experiment(new TimeLimit(TimeUnit.MINUTES, 1), i, 10, false,
+            new Experiment(new TimeLimit(TimeUnit.MINUTES, 1), i, 20, false,
                 cloudiatorModelType)
         );
-        experiments.add(
-            new Experiment(new TimeLimit(TimeUnit.MINUTES, 5), i, 10, false,
-                cloudiatorModelType)
-        );
-        experiments.add(
-            new Experiment(new TimeLimit(TimeUnit.MINUTES, 10), i, 10, false,
-                cloudiatorModelType)
-        );
-        //experiments.add(
-        //    new Experiment(new TimeLimit(TimeUnit.MINUTES, 10), i, 10, true,
-        //        cloudiatorModelType)
-        //);
       }
     }
 
@@ -57,17 +47,20 @@ public class ExperimentRunner {
     PrintWriter smallModelWriter = new PrintWriter("solutionsSmall", "UTF-8");
 
     for (Experiment experiment : experiments) {
-      ChocoSolverTesting chocoSolverTesting = new ChocoSolverTesting(
-          experiment.getCloudiatorModelType().getCandidates());
+      //ChocoSolverTesting chocoSolverTesting = new ChocoSolverTesting(
+      //    experiment.getCloudiatorModelType().getCandidates());
 
       for (int rep = 0; rep < experiment.getRepetitions(); rep++) {
         Solution solution = null;
         if (!experiment.isIterative()) {
-          solution = chocoSolverTesting
-              .solveDirect(experiment.getNodeSize(), experiment.getLimit());
+          solution = CmplTesting
+              .solve(experiment.getNodeSize(), experiment.getCloudiatorModelType().getCandidates());
+          //solution = chocoSolverTesting
+          //    .solveDirect(experiment.getNodeSize(), experiment.getLimit());
         } else {
-          solution = chocoSolverTesting
-              .solveIteratively(experiment.getNodeSize(), experiment.getLimit());
+          throw new IllegalStateException();
+          //solution = chocoSolverTesting
+          //    .solveIteratively(experiment.getNodeSize(), experiment.getLimit());
         }
         if (solution != null) {
           experiment.addSolution(solution);

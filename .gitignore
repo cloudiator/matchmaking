@@ -4,3 +4,5 @@ target
 *.iml
 matchmaking-agent/src/main/resources/application.conf
 logs
+*.cdat
+*.cmsg

@@ -8,9 +8,9 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import javax.inject.Named;
+import org.cloudiator.matchmaking.ocl.MetaSolver;
 import org.cloudiator.matchmaking.ocl.ModelGenerationException;
 import org.cloudiator.matchmaking.ocl.ModelGenerator;
-import org.cloudiator.matchmaking.ocl.MetaSolver;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -72,7 +72,8 @@ public class FileCachedModelGenerator implements ModelGenerator {
   @Override
   public CloudiatorModel generateModel(String userId) throws ModelGenerationException {
     try {
-      return load();
+      final CloudiatorModel load = load();
+      return load;
     } catch (Exception e) {
       LOGGER.warn("Error while loading cached file. Regenerating.", e);
       CloudiatorModel cloudiatorModel = delegate.generateModel(userId);

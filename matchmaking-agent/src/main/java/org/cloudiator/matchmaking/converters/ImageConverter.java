@@ -101,6 +101,8 @@ public class ImageConverter implements TwoWayConverter<IaasEntities.Image, Image
           return OperatingSystemArchitecture.AMD64;
         case I368:
           return OperatingSystemArchitecture.I386;
+        case ARM:
+          return OperatingSystemArchitecture.ARM;
         case UNKOWN:
           return OperatingSystemArchitecture.UNKOWN_OS_ARCH;
         default:
@@ -117,6 +119,8 @@ public class ImageConverter implements TwoWayConverter<IaasEntities.Image, Image
           return OSArchitecture.I368;
         case AMD64:
           return OSArchitecture.AMD64;
+        case ARM:
+          return OSArchitecture.ARM;
         case UNKOWN_OS_ARCH:
           return OSArchitecture.UNKOWN;
         case UNRECOGNIZED:

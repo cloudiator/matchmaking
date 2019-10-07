@@ -5,17 +5,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.primitives.Ints;
+import de.uniulm.omi.cloudiator.sword.domain.AttributeQuota.Attribute;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.constraints.Operator;
+import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.SetVar;
 import org.chocosolver.solver.variables.Variable;
@@ -88,7 +88,8 @@ public class ConstraintHandler {
   }
 
   public void generate() {
-    for (ExpressionInOCL expressionInOCL : modelGenerationContext.getOclCsp().getConstraints()) {
+    for (ExpressionInOCL expressionInOCL : modelGenerationContext.getOclCsp()
+        .getRelevantConstraints()) {
       checkState(context.isEmpty(), "Expected empty context");
       LOGGER.trace("Handling ExpressionInOCL " + expressionInOCL);
       final ConstraintOrVariable constraintOrVariable = this
@@ -237,67 +238,23 @@ public class ConstraintHandler {
 
   private ConstraintOrVariable handleSizeOperation(OperationCallExp operationCallExp) {
 
-    if (operationCallExp.getOwnedSource() instanceof IteratorExp) {
-      IteratorExp iteratorExp = (IteratorExp) operationCallExp.getOwnedSource();
-      if (iteratorExp.getOwnedBody() instanceof OperationCallExp) {
-        final OperationCallExp body = (OperationCallExp) iteratorExp.getOwnedBody();
-        Operator operator;
-        switch (body.getName()) {
-          case ">=":
-          case "=":
-          case ">":
-          case "<":
-          case "<=":
-            operator = Operator.get(body.getName());
-            break;
-          case "<>":
-            operator = Operator.NQ;
-            break;
-          default:
-            throw new AssertionError("Unsupported operator " + body.getName());
-        }
+    final ConstraintOrVariable constraintOrVariable = handleOclExpression(
+        operationCallExp.getOwnedSource());
 
-        //left
-        ConstraintOrVariable leftVariable = handleOclExpression(body.getOwnedSource());
-        ConstraintOrVariable rightVariable = handleOclExpression(body.getOwnedArguments().get(0));
-        checkState(leftVariable.isMultipleVariables(),
-            "Expected left side to be multiple variables");
-        checkState(rightVariable.isVariable(), "Expected right side to be a single variable");
+    checkState(constraintOrVariable.isMultipleVariables(),
+        "Expected body of size operation to return multiple variables");
 
-        IntVar limit = modelGenerationContext.getModel()
-            .intVar(operationCallExp.toString(), 0, modelGenerationContext.nodeSize());
-        //replace with domain
-        final Set<Integer> mergedDomainOfVariables = ChocoHelper
-            .getMergedDomainOfVariables(leftVariable.getVariables().stream().map(
-                new Function<Variable, IntVar>() {
-                  @Nullable
-                  @Override
-                  public IntVar apply(@Nullable Variable variable) {
-                    return (IntVar) variable;
-                  }
-                }).collect(Collectors.toList()));
-        final int[] ints = new int[mergedDomainOfVariables.size()];
-        int i = 0;
-        for (Integer value : mergedDomainOfVariables) {
-          ints[i] = value;
-          i++;
-        }
-        IntVar all = modelGenerationContext.getModel()
-            .intVar(ints);
-        modelGenerationContext.getModel()
-            .arithm(all, operator.toString(), (IntVar) rightVariable.getVariable()).post();
-        //noinspection SuspiciousToArrayCall
-        modelGenerationContext.getModel().count(all,
-            leftVariable.getVariables().toArray(new IntVar[leftVariable.getVariables().size()]),
-            limit).post();
-        return ConstraintOrVariable.fromVariable(limit);
+    //generate a count for all variables with a limit var
+    final IntVar limit = modelGenerationContext.getModel()
+        .intVar(operationCallExp.toString(), 0, modelGenerationContext.nodeSize());
 
+    IntVar[] vars = constraintOrVariable.getVariables().stream()
+        .map(var -> ((IntVar) var)).toArray(IntVar[]::new);
 
-      }
-    }
+    modelGenerationContext.getModel().count(1,
+        vars, limit).post();
 
-    throw new AssertionError(
-        "Can not handle size operation with underlying operation");
+    return ConstraintOrVariable.fromVariable(limit);
   }
 
   private ConstraintOrVariable handleCollectOperation(OperationCallExp operationCallExp,
@@ -374,6 +331,26 @@ public class ConstraintHandler {
 
   private ConstraintOrVariable handlePropertyCallExp(PropertyCallExp propertyCallExp) {
 
+    if (propertyCallExp.getReferredProperty().getName().equals("nodes")) {
+      checkState(!context.hasNode(), "Expected context to have no nodes");
+
+      Collection<Variable> variables = new HashSet<>();
+      for (int node = 1; node <= modelGenerationContext.nodeSize(); node++) {
+        Variable binary_node = modelGenerationContext.getVariableStore()
+            .getCustomVariable(node, Attribute.NODES_SIZE.name());
+        if (binary_node == null) {
+          binary_node = modelGenerationContext.getModel()
+              .boolVar(Attribute.NODES_SIZE.name(), true);
+          modelGenerationContext.getVariableStore()
+              .storeCustomVariable(node, Attribute.NODES_SIZE.name(), binary_node);
+        }
+        variables.add(binary_node);
+      }
+
+      return ConstraintOrVariable.fromVariables(variables);
+
+    }
+
     final EAttribute attributeForPropertyCallExpression = getAttributeForPropertyCallExpression(
         propertyCallExp);
 
@@ -383,6 +360,10 @@ public class ConstraintHandler {
     if (this.context.hasNode()) {
       final Variable variableForEAttribute = getVariableForEAttribute(
           attributeForPropertyCallExpression, context.getNode());
+      checkState(variableForEAttribute != null,
+          String.format("Variable for attribute %s of class %s is null",
+              attributeForPropertyCallExpression,
+              attributeForPropertyCallExpression.getEContainingClass()));
       return ConstraintOrVariable.fromVariable(variableForEAttribute);
     } else {
       final Collection<Variable> variablesForEAttribute = getVariablesForEAttribute(
@@ -422,6 +403,8 @@ public class ConstraintHandler {
         return handleOclExpression(iteratorExp.getOwnedBody());
       case "isUnique":
         return ConstraintOrVariable.fromConstraint(generateIsUniqueConstraint(iteratorExp));
+      case "select":
+        return generateIterationConstraint(iteratorExp, "select");
       default:
         throw new AssertionError(String.format("Can not handle iteratorExp of type %s.",
             referredIteration.getName()));
@@ -514,8 +497,12 @@ public class ConstraintHandler {
 
   private ConstraintOrVariable handleIntegerLiteralExp(IntegerLiteralExp integerLiteralExp) {
 
-    checkState(context.hasAttribute(), "attribute context required for IntegerLiteralExp");
-    EAttribute eAttribute = context.geteAttribute();
+    EAttribute eAttribute;
+    if (context.hasAttribute()) {
+      eAttribute = context.geteAttribute();
+    } else {
+      eAttribute = null;
+    }
 
     return ConstraintOrVariable
         .fromVariable(getVariableForIntegerLiteralExpression(eAttribute, integerLiteralExp));
@@ -590,15 +577,23 @@ public class ConstraintHandler {
     return generateConstant(context, value);
   }
 
-  private Variable getVariableForIntegerLiteralExpression(EAttribute context,
+  private Variable getVariableForIntegerLiteralExpression(@Nullable EAttribute context,
       IntegerLiteralExp integerLiteralExp) {
     return generateConstant(context,
         (integerLiteralExp).getIntegerSymbol().intValue());
   }
 
-  private Variable generateConstant(EAttribute context, int value) {
-    return modelGenerationContext.getModel().intVar(String
-            .format("Constant - %s.%s", context.getEContainingClass().getName(), context.getName()),
+  private Variable generateConstant(@Nullable EAttribute context, int value) {
+
+    String name;
+    if (context != null) {
+      name = String
+          .format("Constant - %s.%s", context.getEContainingClass().getName(), context.getName());
+    } else {
+      name = Integer.toString(value);
+    }
+
+    return modelGenerationContext.getModel().intVar(name,
         value);
   }
 
@@ -638,6 +633,7 @@ public class ConstraintHandler {
               "expected body to generate a constraint or be empty");
           break;
         case "exists":
+        case "select":
           checkState(constraintOrVariable.isConstraint(),
               "expected body to generate a constraint");
           break;
@@ -647,6 +643,7 @@ public class ConstraintHandler {
       if (!constraintOrVariable.isEmpty()) {
         constraints.add(constraintOrVariable.getConstraint());
       }
+
     }
 
     if (constraints.isEmpty()) {
@@ -658,11 +655,25 @@ public class ConstraintHandler {
 
     switch (type) {
       case "forAll":
-        return ConstraintOrVariable
+        final ConstraintOrVariable forAllConstraint = ConstraintOrVariable
             .fromConstraint(modelGenerationContext.getModel().and(array));
+        return forAllConstraint;
       case "exists":
-        return ConstraintOrVariable
+        final ConstraintOrVariable existsConstraint = ConstraintOrVariable
             .fromConstraint(modelGenerationContext.getModel().or(array));
+        return existsConstraint;
+      case "select":
+        int i = 1;
+        Collection<BoolVar> boolVars = new HashSet<>();
+        for (Constraint constraint : constraints) {
+          final BoolVar boolVar = modelGenerationContext.getModel()
+              .boolVar("select for node " + i);
+          constraint.reifyWith(boolVar);
+          i++;
+          boolVars.add(boolVar);
+        }
+        return ConstraintOrVariable.fromVariables(boolVars);
+
       default:
         throw new AssertionError(String.format("Type %s is not known.", type));
     }
@@ -726,10 +737,10 @@ public class ConstraintHandler {
     private final Constraint constraint;
     @Nullable
     private final Variable variable;
-    private final Collection<Variable> variables;
+    private final Collection<? extends Variable> variables;
 
     private ConstraintOrVariable(@Nullable Constraint constraint, @Nullable Variable variable,
-        Collection<Variable> variables) {
+        Collection<? extends Variable> variables) {
       this.constraint = constraint;
       this.variable = variable;
       this.variables = variables;
@@ -749,7 +760,7 @@ public class ConstraintHandler {
       return new ConstraintOrVariable(null, variable, Collections.emptyList());
     }
 
-    public static ConstraintOrVariable fromVariables(Collection<Variable> variables) {
+    public static ConstraintOrVariable fromVariables(Collection<? extends Variable> variables) {
       checkArgument(!variables.isEmpty(), "variables is empty");
       return new ConstraintOrVariable(null, null, variables);
     }
@@ -780,7 +791,7 @@ public class ConstraintHandler {
       return variable;
     }
 
-    public Collection<Variable> getVariables() {
+    public Collection<? extends Variable> getVariables() {
       checkState(isMultipleVariables(), "is not multiple variables");
       return variables;
     }

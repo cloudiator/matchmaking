@@ -3,6 +3,8 @@ package org.cloudiator.matchmaking.choco;
 import static com.google.common.base.Preconditions.checkState;
 
 import cloudiator.CloudiatorPackage.Literals;
+import de.uniulm.omi.cloudiator.sword.domain.AttributeQuota;
+import de.uniulm.omi.cloudiator.sword.domain.Quota;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -45,15 +47,27 @@ public class ClassAttributeHandler {
   private class AttributeCacheLoader {
 
     private final Set<EAttribute> mandatoryAttributes = new HashSet<EAttribute>() {{
-      add((EAttribute) Literals.PRICE.getEStructuralFeature("price"));
+      add((EAttribute) Literals.NODE.getEStructuralFeature("price"));
     }};
 
     private void loadAttributeCache(OclCsp oclCsp) {
       checkState(relevantAttributeCache == null, "Attribute cache already loaded");
       relevantAttributeCache = new RelevantAttributeCache();
       mandatoryAttributes.forEach(eAttribute -> relevantAttributeCache.store(eAttribute));
-      oclCsp.getConstraints().forEach(
+      oclCsp.getRelevantConstraints().forEach(
           expressionInOCL -> handleOclExpression(expressionInOCL.getOwnedBody()));
+
+      for (Quota quota : oclCsp.getQuotaSet().quotaSet()) {
+        if (quota instanceof AttributeQuota) {
+          switch (((AttributeQuota) quota).attribute()) {
+            case HARDWARE_RAM:
+              relevantAttributeCache.store(Literals.HARDWARE__RAM);
+              break;
+            case HARDWARE_CORES:
+              relevantAttributeCache.store(Literals.HARDWARE__CORES);
+          }
+        }
+      }
     }
 
     private void handleOclExpression(OCLExpression oclExpression) {
@@ -93,18 +107,16 @@ public class ClassAttributeHandler {
     handleClass(Literals.NODE);
 
     handleClass(Literals.CLOUD);
-    handleClass(Literals.API);
-    handleClass(Literals.CLOUD_CREDENTIAL);
+    //handleClass(Literals.API);
+    //handleClass(Literals.CLOUD_CREDENTIAL);
 
     handleClass(Literals.HARDWARE);
 
     handleClass(Literals.IMAGE);
-    handleClass(Literals.OPERATING_SYSTEM);
+    //handleClass(Literals.OPERATING_SYSTEM);
 
     handleClass(Literals.LOCATION);
-    handleClass(Literals.GEO_LOCATION);
-
-    handleClass(Literals.PRICE);
+    //handleClass(Literals.GEO_LOCATION);
   }
 
   private void handleClass(EClass eClass) {
@@ -154,10 +166,10 @@ public class ClassAttributeHandler {
 
   private void handleAttribute(EAttribute eAttribute) {
 
+    final Set<Integer> domain = deriveDomain(eAttribute);
+
     //create a new variable for every node
     for (int i = 1; i <= modelGenerationContext.nodeSize(); i++) {
-
-      final Set<Integer> domain = deriveDomain(eAttribute);
 
       //how to handle variables with empty domains?
       //todo

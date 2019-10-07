@@ -125,6 +125,7 @@ public class SmallExperimentModelGenerator implements ModelGenerator {
         geoLocation.setLongitude(5.1234);
         location.setGeoLocation(geoLocation);
         locations.add(location);
+        location.setAssignable(true);
       }
       return locations;
     }

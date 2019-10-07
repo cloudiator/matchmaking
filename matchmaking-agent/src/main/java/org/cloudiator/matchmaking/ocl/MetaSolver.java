@@ -2,15 +2,14 @@ package org.cloudiator.matchmaking.ocl;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import cloudiator.CloudiatorFactory;
-import cloudiator.CloudiatorPackage;
+import cloudiator.CloudiatorModel;
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import de.uniulm.omi.cloudiator.util.StreamUtil;
+import io.github.cloudiator.domain.Node;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -32,34 +31,34 @@ import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.domain.Solver;
-import org.cloudiator.messages.NodeEntities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
 public class MetaSolver {
 
-  private static final CloudiatorFactory cloudiatorFactory = CloudiatorPackage.eINSTANCE
-      .getCloudiatorFactory();
   private static final NodeCandidateFactory nodeCandidateFactory = NodeCandidateFactory.create();
   private static final Logger LOGGER = LoggerFactory.getLogger(MetaSolver.class);
   private final Set<Solver> solvers;
   private final ListeningExecutorService executorService;
   private final ModelGenerator modelGenerator;
   private final int solvingTime;
+  private final ByonNodeCache byonNodeCache;
 
   @Inject
   public MetaSolver(
-      ModelGenerator modelGenerator, Set<Solver> solvers, @Named("solvingTime") int solvingTime) {
+      ModelGenerator modelGenerator, Set<Solver> solvers, @Named("solvingTime") int solvingTime,
+      ByonNodeCache byonNodeCache) {
     this.modelGenerator = modelGenerator;
     this.solvers = solvers;
+    this.byonNodeCache = byonNodeCache;
     executorService = MoreExecutors
-        .listeningDecorator(Executors.newFixedThreadPool(solvers.size()));
+        .listeningDecorator(Executors.newCachedThreadPool());
     this.solvingTime = solvingTime;
     MoreExecutors.addDelayedShutdownHook(executorService, 1, TimeUnit.MINUTES);
   }
 
-  private Optional<Solution> generateExistingSolution(List<NodeEntities.Node> existingNodes,
+  private Optional<Solution> generateExistingSolution(List<Node> existingNodes,
       NodeCandidates nodeCandidates) throws ModelGenerationException {
 
     if (existingNodes.isEmpty()) {
@@ -67,25 +66,25 @@ public class MetaSolver {
     }
 
     List<NodeCandidate> candidates = new ArrayList<>(existingNodes.size());
-    for (NodeEntities.Node existingNode : existingNodes) {
-      if (Strings.isNullOrEmpty(existingNode.getNodeCandidate())) {
+    for (Node existingNode : existingNodes) {
+      if (!existingNode.nodeCandidate().isPresent()) {
         throw new ModelGenerationException(
             String.format("NodeCandidate for node %s is unknown.", existingNode));
       }
       final Optional<NodeCandidate> existingNodeCandidate = nodeCandidates.stream()
-          .filter(nodeCandidate -> nodeCandidate.id().equals(existingNode.getNodeCandidate()))
+          .filter(nodeCandidate -> nodeCandidate.id().equals(existingNode.nodeCandidate().get()))
           .collect(StreamUtil.getOnly());
 
       candidates.add(existingNodeCandidate.orElseThrow(() -> new ModelGenerationException(String
           .format("NodeCandidate with id %s is no longer valid.",
-              existingNode.getNodeCandidate()))));
+              existingNode.nodeCandidate().get()))));
 
     }
 
     return Optional.of(Solution.of(candidates));
   }
 
-  private int deriveNodeSize(List<NodeEntities.Node> existingNodes,
+  private int deriveNodeSize(List<Node> existingNodes,
       @Nullable Integer minimumNodeSize) {
     if (minimumNodeSize == null) {
       return existingNodes.size() + 1;
@@ -94,23 +93,26 @@ public class MetaSolver {
   }
 
   @Nullable
-  public Solution solve(OclCsp csp, List<NodeEntities.Node> existingNodes, String userId)
+  public synchronized Solution solve(OclCsp csp, String userId)
       throws ModelGenerationException {
 
-    final int nodeSize = deriveNodeSize(existingNodes, csp.getMinimumNodeSize());
+    final int nodeSize = deriveNodeSize(csp.getExistingNodes(), csp.getMinimumNodeSize());
 
     ConstraintChecker cc = ConstraintChecker.create(csp);
 
     LOGGER.debug(String
-        .format("%s is solving CSP %s for user %s with existing nodes %s for target node size %s.",
+        .format("%s is solving CSP %s for user %s for target node size %s.",
             this, csp, userId,
-            existingNodes, nodeSize));
+            nodeSize));
 
+    final CloudiatorModel cloudiatorModel = modelGenerator.generateModel(userId);
     NodeGenerator nodeGenerator =
-        new ConsistentNodeGenerator(
-            NodeCandidateCache.cache(userId, new DefaultNodeGenerator(nodeCandidateFactory,
-                modelGenerator.generateModel(userId))),
-            cc);
+        new QuotaFilter(
+            cloudiatorModel, new ConsistentNodeGenerator(
+            NodeCandidateCache
+                .cache(userId, new DefaultNodeGenerator(nodeCandidateFactory, cloudiatorModel, new ByonUpdater()
+                )),
+            cc), csp.getQuotaSet());
 
     long startGeneration = System.currentTimeMillis();
 
@@ -127,7 +129,8 @@ public class MetaSolver {
       return Solution.EMPTY_SOLUTION;
     }
 
-    Optional<Solution> existingSolution = generateExistingSolution(existingNodes, possibleNodes);
+    Optional<Solution> existingSolution = generateExistingSolution(csp.getExistingNodes(),
+        possibleNodes);
 
     long generationTime = System.currentTimeMillis() - startGeneration;
     LOGGER.info(
@@ -142,9 +145,14 @@ public class MetaSolver {
     for (Solver solver : solvers) {
       solverCallables.add(() -> {
         try {
-          return solver.solve(csp, possibleNodes, existingSolution.orElse(null), nodeSize);
-        } catch (Exception e) {
-          LOGGER.error(String.format("Error while executing solver %s on CSP %s", solver, csp), e);
+          final Solution solve = solver
+              .solve(csp, possibleNodes, existingSolution.orElse(null), nodeSize);
+          long solvingTime = System.currentTimeMillis() - startSolving;
+          solve.setTime(solvingTime);
+          byonNodeCache.evictBySolution(solve,userId);
+          return solve;
+        } catch (Throwable t) {
+          LOGGER.warn(String.format("Error while executing solver %s on CSP %s", solver, csp), t);
           return null;
         }
       });
@@ -165,8 +173,6 @@ public class MetaSolver {
         }
       }).collect(Collectors.toList());
 
-      long solvingTime = System.currentTimeMillis() - startSolving;
-
       LOGGER.info(
           String.format("Finished solving of csp: %s.", csp));
 
@@ -182,7 +188,6 @@ public class MetaSolver {
           }).findAny();
       if (anyOptimalSolution.isPresent()) {
         final Solution optimalSolution = anyOptimalSolution.get();
-        optimalSolution.setTime(solvingTime);
 
         LOGGER.info(
             String.format("Found optimal solution %s for csp: %s.", optimalSolution, csp));

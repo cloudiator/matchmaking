@@ -47,6 +47,8 @@ public class OclServiceModule extends AbstractModule {
 
     bindConstant().annotatedWith(Names.named("solvingTime")).to(oclContext.solvingTime());
 
+    bindConstant().annotatedWith(Names.named("considerQuota")).to(oclContext.considerQuotas());
+
     if (oclContext.modelGenerator().cacheClass().isPresent()) {
       LOGGER.info(String.format("Using cache %s for model generator.",
           oclContext.modelGenerator().cacheClass().get().getName()));
@@ -59,5 +61,7 @@ public class OclServiceModule extends AbstractModule {
     } else {
       bind(ModelGenerator.class).to(oclContext.modelGenerator().modelGeneratorClass());
     }
+
+    bind(ByonUpdater.class).asEagerSingleton();
   }
 }

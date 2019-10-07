@@ -22,6 +22,7 @@ public class Solution implements Comparable<Solution> {
   private Float time = null;
   private boolean isOptimal = false;
   private boolean valid = true;
+  private Class<? extends Solver> solver;
 
   private Solution(Collection<NodeCandidate> candidates, @Nullable String id) {
     this.nodeCandidates = new ArrayList<>(candidates);
@@ -41,7 +42,15 @@ public class Solution implements Comparable<Solution> {
     return new Solution(candidates, id);
   }
 
-  public void expire() {
+  public void setSolver(Class<? extends Solver> solver) {
+    this.solver = solver;
+  }
+
+  public Class<? extends Solver> getSolver() {
+    return solver;
+  }
+
+  public void expired() {
     this.valid = false;
   }
 
@@ -87,7 +96,10 @@ public class Solution implements Comparable<Solution> {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("time", getTime()).add("price", getCosts())
+    return MoreObjects.toStringHelper(this).add("valid", valid).add("optimal", isOptimal())
+        .add("solver", solver.getCanonicalName())
+        .add("time", getTime())
+        .add("price", getCosts())
         .add("numberOfNodes", nodeSize())
         .add("nodes", nodeCandidates)
         .toString();

@@ -1,18 +1,27 @@
 package org.cloudiator.matchmaking.ocl;
 
 import com.google.common.base.MoreObjects;
+import de.uniulm.omi.cloudiator.sword.domain.QuotaSet;
+import io.github.cloudiator.domain.Node;
+import io.github.cloudiator.messaging.NodeToNodeMessageConverter;
+import io.github.cloudiator.messaging.QuotaConverter;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.inject.Named;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
 import org.cloudiator.matchmaking.converters.SolutionConverter;
 import org.cloudiator.matchmaking.domain.Solution;
+import org.cloudiator.messages.Cloud.QuotaQueryRequest;
+import org.cloudiator.messages.Cloud.QuotaQueryResponse;
 import org.cloudiator.messages.General.Error;
 import org.cloudiator.messages.entities.Matchmaking.MatchmakingRequest;
 import org.cloudiator.messages.entities.Matchmaking.MatchmakingResponse;
 import org.cloudiator.messages.entities.Matchmaking.MatchmakingResponse.Builder;
 import org.cloudiator.messaging.MessageInterface;
 import org.cloudiator.messaging.Subscription;
+import org.cloudiator.messaging.services.CloudService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,14 +32,23 @@ public class MatchmakingRequestListener implements Runnable {
   private final MetaSolver metaSolver;
   private static final RequirementConverter REQUIREMENT_CONVERTER = RequirementConverter.INSTANCE;
   private static final SolutionConverter SOLUTION_CONVERTER = SolutionConverter.INSTANCE;
+  private static final NodeToNodeMessageConverter NODE_CONVERTER = NodeToNodeMessageConverter.INSTANCE;
+  private static final QuotaConverter QUOTA_CONVERTER = QuotaConverter.INSTANCE;
   private final SolutionCache solutionCache;
+  private final CloudService cloudService;
+  private final ByonNodeCache byonCache;
+  private final boolean considerQuota;
 
   @Inject
   public MatchmakingRequestListener(MessageInterface messageInterface, MetaSolver metaSolver,
-      SolutionCache solutionCache) {
+      SolutionCache solutionCache, CloudService cloudService,
+      @Named("considerQuota") boolean considerQuota, ByonNodeCache byonCache) {
     this.messageInterface = messageInterface;
     this.metaSolver = metaSolver;
     this.solutionCache = solutionCache;
+    this.cloudService = cloudService;
+    this.byonCache = byonCache;
+    this.considerQuota = considerQuota;
   }
 
   @Override
@@ -55,12 +73,31 @@ public class MatchmakingRequestListener implements Runnable {
                 targetNodeSize = matchmakingRequest.getMinimumNodeSize();
               }
 
+              List<Node> existingNodes = matchmakingRequest.getExistingNodesList().stream()
+                  .map(NODE_CONVERTER::applyBack).collect(Collectors.toList());
+
               try {
+
+                QuotaSet quotaSet;
+
+                if (considerQuota) {
+                  final QuotaQueryResponse quotaQueryResponse = cloudService.queryQuota(
+                      QuotaQueryRequest.newBuilder().setUserId(matchmakingRequest.getUserId())
+                          .build());
+
+                quotaSet = new QuotaSet(
+                    quotaQueryResponse.getQuotasList().stream().map(QUOTA_CONVERTER)
+                        .collect(Collectors.toSet()));
+                quotaSet.addAll(byonCache.readAllCorrespondingQuotas());
+                } else {
+                  quotaSet = QuotaSet.EMPTY;
+                }
 
                 OclCsp oclCsp = OclCsp
                     .ofRequirements(
                         matchmakingRequest.getNodeRequirements().getRequirementsList().stream()
-                            .map(REQUIREMENT_CONVERTER).collect(Collectors.toList()),
+                            .map(REQUIREMENT_CONVERTER).collect(Collectors.toList()), existingNodes,
+                        quotaSet,
                         targetNodeSize);
 
                 LOGGER.info(
@@ -68,26 +105,23 @@ public class MatchmakingRequestListener implements Runnable {
                         .format("%s has generated the constraint problem %s.", this,
                             oclCsp));
 
-                if (matchmakingRequest.getExistingNodesList().isEmpty()) {
+                final Optional<Solution> cachedSolution = solutionCache.retrieve(userId, oclCsp);
 
-                  final Optional<Solution> cachedSolution = solutionCache.retrieve(userId, oclCsp);
+                if (cachedSolution.isPresent() && cachedSolution.get().isValid()) {
 
-                  if (cachedSolution.isPresent() && cachedSolution.get().isValid()) {
+                  LOGGER.info(
+                      String
+                          .format("%s found existing solution %s for the constraint problem %s.",
+                              this, cachedSolution.get(),
+                              oclCsp));
 
-                    LOGGER.info(
-                        String
-                            .format("%s found existing solution %s for the constraint problem %s.",
-                                this, cachedSolution.get(),
-                                oclCsp));
+                  replyWithSolution(id, cachedSolution.get());
 
-                    replyWithSolution(id, cachedSolution.get());
-
-                    return;
-                  }
+                  return;
                 }
 
                 Solution solution = metaSolver
-                    .solve(oclCsp, matchmakingRequest.getExistingNodesList(), userId);
+                    .solve(oclCsp, userId);
 
                 if (solution == null || solution.noSolution()) {
                   LOGGER

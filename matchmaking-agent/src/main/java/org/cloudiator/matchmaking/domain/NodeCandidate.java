@@ -1,9 +1,16 @@
 package org.cloudiator.matchmaking.domain;
 
-import cloudiator.*;
+import cloudiator.Cloud;
+import cloudiator.CloudiatorFactory;
+import cloudiator.Environment;
+import cloudiator.Hardware;
+import cloudiator.Image;
+import cloudiator.Location;
+import cloudiator.Node;
+import cloudiator.NodeType;
 import com.google.common.base.MoreObjects;
-
 import javax.annotation.Nullable;
+import org.cloudiator.matchmaking.ocl.ByonUpdater;
 
 public class NodeCandidate implements Comparable<NodeCandidate> {
 
@@ -32,6 +39,17 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
     this.price = price;
   }
 
+  public NodeCandidate(Hardware hardware,
+      Image image, Location location) {
+    this.type = NodeType.BYON;
+    this.cloud = ByonUpdater.BYON_CLOUD;
+    this.hardware = hardware;
+    this.image = image;
+    this.location = location;
+    this.price = 0.0;
+  }
+
+
   public NodeCandidate(Cloud cloud, Location location, Hardware hardware, double pricePerInvocation,
       double memoryPrice, Environment environment) {
     this.type = NodeType.FAAS;
@@ -45,6 +63,7 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
 
   private Node toNode() {
     Node node = CLOUDIATOR_FACTORY.createNode();
+    node.setId(id());
     node.setType(type);
     node.setImage(image);
     node.setHardware(hardware);
@@ -192,9 +211,15 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
       return new NodeCandidate(cloud, hardware, image, location, price);
     }
 
+    public NodeCandidate byon(Hardware hardware, Image image,
+        Location location) {
+      return new NodeCandidate(hardware, image, location);
+    }
+
     public NodeCandidate of(Cloud cloud, Location location, Hardware hardware,
         double pricePerInvocation, double memoryPrice, Environment environment) {
-      return new NodeCandidate(cloud, location, hardware, pricePerInvocation, memoryPrice, environment);
+      return new NodeCandidate(cloud, location, hardware, pricePerInvocation, memoryPrice,
+          environment);
     }
   }
 }

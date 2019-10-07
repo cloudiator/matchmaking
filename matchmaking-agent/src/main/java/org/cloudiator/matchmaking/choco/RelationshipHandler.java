@@ -42,15 +42,15 @@ public class RelationshipHandler {
     //handleRelationship(Literals.IMAGE__LOCATION);
     //handleRelationship(Literals.HARDWARE__LOCATION);
 
-    handleRelationship(Literals.CLOUD__API);
-    handleRelationship(Literals.CLOUD__CLOUDCREDENTIAL);
+    //handleRelationship(Literals.CLOUD__API);
+    //handleRelationship(Literals.CLOUD__CLOUDCREDENTIAL);
 
-    handleRelationship(Literals.IMAGE__OPERATING_SYSTEM);
-    handleRelationship(Literals.LOCATION__GEO_LOCATION);
+    //handleRelationship(Literals.IMAGE__OPERATING_SYSTEM);
+    //handleRelationship(Literals.LOCATION__GEO_LOCATION);
 
-    handleRelationship(Literals.PRICE__HARDWARE);
-    handleRelationship(Literals.PRICE__IMAGE);
-    handleRelationship(Literals.PRICE__LOCATION);
+    //handleRelationship(Literals.PRICE__HARDWARE);
+    //handleRelationship(Literals.PRICE__IMAGE);
+    //handleRelationship(Literals.PRICE__LOCATION);
   }
 
   private void handleRelationship(EReference eReference) {

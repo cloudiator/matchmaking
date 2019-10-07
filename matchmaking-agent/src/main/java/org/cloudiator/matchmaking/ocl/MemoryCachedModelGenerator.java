@@ -16,18 +16,22 @@ public class MemoryCachedModelGenerator implements ModelGenerator, Expirable {
 
   private final Cache<String, CloudiatorModel> modelCache;
   private final ModelGenerator delegate;
+  public final static int CACHE_INFINITE = -1;
 
   @Inject
   public MemoryCachedModelGenerator(@Named("Base") ModelGenerator delegate,
       @Named("cacheTime") int cacheTime) {
 
-    checkArgument(cacheTime >= 0, "cacheTime needs to be larger than zero");
+    checkArgument(cacheTime >= 0 || cacheTime == CACHE_INFINITE,
+        "cacheTime needs to be larger than zero or CACHE_INFINITE");
 
-    this.modelCache = CacheBuilder.newBuilder()
-        .expireAfterWrite(cacheTime,
-            TimeUnit.SECONDS)
-        .build();
+    final CacheBuilder<Object, Object> cacheBuilder = CacheBuilder.newBuilder();
 
+    if (cacheTime != CACHE_INFINITE) {
+      cacheBuilder.expireAfterWrite(cacheTime, TimeUnit.SECONDS);
+    }
+
+    this.modelCache = cacheBuilder.build();
     this.delegate = delegate;
   }
 

@@ -3,6 +3,8 @@ package org.cloudiator.matchmaking.ocl;
 import cloudiator.CloudiatorModel;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import de.uniulm.omi.cloudiator.sword.domain.QuotaSet;
+import java.util.Collections;
 import java.util.stream.Collectors;
 import org.cloudiator.matchmaking.converters.NodeCandidateConverter;
 import org.cloudiator.matchmaking.converters.RequirementConverter;
@@ -45,14 +47,15 @@ public class NodeCandidateListener implements Runnable {
 
             final CachedNodeGenerator cachedNodeGenerator = NodeCandidateCache
                 .cache(content.getUserId(), new DefaultNodeGenerator(
-                    NodeCandidateFactory.create(), cloudiatorModel));
+                    NodeCandidateFactory.create(), cloudiatorModel, new ByonUpdater()));
 
             final NodeCandidates nodeCandidates;
             if (Strings.isNullOrEmpty(content.getId())) {
               OclCsp oclCsp = OclCsp
                   .ofRequirements(
                       content.getRequirementsList().stream()
-                          .map(REQUIREMENT_CONVERTER).collect(Collectors.toList()), 1
+                          .map(REQUIREMENT_CONVERTER).collect(Collectors.toList()),
+                      Collections.emptyList(), QuotaSet.EMPTY, 1
                   );
 
               LOGGER.info(String.format("%s generated the csp %s.", this, oclCsp));
