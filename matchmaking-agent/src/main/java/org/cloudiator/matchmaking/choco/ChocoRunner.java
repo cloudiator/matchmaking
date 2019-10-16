@@ -5,7 +5,6 @@ import com.google.inject.Injector;
 import de.uniulm.omi.cloudiator.util.configuration.Configuration;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.matchmaking.experiment.ExperimentCSP;
-import org.cloudiator.matchmaking.ocl.ByonUpdater;
 import org.cloudiator.matchmaking.ocl.ConsistentNodeGenerator;
 import org.cloudiator.matchmaking.ocl.ConstraintChecker;
 import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator;
@@ -32,7 +31,7 @@ public class ChocoRunner {
     NodeGenerator nodeGenerator = new ConsistentNodeGenerator(
         new DefaultNodeGenerator(NodeCandidateFactory.create(),
             instance.generateModel("dummy_user_id"),
-            new ByonUpdater()),
+            null),
         ConstraintChecker.create(ExperimentCSP.CSP));
 
     new ChocoSolver().solve(ExperimentCSP.CSP, nodeGenerator.get(), null, 1);

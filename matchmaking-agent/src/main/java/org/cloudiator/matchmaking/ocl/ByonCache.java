@@ -27,11 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Singleton
-public final class ByonNodeCache {
+public final class ByonCache {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ByonNodeCache.class);
-  private final ByonUpdater updater;
+  private static final Logger LOGGER = LoggerFactory.getLogger(ByonCache.class);
+  private final ByonGenerator updater;
   private final Set<Expirable> expirableSet;
+  private static final ByonGenerator BYON_GENERATOR = new ByonGenerator();
   private volatile Map<ByonCacheKey, ByonNode> byonNodeCache = new HashMap<>();
   @SuppressWarnings("UnstableApiUsage")
   private final Cache<ByonCacheKey, ByonNode> tempCache =
@@ -48,9 +49,13 @@ public final class ByonNodeCache {
           .build();
 
   @Inject
-  public ByonNodeCache(ByonUpdater updater, Set<Expirable> expirableSet) {
+  public ByonCache(ByonGenerator updater, Set<Expirable> expirableSet) {
     this.updater = updater;
     this.expirableSet = expirableSet;
+  }
+
+  public ByonGenerator generator() {
+    return BYON_GENERATOR;
   }
 
   public synchronized Optional<ByonNode> add(ByonNode node) {
@@ -60,7 +65,6 @@ public final class ByonNodeCache {
     }
 
     ByonNode origByonNode = byonNodeCache.put(key, node);
-    publishUpdate();
     // invalidate caches
     expirableSet.stream().forEach(expirable -> expirable.expire(key.getUserId()));
 
@@ -99,15 +103,10 @@ public final class ByonNodeCache {
 
     ByonNode evictNode = byonNodeCache.get(key);
     byonNodeCache.remove(key);
-    publishUpdate();
     // invalidate caches
     expirableSet.stream().forEach(expirable -> expirable.expire(key.getUserId()));
 
     return Optional.of(evictNode);
-  }
-
-  private synchronized void publishUpdate() {
-    updater.update(this);
   }
 
   public synchronized Optional<ByonNode> hit(String id, String userId) {

@@ -23,7 +23,6 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
-import org.cloudiator.matchmaking.ocl.ByonUpdater.ByonTriple;
 import org.cloudiator.matchmaking.ocl.DefaultNodeGenerator.PriceCache.PriceKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,16 +35,16 @@ public class DefaultNodeGenerator implements NodeGenerator {
   private final NodeCandidateFactory nodeCandidateFactory;
   private final CloudiatorModel cloudiatorModel;
   @Nullable
-  private final ByonUpdater byonUpdater;
+  private final ByonCache byonCache;
 
   public DefaultNodeGenerator(NodeCandidateFactory nodeCandidateFactory,
-      CloudiatorModel cloudiatorModel, @Nullable ByonUpdater byonUpdater) {
+      CloudiatorModel cloudiatorModel, @Nullable ByonCache byonCache) {
     this.nodeCandidateFactory = nodeCandidateFactory;
     this.cloudiatorModel = cloudiatorModel;
     if (!PRICE_CACHE.exists(cloudiatorModel)) {
       PRICE_CACHE.load(cloudiatorModel);
     }
-    this.byonUpdater = byonUpdater;
+    this.byonCache = byonCache;
   }
 
   private static boolean isValidCombination(Image image, Hardware hardware, Location location) {
@@ -130,19 +129,10 @@ public class DefaultNodeGenerator implements NodeGenerator {
   }
 
   private Set<NodeCandidate> generateByonNodeCandidates() {
-
-    if (byonUpdater == null) {
+    if (byonCache == null) {
       return Collections.emptySet();
     }
-
-    Set<NodeCandidate> nodeCandidates = new HashSet<>();
-    Set<ByonTriple> triples = byonUpdater.getValidTriples();
-
-    for (ByonTriple triple : triples) {
-      nodeCandidates.add(nodeCandidateFactory.byon(triple.hardware, triple.image, triple.location));
-    }
-
-    return nodeCandidates;
+    return byonCache.generator().getNodeCandidates(byonCache.readAll());
   }
 
   private Set<NodeCandidate> generateFaasNodeCandidates(Cloud cloud) {

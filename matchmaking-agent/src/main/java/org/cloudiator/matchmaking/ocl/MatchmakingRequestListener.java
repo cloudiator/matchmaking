@@ -36,13 +36,13 @@ public class MatchmakingRequestListener implements Runnable {
   private static final QuotaConverter QUOTA_CONVERTER = QuotaConverter.INSTANCE;
   private final SolutionCache solutionCache;
   private final CloudService cloudService;
-  private final ByonNodeCache byonCache;
+  private final ByonCache byonCache;
   private final boolean considerQuota;
 
   @Inject
   public MatchmakingRequestListener(MessageInterface messageInterface, MetaSolver metaSolver,
       SolutionCache solutionCache, CloudService cloudService,
-      @Named("considerQuota") boolean considerQuota, ByonNodeCache byonCache) {
+      @Named("considerQuota") boolean considerQuota, ByonCache byonCache) {
     this.messageInterface = messageInterface;
     this.metaSolver = metaSolver;
     this.solutionCache = solutionCache;

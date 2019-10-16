@@ -28,11 +28,11 @@ public class ByonNodeEventSubscriber implements Runnable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ByonNodeEventSubscriber.class);
   private final ByonService byonService;
-  private final ByonNodeCache cache;
+  private final ByonCache cache;
 
   @Inject
   public ByonNodeEventSubscriber(ByonService byonService,
-      ByonNodeCache cache) {
+      ByonCache cache) {
     this.byonService = byonService;
     this.cache = cache;
   }
@@ -50,17 +50,17 @@ public class ByonNodeEventSubscriber implements Runnable {
 
   private void doManipulateCache(Byon.ByonNode byonNode, CacheOperation operation) {
 
-    switch(operation) {
+    switch (operation) {
 
       case ADD:
-        if(byonNode.getNodeData().getAllocated()) {
+        if (byonNode.getNodeData().getAllocated()) {
           LOGGER.error(String.format("Cannot add byon with id: %s to cache as it is in"
               + "inconsistent state: %s", byonNode.getId(), byonNode.getNodeData().getAllocated()));
         }
         cache.add(byonNode);
         break;
       case EVICT:
-        if(byonNode.getNodeData().getAllocated()) {
+        if (byonNode.getNodeData().getAllocated()) {
           LOGGER.error(String.format("Cannot evict byon with id: %s from cache as it is in"
               + "inconsistent state: %s", byonNode.getId(), byonNode.getNodeData().getAllocated()));
         }
@@ -74,7 +74,8 @@ public class ByonNodeEventSubscriber implements Runnable {
         }
         break;
       default:
-        throw new IllegalArgumentException(String.format("Unknown operation: %s for manipulating the cache.", operation));
+        throw new IllegalArgumentException(
+            String.format("Unknown operation: %s for manipulating the cache.", operation));
     }
   }
 }
