@@ -26,7 +26,7 @@ public class CompositePriceFunction implements PriceFunction {
 
     for (PriceFunction priceFunction : priceFunctions) {
       try {
-        priceFunction.calculatePricing(cloud, hardware, location, image, userId);
+        return priceFunction.calculatePricing(cloud, hardware, location, image, userId);
       } catch (Exception e) {
         //ignore
       }
