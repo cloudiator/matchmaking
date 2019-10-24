@@ -10,11 +10,12 @@ import cloudiator.Node;
 import cloudiator.NodeType;
 import com.google.common.base.MoreObjects;
 import javax.annotation.Nullable;
-import org.cloudiator.matchmaking.ocl.ByonUpdater;
+import org.cloudiator.matchmaking.ocl.ByonGenerator;
 
 public class NodeCandidate implements Comparable<NodeCandidate> {
 
   private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorFactory.eINSTANCE;
+  private String id;
   private NodeType type;
   private Cloud cloud;
   private Location location;
@@ -39,10 +40,11 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
     this.price = price;
   }
 
-  public NodeCandidate(Hardware hardware,
+  public NodeCandidate(String id, Hardware hardware,
       Image image, Location location) {
+    this.id = id;
     this.type = NodeType.BYON;
-    this.cloud = ByonUpdater.BYON_CLOUD;
+    this.cloud = ByonGenerator.BYON_CLOUD;
     this.hardware = hardware;
     this.image = image;
     this.location = location;
@@ -76,8 +78,11 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
     return node;
   }
 
-  public String id() {
-    return ID_GENERATOR.generateId(this);
+  public synchronized String id() {
+    if (id == null) {
+      id = ID_GENERATOR.generateId(this);
+    }
+    return id;
   }
 
   public Node getNode() {
@@ -211,9 +216,9 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
       return new NodeCandidate(cloud, hardware, image, location, price);
     }
 
-    public NodeCandidate byon(Hardware hardware, Image image,
+    public NodeCandidate byon(String id, Hardware hardware, Image image,
         Location location) {
-      return new NodeCandidate(hardware, image, location);
+      return new NodeCandidate(id, hardware, image, location);
     }
 
     public NodeCandidate of(Cloud cloud, Location location, Hardware hardware,

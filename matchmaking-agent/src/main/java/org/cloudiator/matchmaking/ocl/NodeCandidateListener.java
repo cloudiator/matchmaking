@@ -26,12 +26,14 @@ public class NodeCandidateListener implements Runnable {
   private final Logger LOGGER = LoggerFactory.getLogger(NodeCandidateListener.class);
   private final MessageInterface messageInterface;
   private final ModelGenerator modelGenerator;
+  private final ByonCache byonCache;
 
   @Inject
   public NodeCandidateListener(MessageInterface messageInterface,
-      ModelGenerator modelGenerator) {
+      ModelGenerator modelGenerator, ByonCache byonCache) {
     this.messageInterface = messageInterface;
     this.modelGenerator = modelGenerator;
+    this.byonCache = byonCache;
   }
 
   @Override
@@ -47,7 +49,7 @@ public class NodeCandidateListener implements Runnable {
 
             final CachedNodeGenerator cachedNodeGenerator = NodeCandidateCache
                 .cache(content.getUserId(), new DefaultNodeGenerator(
-                    NodeCandidateFactory.create(), cloudiatorModel, new ByonUpdater()));
+                    NodeCandidateFactory.create(), cloudiatorModel, byonCache));
 
             final NodeCandidates nodeCandidates;
             if (Strings.isNullOrEmpty(content.getId())) {

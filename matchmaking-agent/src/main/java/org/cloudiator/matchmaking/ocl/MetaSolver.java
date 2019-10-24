@@ -43,15 +43,15 @@ public class MetaSolver {
   private final ListeningExecutorService executorService;
   private final ModelGenerator modelGenerator;
   private final int solvingTime;
-  private final ByonNodeCache byonNodeCache;
+  private final ByonCache byonCache;
 
   @Inject
   public MetaSolver(
       ModelGenerator modelGenerator, Set<Solver> solvers, @Named("solvingTime") int solvingTime,
-      ByonNodeCache byonNodeCache) {
+      ByonCache byonCache) {
     this.modelGenerator = modelGenerator;
     this.solvers = solvers;
-    this.byonNodeCache = byonNodeCache;
+    this.byonCache = byonCache;
     executorService = MoreExecutors
         .listeningDecorator(Executors.newCachedThreadPool());
     this.solvingTime = solvingTime;
@@ -110,8 +110,9 @@ public class MetaSolver {
         new QuotaFilter(
             cloudiatorModel, new ConsistentNodeGenerator(
             NodeCandidateCache
-                .cache(userId, new DefaultNodeGenerator(nodeCandidateFactory, cloudiatorModel, new ByonUpdater()
-                )),
+                .cache(userId,
+                    new DefaultNodeGenerator(nodeCandidateFactory, cloudiatorModel, byonCache
+                    )),
             cc), csp.getQuotaSet());
 
     long startGeneration = System.currentTimeMillis();
@@ -149,7 +150,7 @@ public class MetaSolver {
               .solve(csp, possibleNodes, existingSolution.orElse(null), nodeSize);
           long solvingTime = System.currentTimeMillis() - startSolving;
           solve.setTime(solvingTime);
-          byonNodeCache.evictBySolution(solve,userId);
+          byonCache.evictBySolution(solve, userId);
           return solve;
         } catch (Throwable t) {
           LOGGER.warn(String.format("Error while executing solver %s on CSP %s", solver, csp), t);

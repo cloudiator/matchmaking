@@ -62,6 +62,6 @@ public class OclServiceModule extends AbstractModule {
       bind(ModelGenerator.class).to(oclContext.modelGenerator().modelGeneratorClass());
     }
 
-    bind(ByonUpdater.class).asEagerSingleton();
+    bind(ByonGenerator.class).asEagerSingleton();
   }
 }
