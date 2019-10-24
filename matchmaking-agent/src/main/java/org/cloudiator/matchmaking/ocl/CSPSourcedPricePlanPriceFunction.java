@@ -61,4 +61,9 @@ public class CSPSourcedPricePlanPriceFunction implements PriceFunction {
 
         return cloudUser2PriceMap.computeIfAbsent(cloudUserKey, k -> pricingSupplierFactory.newInstance(userId, cloud.getApi().getProviderName()).get());
     }
+
+    @Override
+    public int getPriority() {
+        return Priority.HIGH;
+    }
 }

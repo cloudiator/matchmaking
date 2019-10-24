@@ -14,7 +14,8 @@ public class ExperimentModelPriceFunction implements PriceFunction {
   private static final HardwareBasedPriceFunction HARDWARE_BASED_PRICE_FUNCTION = new HardwareBasedPriceFunction();
 
   @Override
-  public double calculatePricing(Cloud cloud, Hardware hardware, Location location, Image image, String userId) {
+  public double calculatePricing(Cloud cloud, Hardware hardware, Location location, Image image,
+      String userId) {
     //basic price
     double basicPrice = HARDWARE_BASED_PRICE_FUNCTION
         .calculatePricing(cloud, hardware, location, image, null);
@@ -32,5 +33,10 @@ public class ExperimentModelPriceFunction implements PriceFunction {
     double locationFactor = LocationGenerator.OPTIONS.get(location.getGeoLocation().getCountry());
 
     return (basicPrice + imageCost) * cloudFactor * locationFactor;
+  }
+
+  @Override
+  public int getPriority() {
+    return Priority.LOW;
   }
 }
