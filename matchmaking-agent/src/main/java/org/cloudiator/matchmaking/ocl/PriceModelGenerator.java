@@ -29,7 +29,8 @@ public class PriceModelGenerator {
           price.setHardware(hardware);
           price.setLocation(location);
           price.setImage(image);
-          price.setPrice(priceFunction.calculatePricing(cloud, hardware, location, image, userId));
+          price.setPrice(priceFunction.calculatePricing(cloud, hardware, location, image, userId)
+              .orElseThrow(() -> new IllegalStateException("Could not calculate pricing.")));
           cloud.getPrices().add(price);
         }
       }

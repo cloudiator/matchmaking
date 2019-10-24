@@ -5,11 +5,12 @@ import cloudiator.CloudType;
 import cloudiator.Hardware;
 import cloudiator.Image;
 import cloudiator.Location;
+import java.util.Optional;
 
 public class HardwareBasedPriceFunction implements PriceFunction {
 
   @Override
-  public double calculatePricing(Cloud cloud, Hardware hardware, Location location, Image image,
+  public Optional<Double> calculatePricing(Cloud cloud, Hardware hardware, Location location, Image image,
       String userId) {
 
     double price = 0;
@@ -21,10 +22,10 @@ public class HardwareBasedPriceFunction implements PriceFunction {
     }
 
     if (cloud.getType().equals(CloudType.PRIVATE)) {
-      return price / 2;
+      return Optional.of(price / 2);
     }
 
-    return price;
+    return Optional.of(price);
   }
 
   @Override

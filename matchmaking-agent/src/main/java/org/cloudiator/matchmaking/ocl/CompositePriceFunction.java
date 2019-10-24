@@ -6,6 +6,7 @@ import cloudiator.Image;
 import cloudiator.Location;
 import com.google.inject.Inject;
 import de.uniulm.omi.cloudiator.util.execution.Prioritized;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -21,18 +22,23 @@ public class CompositePriceFunction implements PriceFunction {
   }
 
   @Override
-  public double calculatePricing(Cloud cloud, Hardware hardware, Location location, Image image,
+  public Optional<Double> calculatePricing(Cloud cloud, Hardware hardware, Location location,
+      Image image,
       String userId) {
 
     for (PriceFunction priceFunction : priceFunctions) {
       try {
-        return priceFunction.calculatePricing(cloud, hardware, location, image, userId);
+        final Optional<Double> price = priceFunction
+            .calculatePricing(cloud, hardware, location, image, userId);
+        if (price.isPresent()) {
+          return price;
+        }
       } catch (Exception e) {
         //ignore
       }
     }
 
-    throw new IllegalStateException("Could not calculate pricing.");
+    return Optional.empty();
   }
 
   @Override

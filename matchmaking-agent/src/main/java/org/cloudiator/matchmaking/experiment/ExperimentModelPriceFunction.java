@@ -5,6 +5,7 @@ import cloudiator.Hardware;
 import cloudiator.Image;
 import cloudiator.Location;
 import java.math.BigDecimal;
+import java.util.Optional;
 import org.cloudiator.matchmaking.experiment.LargeModelGenerator.LocationGenerator;
 import org.cloudiator.matchmaking.ocl.HardwareBasedPriceFunction;
 import org.cloudiator.matchmaking.ocl.PriceFunction;
@@ -14,11 +15,11 @@ public class ExperimentModelPriceFunction implements PriceFunction {
   private static final HardwareBasedPriceFunction HARDWARE_BASED_PRICE_FUNCTION = new HardwareBasedPriceFunction();
 
   @Override
-  public double calculatePricing(Cloud cloud, Hardware hardware, Location location, Image image,
+  public Optional<Double> calculatePricing(Cloud cloud, Hardware hardware, Location location, Image image,
       String userId) {
     //basic price
     double basicPrice = HARDWARE_BASED_PRICE_FUNCTION
-        .calculatePricing(cloud, hardware, location, image, null);
+        .calculatePricing(cloud, hardware, location, image, null).get();
 
     //include image
     //do nothing at the moment
@@ -32,7 +33,7 @@ public class ExperimentModelPriceFunction implements PriceFunction {
     //include location factor
     double locationFactor = LocationGenerator.OPTIONS.get(location.getGeoLocation().getCountry());
 
-    return (basicPrice + imageCost) * cloudFactor * locationFactor;
+    return Optional.of((basicPrice + imageCost) * cloudFactor * locationFactor);
   }
 
   @Override

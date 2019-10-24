@@ -72,7 +72,7 @@ public class LargeModelGenerator implements ModelGenerator {
             price.setHardware(hardware);
             price.setImage(image);
             price.setLocation(location);
-            price.setPrice(PRICE_FUNCTION.calculatePricing(cloud, hardware, location, image, null));
+            price.setPrice(PRICE_FUNCTION.calculatePricing(cloud, hardware, location, image, null).get());
             cloud.getPrices().add(price);
           }
         }
