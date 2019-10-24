@@ -14,10 +14,10 @@ public class ExperimentModelPriceFunction implements PriceFunction {
   private static final HardwareBasedPriceFunction HARDWARE_BASED_PRICE_FUNCTION = new HardwareBasedPriceFunction();
 
   @Override
-  public double calculatePricing(Cloud cloud, Hardware hardware, Location location, Image image) {
+  public double calculatePricing(Cloud cloud, Hardware hardware, Location location, Image image, String userId) {
     //basic price
     double basicPrice = HARDWARE_BASED_PRICE_FUNCTION
-        .calculatePricing(cloud, hardware, location, image);
+        .calculatePricing(cloud, hardware, location, image, null);
 
     //include image
     //do nothing at the moment

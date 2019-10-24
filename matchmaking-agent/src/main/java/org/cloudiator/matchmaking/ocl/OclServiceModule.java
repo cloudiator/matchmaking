@@ -3,10 +3,13 @@ package org.cloudiator.matchmaking.ocl;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import org.cloudiator.matchmaking.choco.ChocoSolver;
 import org.cloudiator.matchmaking.domain.Solver;
+import org.cloudiator.messaging.services.PricingService;
+import org.cloudiator.messaging.services.PricingServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +36,7 @@ public class OclServiceModule extends AbstractModule {
     expireBinder.addBinding().to(SolutionCacheImpl.class);
     expireBinder.addBinding().to(NodeCandidateCache.class);
 
-    bind(PriceFunction.class).to(HardwareBasedPriceFunction.class);
+    bind(PriceFunction.class).to(CSPSourcedPricePlanPriceFunction.class).in(Scopes.SINGLETON);
 
     LOGGER.info(String.format("Using %s as model generator.",
         oclContext.modelGenerator().modelGeneratorClass().getName()));

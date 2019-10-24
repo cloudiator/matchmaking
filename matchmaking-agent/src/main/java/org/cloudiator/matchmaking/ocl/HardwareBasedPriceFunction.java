@@ -9,8 +9,8 @@ import cloudiator.Location;
 public class HardwareBasedPriceFunction implements PriceFunction {
 
   @Override
-  public double calculatePricing(Cloud cloud, Hardware hardware, Location location, Image image) {
-
+  public double calculatePricing(Cloud cloud, Hardware hardware, Location location, Image image, String userId) {
+  
     double price = 0;
     price += hardware.getCores();
     price += hardware.getRam() / 1000;

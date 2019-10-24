@@ -20,7 +20,7 @@ public class PriceModelGenerator {
     this.priceFunction = priceFunction;
   }
 
-  public void generatePriceModel(Cloud cloud) {
+  public void generatePriceModel(Cloud cloud, String userId) {
 
     for (Hardware hardware : cloud.getHardwareList()) {
       for (Image image : cloud.getImages()) {
@@ -29,7 +29,7 @@ public class PriceModelGenerator {
           price.setHardware(hardware);
           price.setLocation(location);
           price.setImage(image);
-          price.setPrice(priceFunction.calculatePricing(cloud, hardware, location, image));
+          price.setPrice(priceFunction.calculatePricing(cloud, hardware, location, image, userId));
           cloud.getPrices().add(price);
         }
       }

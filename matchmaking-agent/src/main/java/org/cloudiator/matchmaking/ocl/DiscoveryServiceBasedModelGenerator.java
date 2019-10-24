@@ -50,7 +50,7 @@ public class DiscoveryServiceBasedModelGenerator {
         cloud.getHardwareList().addAll(hardwareSupplierFactory.newInstance(cloud, userId).get());
         cloud.getImages().addAll(imageSupplierFactory.newInstance(cloud, userId).get());
 
-        priceModelGenerator.generatePriceModel(cloud);
+        priceModelGenerator.generatePriceModel(cloud, userId);
 
         return cloud;
       }).forEach(cloud -> cloudiatorModel.getClouds().add(cloud));
