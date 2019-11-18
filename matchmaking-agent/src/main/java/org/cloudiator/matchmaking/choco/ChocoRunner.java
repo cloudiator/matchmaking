@@ -12,7 +12,7 @@ import org.cloudiator.matchmaking.ocl.ModelGenerationException;
 import org.cloudiator.matchmaking.ocl.ModelGenerator;
 import org.cloudiator.matchmaking.ocl.NodeGenerator;
 import org.cloudiator.matchmaking.ocl.OclContext;
-import org.cloudiator.matchmaking.ocl.OclServiceModule;
+import org.cloudiator.matchmaking.ocl.MatchmakingModule;
 import org.cloudiator.messaging.kafka.KafkaContext;
 import org.cloudiator.messaging.kafka.KafkaMessagingModule;
 import org.cloudiator.messaging.services.MessageServiceModule;
@@ -23,7 +23,7 @@ public class ChocoRunner {
 
     Injector injector = Guice.createInjector(new MessageServiceModule(),
         new KafkaMessagingModule(new KafkaContext(Configuration.conf().getConfig("kafka"))),
-        new OclServiceModule(
+        new MatchmakingModule(
             new OclContext(Configuration.conf().getConfig("ocl"))));
 
     final ModelGenerator instance = injector.getInstance(ModelGenerator.class);

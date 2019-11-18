@@ -8,7 +8,7 @@ import org.cloudiator.matchmaking.ocl.DiscoveryListener;
 import org.cloudiator.matchmaking.ocl.MatchmakingRequestListener;
 import org.cloudiator.matchmaking.ocl.NodeCandidateListener;
 import org.cloudiator.matchmaking.ocl.OclContext;
-import org.cloudiator.matchmaking.ocl.OclServiceModule;
+import org.cloudiator.matchmaking.ocl.MatchmakingModule;
 import org.cloudiator.matchmaking.ocl.SolutionRequestListener;
 import org.cloudiator.messaging.kafka.KafkaContext;
 import org.cloudiator.messaging.kafka.KafkaMessagingModule;
@@ -18,7 +18,7 @@ public class MatchmakingAgent {
 
   private final static Injector injector = Guice
       .createInjector(new MessageServiceModule(),
-          new OclServiceModule(new OclContext(Configuration.conf().getConfig("matchmaking"))),
+          new MatchmakingModule(new OclContext(Configuration.conf().getConfig("matchmaking"))),
           new KafkaMessagingModule(new KafkaContext(
               Configuration.conf())));
 

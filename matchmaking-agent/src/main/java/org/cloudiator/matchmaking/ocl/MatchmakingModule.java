@@ -6,17 +6,16 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
-import org.cloudiator.matchmaking.choco.ChocoSolver;
 import org.cloudiator.matchmaking.domain.Solver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OclServiceModule extends AbstractModule {
+public class MatchmakingModule extends AbstractModule {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(OclServiceModule.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MatchmakingModule.class);
   private final OclContext oclContext;
 
-  public OclServiceModule(OclContext oclContext) {
+  public MatchmakingModule(OclContext oclContext) {
     checkNotNull(oclContext, "oclContext is null");
     this.oclContext = oclContext;
   }
@@ -25,8 +24,23 @@ public class OclServiceModule extends AbstractModule {
   protected void configure() {
 
     Multibinder<Solver> solverBinder = Multibinder.newSetBinder(binder(), Solver.class);
-    solverBinder.addBinding().to(ChocoSolver.class);
-    solverBinder.addBinding().to(BestFitSolver.class);
+
+    for (String clazz : oclContext.solvers()) {
+
+      try {
+        Class<? extends Solver> solverClass = Class.forName(clazz).asSubclass(Solver.class);
+        solverBinder.addBinding().to(solverClass);
+        LOGGER.info(String.format("%s is loading the solver %s", this, solverClass));
+      } catch (ClassNotFoundException e) {
+        throw new IllegalStateException(String.format("Could not find solver with name %s.", clazz),
+            e);
+      } catch (ClassCastException e) {
+        throw new IllegalStateException(
+            String.format("Class %s does not implement Solver interface.", clazz), e);
+      }
+
+
+    }
 
     //expire binder
     Multibinder<Expirable> expireBinder = Multibinder

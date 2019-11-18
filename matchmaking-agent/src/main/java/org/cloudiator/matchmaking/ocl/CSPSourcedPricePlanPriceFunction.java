@@ -51,7 +51,7 @@ public class CSPSourcedPricePlanPriceFunction implements PriceFunction {
         .orElse(null);
 
     if (price == null) {
-      LOGGER.warn(String.format(
+      LOGGER.trace(String.format(
           "No pricing data found for: CSP: %s, Location: %s, Instance: %s, OS: %s, %s. sha256 (asLong) key: %d"
           , cloud.getApi().getProviderName()
           , locationProviderId

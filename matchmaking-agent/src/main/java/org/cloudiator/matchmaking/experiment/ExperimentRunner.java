@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.cloudiator.matchmaking.choco.TimeLimit;
-import org.cloudiator.matchmaking.cmpl.CmplTesting;
+import org.cloudiator.matchmaking.cmpl.CMPLSolver;
 import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.experiment.Experiment.CloudiatorModelType;
 import org.cloudiator.matchmaking.ocl.OclCsp;
@@ -53,8 +53,9 @@ public class ExperimentRunner {
       for (int rep = 0; rep < experiment.getRepetitions(); rep++) {
         Solution solution = null;
         if (!experiment.isIterative()) {
-          solution = CmplTesting
-              .solve(experiment.getNodeSize(), experiment.getCloudiatorModelType().getCandidates());
+          solution = new CMPLSolver()
+              .solve(csp, experiment.getCloudiatorModelType().getCandidates(), null,
+                  experiment.getNodeSize());
           //solution = chocoSolverTesting
           //    .solveDirect(experiment.getNodeSize(), experiment.getLimit());
         } else {

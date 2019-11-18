@@ -3,6 +3,7 @@ package org.cloudiator.matchmaking.ocl;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import de.uniulm.omi.cloudiator.util.configuration.Configuration;
+import java.util.List;
 
 public class OclContext {
 
@@ -19,6 +20,10 @@ public class OclContext {
 
   public ModelGenerators modelGenerator() {
     return ModelGenerators.valueOf(config.getString("discoveryModel"));
+  }
+
+  public List<String> solvers() {
+    return config.getStringList("solvers");
   }
 
   public int cacheTime() {

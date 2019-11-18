@@ -9,6 +9,7 @@ public class OclTestCsp {
   }
 
   public static final HashSet<String> TEST_CSP = new HashSet<String>() {{
+    add("nodes->forAll(type = NodeType::IAAS)");
     add("nodes->exists(location.geoLocation.country = 'DE')");
     add("nodes->forAll(n | n.hardware.cores >= 2)");
     add("nodes->isUnique(n | n.location.geoLocation.country)");
