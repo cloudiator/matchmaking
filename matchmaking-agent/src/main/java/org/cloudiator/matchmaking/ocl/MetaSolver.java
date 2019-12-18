@@ -1,224 +1,146 @@
 package org.cloudiator.matchmaking.ocl;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.checkNotNull;
 
-import cloudiator.CloudiatorModel;
-import com.google.common.base.Joiner;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import de.uniulm.omi.cloudiator.util.StreamUtil;
-import io.github.cloudiator.domain.Node;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
-import javax.inject.Named;
-import org.cloudiator.matchmaking.domain.NodeCandidate;
-import org.cloudiator.matchmaking.domain.NodeCandidate.NodeCandidateFactory;
 import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.domain.Solver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Singleton
-public class MetaSolver {
+public class MetaSolver implements Solver {
 
-  private static final NodeCandidateFactory nodeCandidateFactory = NodeCandidateFactory.create();
-  private static final Logger LOGGER = LoggerFactory.getLogger(MetaSolver.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SolverHandler.class);
   private final Set<Solver> solvers;
   private final ListeningExecutorService executorService;
-  private final ModelGenerator modelGenerator;
   private final int solvingTime;
-  private final ByonCache byonCache;
 
-  @Inject
-  public MetaSolver(
-      ModelGenerator modelGenerator, Set<Solver> solvers, @Named("solvingTime") int solvingTime,
-      ByonCache byonCache) {
-    this.modelGenerator = modelGenerator;
+  public MetaSolver(Set<Solver> solvers, int solvingTime) {
     this.solvers = solvers;
-    this.byonCache = byonCache;
+    this.solvingTime = solvingTime;
     executorService = MoreExecutors
         .listeningDecorator(Executors.newCachedThreadPool());
-    this.solvingTime = solvingTime;
     MoreExecutors.addDelayedShutdownHook(executorService, 1, TimeUnit.MINUTES);
   }
 
-  private Optional<Solution> generateExistingSolution(List<Node> existingNodes,
-      NodeCandidates nodeCandidates) throws ModelGenerationException {
+  private class SolutionCollector implements Consumer<Solution> {
 
-    if (existingNodes.isEmpty()) {
-      return Optional.empty();
+    private final CountDownLatch countDownLatch;
+    private List<Solution> collectedSolutions = new LinkedList<>();
+
+    private SolutionCollector(int numberOfSolvers) {
+      countDownLatch = new CountDownLatch(numberOfSolvers);
     }
 
-    List<NodeCandidate> candidates = new ArrayList<>(existingNodes.size());
-    for (Node existingNode : existingNodes) {
-      if (!existingNode.nodeCandidate().isPresent()) {
-        throw new ModelGenerationException(
-            String.format("NodeCandidate for node %s is unknown.", existingNode));
+    @Override
+    public void accept(Solution solution) {
+      if (solution.isOptimal()) {
+        collectedSolutions.add(solution);
+        //directly count down
+        while (countDownLatch.getCount() > 0) {
+          countDownLatch.countDown();
+        }
+      } else {
+        collectedSolutions.add(solution);
+        countDownLatch.countDown();
       }
-      final Optional<NodeCandidate> existingNodeCandidate = nodeCandidates.stream()
-          .filter(nodeCandidate -> nodeCandidate.id().equals(existingNode.nodeCandidate().get()))
-          .collect(StreamUtil.getOnly());
-
-      candidates.add(existingNodeCandidate.orElseThrow(() -> new ModelGenerationException(String
-          .format("NodeCandidate with id %s is no longer valid.",
-              existingNode.nodeCandidate().get()))));
-
     }
 
-    return Optional.of(Solution.of(candidates));
+    public List<Solution> waitFor(long l, TimeUnit timeUnit) throws InterruptedException {
+      countDownLatch.await(l, timeUnit);
+      return collectedSolutions;
+    }
+
+
+    public void fail() {
+      countDownLatch.countDown();
+    }
   }
 
-  private int deriveNodeSize(List<Node> existingNodes,
-      @Nullable Integer minimumNodeSize) {
-    if (minimumNodeSize == null) {
-      return existingNodes.size() + 1;
+  private class SolutionCallback implements FutureCallback<Solution> {
+
+    private final Solver solver;
+    private final long startTime;
+    private final SolutionCollector solutionCollector;
+
+    private SolutionCallback(Solver solver, long startTime,
+        SolutionCollector solutionCollector) {
+      this.solver = solver;
+      this.startTime = startTime;
+      this.solutionCollector = solutionCollector;
     }
-    return minimumNodeSize;
+
+    @Override
+    public void onSuccess(@Nullable Solution solution) {
+      checkNotNull(solution, "solution is null");
+      long solvingTime = System.currentTimeMillis() - startTime;
+      solution.setTime(solvingTime);
+      solutionCollector.accept(solution);
+    }
+
+    @Override
+    public void onFailure(Throwable throwable) {
+      LOGGER.warn(String.format("Solver %s failed to find a solution due to an error.", solver),
+          throwable);
+      solutionCollector.fail();
+    }
   }
 
-  @Nullable
-  public synchronized Solution solve(OclCsp csp, String userId)
-      throws ModelGenerationException {
 
-    final int nodeSize = deriveNodeSize(csp.getExistingNodes(), csp.getMinimumNodeSize());
+  @Override
+  public Solution solve(OclCsp oclCsp, NodeCandidates nodeCandidates,
+      @Nullable Solution existingSolution, @Nullable Integer targetNodeSize)
+      throws InterruptedException {
 
-    ConstraintChecker cc = ConstraintChecker.create(csp);
-
-    LOGGER.debug(String
-        .format("%s is solving CSP %s for user %s for target node size %s.",
-            this, csp, userId,
-            nodeSize));
-
-    final CloudiatorModel cloudiatorModel = modelGenerator.generateModel(userId);
-    NodeGenerator nodeGenerator =
-        new QuotaFilter(
-            cloudiatorModel, new ConsistentNodeGenerator(
-            NodeCandidateCache
-                .cache(userId,
-                    new DefaultNodeGenerator(nodeCandidateFactory, cloudiatorModel, byonCache
-                    )),
-            cc), csp.getQuotaSet());
-
-    long startGeneration = System.currentTimeMillis();
-
-    //generate node candidates
-    final NodeCandidates possibleNodes = nodeGenerator.get();
-
-    LOGGER.debug(String.format("CSP %s has %s possible candidates.", csp,
-        possibleNodes.size()));
-
-    if (possibleNodes.isEmpty()) {
-      LOGGER.info(String.format(
-          "CSP %s can not have a solution as possible candidates is empty. Returning without solvers.",
-          csp));
-      return Solution.EMPTY_SOLUTION;
-    }
-
-    Optional<Solution> existingSolution = generateExistingSolution(csp.getExistingNodes(),
-        possibleNodes);
-
-    long generationTime = System.currentTimeMillis() - startGeneration;
-    LOGGER.info(
-        String.format("Possible candidate generation for CSP %s took %s", csp, generationTime));
-
-    LOGGER.info(
-        String.format("Start solving of csp: %s using the following solvers: %s", csp,
-            Joiner.on(",").join(solvers)));
     long startSolving = System.currentTimeMillis();
 
-    List<Callable<Solution>> solverCallables = new LinkedList<>();
+    SolutionCollector solutionCollector = new SolutionCollector(solvers.size());
+
     for (Solver solver : solvers) {
-      solverCallables.add(() -> {
-        try {
-          final Solution solve = solver
-              .solve(csp, possibleNodes, existingSolution.orElse(null), nodeSize);
-          long solvingTime = System.currentTimeMillis() - startSolving;
-          solve.setTime(solvingTime);
-          byonCache.evictBySolution(solve, userId);
-          return solve;
-        } catch (Throwable t) {
-          LOGGER.warn(String.format("Error while executing solver %s on CSP %s", solver, csp), t);
-          return null;
-        }
-      });
+      final ListenableFuture<Solution> solutionFuture = executorService
+          .submit(wrapSolverCall(solver, oclCsp, nodeCandidates, existingSolution, targetNodeSize));
+      Futures.addCallback(solutionFuture,
+          new SolutionCallback(solver, startSolving, solutionCollector));
     }
 
     try {
-
-      final List<Future<Solution>> futures = executorService
-          .invokeAll(solverCallables, solvingTime, TimeUnit.MINUTES);
-
-      //get all solutions and filter failed ones
-      final List<Solution> initialSolutions = futures.stream().map(future -> {
-        try {
-          checkState(future.isDone(), "Expected future to be done, by contract of invokeAll");
-          return future.get();
-        } catch (InterruptedException | ExecutionException | CancellationException e) {
-          return null;
-        }
-      }).collect(Collectors.toList());
-
-      LOGGER.info(
-          String.format("Finished solving of csp: %s.", csp));
-
-      final List<Solution> solutions = initialSolutions.stream().filter(
-          Objects::nonNull).filter(solution -> !solution.noSolution()).collect(Collectors.toList());
-
-      final Optional<Solution> anyOptimalSolution = solutions.stream()
-          .filter(new Predicate<Solution>() {
-            @Override
-            public boolean test(Solution solution) {
-              return solution.isOptimal();
-            }
-          }).findAny();
-      if (anyOptimalSolution.isPresent()) {
-        final Solution optimalSolution = anyOptimalSolution.get();
-
-        LOGGER.info(
-            String.format("Found optimal solution %s for csp: %s.", optimalSolution, csp));
-
-        return optimalSolution;
-      }
-
+      final List<Solution> solutions = solutionCollector.waitFor(solvingTime, TimeUnit.MINUTES);
+      //find best solution
       final Optional<Solution> minOptional = solutions.stream().min(Comparator.naturalOrder());
-      if (minOptional.isPresent()) {
-        final Solution solution = minOptional.get();
-        solution.setTime(solvingTime);
 
-        LOGGER.info(
-            String.format("Not found an optimal solution. Using best solution %s for csp: %s.",
-                solution, csp));
-
-        return solution;
-      }
-
-      LOGGER.info(
-          String.format("No solution found for csp: %s.", csp));
-
-      return Solution.EMPTY_SOLUTION;
-
+      return minOptional.orElse(Solution.EMPTY_SOLUTION);
 
     } catch (InterruptedException e) {
-      LOGGER.warn("Solver got interrupted while solving CSP " + csp, e);
-      Thread.currentThread().interrupt();
-      return Solution.EMPTY_SOLUTION;
+      LOGGER.warn("MetaSolver got interrupted while searching for solution");
+      throw e;
+    } finally {
+      executorService.shutdownNow();
     }
   }
 
+  private Callable<Solution> wrapSolverCall(Solver solver, OclCsp oclCsp,
+      NodeCandidates nodeCandidates, @Nullable Solution existingSolution,
+      @Nullable Integer targetNodeSize) {
+    return new Callable<Solution>() {
+      @Override
+      public Solution call() throws Exception {
+        return solver.solve(oclCsp, nodeCandidates, existingSolution, targetNodeSize);
+      }
+    };
+  }
 }

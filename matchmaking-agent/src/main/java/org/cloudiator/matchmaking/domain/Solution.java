@@ -70,6 +70,10 @@ public class Solution implements Comparable<Solution> {
     return isOptimal;
   }
 
+  public boolean isEmpty() {
+    return nodeCandidates.isEmpty();
+  }
+
   public boolean noSolution() {
     return nodeCandidates.isEmpty();
   }

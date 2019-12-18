@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import javax.inject.Named;
-import org.cloudiator.matchmaking.ocl.MetaSolver;
+import org.cloudiator.matchmaking.ocl.SolverHandler;
 import org.cloudiator.matchmaking.ocl.ModelGenerationException;
 import org.cloudiator.matchmaking.ocl.ModelGenerator;
 import org.eclipse.emf.common.util.URI;
@@ -26,7 +26,7 @@ public class FileCachedModelGenerator implements ModelGenerator {
   private static final String FILE_NAME = FILE_DESC + "." + FILE_ENDING;
 
   private static final CloudiatorFactory CLOUDIATOR_FACTORY = CloudiatorFactory.eINSTANCE;
-  private static final Logger LOGGER = LoggerFactory.getLogger(MetaSolver.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SolverHandler.class);
   private final ModelGenerator delegate;
 
   @Inject

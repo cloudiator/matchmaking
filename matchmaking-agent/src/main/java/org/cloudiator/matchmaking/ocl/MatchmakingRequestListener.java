@@ -29,7 +29,7 @@ public class MatchmakingRequestListener implements Runnable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(MatchmakingRequestListener.class);
   private final MessageInterface messageInterface;
-  private final MetaSolver metaSolver;
+  private final SolverHandler solverHandler;
   private static final RequirementConverter REQUIREMENT_CONVERTER = RequirementConverter.INSTANCE;
   private static final SolutionConverter SOLUTION_CONVERTER = SolutionConverter.INSTANCE;
   private static final NodeToNodeMessageConverter NODE_CONVERTER = NodeToNodeMessageConverter.INSTANCE;
@@ -40,11 +40,11 @@ public class MatchmakingRequestListener implements Runnable {
   private final boolean considerQuota;
 
   @Inject
-  public MatchmakingRequestListener(MessageInterface messageInterface, MetaSolver metaSolver,
+  public MatchmakingRequestListener(MessageInterface messageInterface, SolverHandler solverHandler,
       SolutionCache solutionCache, CloudService cloudService,
       @Named("considerQuota") boolean considerQuota, ByonCache byonCache) {
     this.messageInterface = messageInterface;
-    this.metaSolver = metaSolver;
+    this.solverHandler = solverHandler;
     this.solutionCache = solutionCache;
     this.cloudService = cloudService;
     this.byonCache = byonCache;
@@ -120,7 +120,7 @@ public class MatchmakingRequestListener implements Runnable {
                   return;
                 }
 
-                Solution solution = metaSolver
+                Solution solution = solverHandler
                     .solve(oclCsp, userId);
 
                 if (solution == null || solution.noSolution()) {

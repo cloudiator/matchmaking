@@ -7,6 +7,7 @@ import org.cloudiator.matchmaking.domain.Solution;
 
 public interface Solver {
 
-  Solution solve(OclCsp oclCsp, NodeCandidates nodeCandidates, @Nullable Solution existingSolution, @Nullable Integer targetNodeSize);
+  Solution solve(OclCsp oclCsp, NodeCandidates nodeCandidates, @Nullable Solution existingSolution, @Nullable Integer targetNodeSize)
+      throws InterruptedException;
 
 }
