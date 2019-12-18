@@ -22,6 +22,8 @@ public class OclTestCsp {
     add("nodes->forAll(n | Set{'ulm','stuttgart','freiburg'}->includes(n.location.geoLocation.country))");
     add("nodes->forAll(n | Set{'IE'}->includes(n.location.geoLocation.country))");
     add("nodes->collect(n | n.cloud)->asSet()->size() >= 2");
+    add("nodes->forAll(n | n.cloud.type = CloudType::PUBLIC implies n.location.geoLocation.country = 'IE')");
+    add("nodes->select(n | n.cloud.type = CloudType::PUBLIC)->size() = 40 / 2");
   }};
 
 }

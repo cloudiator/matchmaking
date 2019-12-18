@@ -16,6 +16,7 @@ import cloudiator.LocationScope;
 import cloudiator.OSArchitecture;
 import cloudiator.OSFamily;
 import cloudiator.OperatingSystem;
+import cloudiator.Price;
 import java.util.UUID;
 
 public class ExampleModel {
@@ -32,7 +33,27 @@ public class ExampleModel {
     generateLocations(cloud);
     generateHardware(cloud);
     generateImages(cloudiatorModel);
+    generatePrices(cloud);
+
     return cloudiatorModel;
+  }
+
+  private static void generatePrices(Cloud cloud) {
+    final HardwareBasedPriceFunction hardwareBasedPriceFunction = new HardwareBasedPriceFunction();
+    for (Hardware hardware : cloud.getHardwareList()) {
+      for (Image image : cloud.getImages()) {
+        for (Location location : cloud.getLocations()) {
+          final Double price = hardwareBasedPriceFunction
+              .calculatePricing(cloud, hardware, location, image, null).get();
+          final Price modelPrice = CLOUDIATOR_FACTORY.createPrice();
+          modelPrice.setHardware(hardware);
+          modelPrice.setImage(image);
+          modelPrice.setLocation(location);
+          modelPrice.setPrice(price);
+          cloud.getPrices().add(modelPrice);
+        }
+      }
+    }
   }
 
   private static void generateHardware(Cloud cloud) {
@@ -126,7 +147,7 @@ public class ExampleModel {
     cloud.setId(UUID.randomUUID().toString());
     cloud.setEndpoint("http://example.com/api");
     cloud.setState(CloudState.OK);
-    cloud.setType(CloudType.PRIVATE);
+    cloud.setType(CloudType.PUBLIC);
     cloud.setDiagnostic(null);
     cloud.setCloudcredential(generateCredential());
     cloud.setApi(generateApi());

@@ -56,6 +56,12 @@ import org.eclipse.ocl.pivot.TypeExp;
 import org.eclipse.ocl.pivot.UnlimitedNaturalLiteralExp;
 import org.eclipse.ocl.pivot.UnspecifiedValueExp;
 import org.eclipse.ocl.pivot.VariableExp;
+import org.eclipse.ocl.pivot.internal.RealLiteralExpImpl;
+import org.eclipse.ocl.pivot.internal.values.IntIntegerValueImpl;
+import org.eclipse.ocl.pivot.internal.values.RealValueImpl;
+import org.eclipse.ocl.pivot.library.AbstractSimpleBinaryOperation;
+import org.eclipse.ocl.pivot.values.RealValue;
+import org.eclipse.ocl.pivot.values.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -208,8 +214,47 @@ public class ConstraintHandler {
         return handleSizeOperation(operationCallExp);
       case "includes":
         return handleIncludesOperation(operationCallExp);
+      case "/":
+        return handleMathOperation(operationCallExp);
       default:
         throw new AssertionError("Can not handle operation of type:" + referredOperation.getName());
+    }
+  }
+
+  private Value getValue(OCLExpression oclExpression) {
+    switch (oclExpression.getType().getName()) {
+      case "Integer":
+        IntegerLiteralExp integerLiteralExp = (IntegerLiteralExp) oclExpression;
+        return new IntIntegerValueImpl(integerLiteralExp.getIntegerSymbol().intValue());
+      case "Real":
+        RealLiteralExpImpl realLiteralExp = (RealLiteralExpImpl) oclExpression;
+        return new RealValueImpl(realLiteralExp.getRealSymbol().doubleValue());
+      default:
+        throw new IllegalStateException();
+    }
+  }
+
+  private ConstraintOrVariable handleMathOperation(OperationCallExp operationCallExp) {
+
+    OCLExpression left = operationCallExp.getOwnedSource();
+    OCLExpression right = operationCallExp.getOwnedArguments().get(0);
+
+    final String implementationClass = operationCallExp.getReferredOperation()
+        .getImplementationClass();
+
+    try {
+      final AbstractSimpleBinaryOperation operation = Class.forName(implementationClass)
+          .asSubclass(AbstractSimpleBinaryOperation.class).newInstance();
+
+      RealValue evaluate = (RealValue) operation.evaluate(getValue(left), getValue(right));
+
+      return ConstraintOrVariable
+          .fromVariable(
+              modelGenerationContext.getModel()
+                  .intVar(new DoubleMapper().applyAsInt(evaluate.doubleValue())));
+
+    } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+      throw new IllegalStateException(e);
     }
   }
 
