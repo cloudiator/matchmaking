@@ -7,6 +7,8 @@ import jCMPL.CmplParameter;
 import jCMPL.CmplSet;
 import jCMPL.CmplSolElement;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -169,6 +171,12 @@ public class CMPLSolver implements Solver {
         CmplParameter privateSizeParameter = new CmplParameter("privateSize");
         privateSizeParameter.setValues(privateSize / 2);
 
+        final File file = new File("both.cmpl");
+        try (FileWriter fileWriter = new FileWriter(file);) {
+          fileWriter.write(CMPLTemplate.BOTH);
+        } catch (IOException e) {
+          throw new IllegalStateException(e);
+        }
         Cmpl model = new Cmpl("both.cmpl");
         model.setSets(nodesSet);
         //model.setParameters(costParameter, coreParameter, largerOrEqual4CoresParameters, nodeSize,
