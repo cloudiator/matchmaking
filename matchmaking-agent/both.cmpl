@@ -1,0 +1,12 @@
+%data : NODES set, nodeSize, privateSize, publicSize, private[NODES], costs[NODES], public[NODES]
+
+variables:
+ x[NODES]: integer[0..];
+
+objectives:
+ cost: costs[]T * x[]->min;
+
+constraints:
+  $1$: public[]T * x[] = publicSize;
+  $2$: private[]T * x[] = privateSize;
+  $3$: sum{n in NODES : x[n]} = nodeSize;

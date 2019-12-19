@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-alpine
+FROM dbaur/jcmpl
 
 WORKDIR /data
 

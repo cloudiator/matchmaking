@@ -17,6 +17,7 @@ import cloudiator.OSArchitecture;
 import cloudiator.OSFamily;
 import cloudiator.OperatingSystem;
 import cloudiator.Price;
+import java.util.HashSet;
 import java.util.UUID;
 
 public class ExampleModel {
@@ -27,13 +28,22 @@ public class ExampleModel {
   public static CloudiatorModel testModel() {
 
     final CloudiatorModel cloudiatorModel = CLOUDIATOR_FACTORY.createCloudiatorModel();
-    final Cloud cloud = generateCloud();
-    cloudiatorModel.getClouds().add(cloud);
     cloudiatorModel.getOperatingsystems().add(generateOS());
-    generateLocations(cloud);
-    generateHardware(cloud);
-    generateImages(cloudiatorModel);
-    generatePrices(cloud);
+
+    Iterable<CloudType> types = new HashSet<CloudType>(){{
+      add(CloudType.PRIVATE);
+      add(CloudType.PUBLIC);
+    }};
+
+    for(CloudType type : types) {
+      final Cloud cloud = generateCloud(type);
+      cloudiatorModel.getClouds().add(cloud);
+
+      generateLocations(cloud);
+      generateHardware(cloud);
+      generateImages(cloudiatorModel);
+      generatePrices(cloud);
+    }
 
     return cloudiatorModel;
   }
@@ -142,12 +152,12 @@ public class ExampleModel {
   }
 
 
-  private static Cloud generateCloud() {
+  private static Cloud generateCloud(CloudType cloudType) {
     final Cloud cloud = CLOUDIATOR_FACTORY.createCloud();
     cloud.setId(UUID.randomUUID().toString());
     cloud.setEndpoint("http://example.com/api");
     cloud.setState(CloudState.OK);
-    cloud.setType(CloudType.PUBLIC);
+    cloud.setType(cloudType);
     cloud.setDiagnostic(null);
     cloud.setCloudcredential(generateCredential());
     cloud.setApi(generateApi());
