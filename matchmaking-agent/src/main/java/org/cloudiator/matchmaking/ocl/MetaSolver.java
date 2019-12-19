@@ -49,12 +49,19 @@ public class MetaSolver implements Solver {
 
     @Override
     public void accept(Solution solution) {
+      LOGGER.debug(
+          String.format("MetaSolver received new solution by solver %s", solution.getSolver()));
+      LOGGER.debug(String.format("Missing %s solvers", countDownLatch.getCount() - 1));
       if (solution.isOptimal()) {
+        LOGGER.debug(String.format("Received solution by solver %s is optimal. Exiting early",
+            solution.getSolver()));
         collectedSolutions.add(solution);
         //directly count down
         while (countDownLatch.getCount() > 0) {
           countDownLatch.countDown();
         }
+      } else if (solution.isEmpty()) {
+        fail();
       } else {
         collectedSolutions.add(solution);
         countDownLatch.countDown();
