@@ -50,6 +50,9 @@
             <mainClass>org.cloudiator.matchmaking.MatchmakingAgent</mainClass>
             <useCurrentTimestamp>true</useCurrentTimestamp>
           </container>
+          <from>
+            <image>dbaur/jcmpl</image>
+          </from>
           <to>
             registry.hub.docker.com/cloudiator/matchmaking-agent:${docker.tag}
           </to>
