@@ -24,8 +24,12 @@ import org.cloudiator.matchmaking.domain.Solution;
 import org.cloudiator.matchmaking.domain.Solver;
 import org.cloudiator.matchmaking.ocl.NodeCandidates;
 import org.cloudiator.matchmaking.ocl.OclCsp;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CMPLSolver implements Solver {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(CMPLSolver.class);
 
   private static class CMPLSolverInternal {
 
@@ -189,6 +193,9 @@ public class CMPLSolver implements Solver {
         long stop = System.currentTimeMillis();
 
         if (model.solverStatus() == Cmpl.SOLVER_OK) {
+
+          LOGGER.debug(String.format("%s found solution: %s", this, model.solution()));
+
           List<NodeCandidate> solutionCandidates = new ArrayList<>();
           for (CmplSolElement v : model.solution().variables()) {
             if ((long) v.activity() != 0) {

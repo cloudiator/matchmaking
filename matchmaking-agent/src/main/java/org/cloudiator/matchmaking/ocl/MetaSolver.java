@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 public class MetaSolver implements Solver {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(SolverHandler.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MetaSolver.class);
   private final Set<Solver> solvers;
   private final ListeningExecutorService executorService;
   private final int solvingTime;
