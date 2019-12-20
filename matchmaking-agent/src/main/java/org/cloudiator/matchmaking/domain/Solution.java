@@ -101,7 +101,7 @@ public class Solution implements Comparable<Solution> {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this).add("valid", valid).add("optimal", isOptimal())
-        .add("solver", solver.getCanonicalName())
+        .add("solver", solver)
         .add("time", getTime())
         .add("price", getCosts())
         .add("numberOfNodes", nodeSize())
