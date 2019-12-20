@@ -44,6 +44,9 @@ public class CMPLEvaluationTest {
         ConstraintChecker.create(oclCsp));
 
     final Solution solution = new CMPLSolver().solve(oclCsp, nodeGenerator.get(), null, null);
+
+    System.out.println(solution);
+
   }
 
 }

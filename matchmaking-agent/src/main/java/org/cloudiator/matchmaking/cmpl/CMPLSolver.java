@@ -211,6 +211,12 @@ public class CMPLSolver implements Solver {
               }
             }
           }
+
+          if (solutionCandidates.isEmpty()) {
+            throw new IllegalStateException(
+                "Solver found solution but solution candidates is empty.");
+          }
+
           final Solution of = Solution.of(solutionCandidates);
           of.setSolver(CMPLSolver.class);
           of.setIsOptimal(true);
