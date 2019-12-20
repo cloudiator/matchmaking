@@ -123,7 +123,6 @@ public class SolverHandler {
     LOGGER.info(
         String.format("Start solving of csp: %s using the following solvers: %s", csp,
             Joiner.on(",").join(solvers)));
-    long startSolving = System.currentTimeMillis();
 
     MetaSolver metaSolver = new MetaSolver(solvers, solvingTime);
 

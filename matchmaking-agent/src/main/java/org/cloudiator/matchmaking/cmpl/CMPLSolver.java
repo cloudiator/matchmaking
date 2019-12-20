@@ -205,6 +205,7 @@ public class CMPLSolver implements Solver {
             }
           }
           final Solution of = Solution.of(solutionCandidates);
+          of.setSolver(CMPLSolver.class);
           of.setIsOptimal(true);
           of.setTime(stop - start);
           return of;

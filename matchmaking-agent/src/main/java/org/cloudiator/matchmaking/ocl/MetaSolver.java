@@ -114,6 +114,8 @@ public class MetaSolver implements Solver {
       @Nullable Solution existingSolution, @Nullable Integer targetNodeSize)
       throws InterruptedException {
 
+    LOGGER.debug(String.format("MetaSolver is using %s solvers: %s", solvers.size(), solvers));
+
     long startSolving = System.currentTimeMillis();
 
     SolutionCollector solutionCollector = new SolutionCollector(solvers.size());
