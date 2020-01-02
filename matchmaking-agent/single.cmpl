@@ -1,0 +1,10 @@
+%data : NODES set, nodeSize, costs[NODES]
+
+variables:
+ x[NODES]: integer[0..];
+
+objectives:
+ cost: costs[]T * x[]->min;
+
+constraints:
+  $1$: sum{n in NODES : x[n]} = nodeSize;
