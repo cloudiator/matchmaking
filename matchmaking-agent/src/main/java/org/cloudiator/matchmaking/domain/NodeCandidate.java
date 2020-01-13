@@ -199,8 +199,18 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("hardware", hardware).add("image", image)
-        .add("location", location).add("price", price).toString();
+    return MoreObjects.toStringHelper(this)
+        .add("id", id)
+        .add("type", type)
+        .add("cloud", cloud)
+        .add("location", location)
+        .add("hardware", hardware)
+        .add("image", image)
+        .add("price", price)
+        .add("pricePerInvocation", pricePerInvocation)
+        .add("memoryPrice", memoryPrice)
+        .add("environment", environment)
+        .toString();
   }
 
   @Override
