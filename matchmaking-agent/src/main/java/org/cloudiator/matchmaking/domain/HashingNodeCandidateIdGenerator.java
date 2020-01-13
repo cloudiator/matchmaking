@@ -32,6 +32,7 @@ public class HashingNodeCandidateIdGenerator implements NodeCandidateIdGenerator
   public String generateId(NodeCandidate nodeCandidate) {
     switch (nodeCandidate.getType()) {
       case IAAS:
+      case SIMULATION:
         return HASH_FUNCTION.hashObject(nodeCandidate, IAAS_NODE_CANDIDATE_FUNNEL).toString();
       case FAAS:
         return HASH_FUNCTION.hashObject(nodeCandidate, FAAS_NODE_CANDIDATE_FUNNEL).toString();
