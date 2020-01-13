@@ -147,11 +147,11 @@ public class CMPLSolver implements Solver {
         CmplParameter costParameter = new CmplParameter("costs", nodesSet);
         costParameter.setValues(prices.toArray(new Double[0]));
 
-        CmplParameter privateParameter = new CmplParameter("private", nodesSet);
-        privateParameter.setValues(privateCloud.toArray(new Integer[0]));
+        //CmplParameter privateParameter = new CmplParameter("private", nodesSet);
+        //privateParameter.setValues(privateCloud.toArray(new Integer[0]));
 
-        CmplParameter publicParameter = new CmplParameter("public", nodesSet);
-        publicParameter.setValues(publicCloud.toArray(new Integer[0]));
+        //CmplParameter publicParameter = new CmplParameter("public", nodesSet);
+        //publicParameter.setValues(publicCloud.toArray(new Integer[0]));
 
         //CmplParameter coreParameter = new CmplParameter("cores", nodesSet);
         //coreParameter.setValues(cores.toArray(new Integer[0]));
@@ -169,24 +169,25 @@ public class CMPLSolver implements Solver {
         CmplParameter nodeSize = new CmplParameter("nodeSize");
         nodeSize.setValues(totalSize);
 
-        CmplParameter publicSizeParameter = new CmplParameter("publicSize");
-        publicSizeParameter.setValues(publicSize / 2);
+        //CmplParameter publicSizeParameter = new CmplParameter("publicSize");
+        //publicSizeParameter.setValues(publicSize / 2);
 
-        CmplParameter privateSizeParameter = new CmplParameter("privateSize");
-        privateSizeParameter.setValues(privateSize / 2);
+        //CmplParameter privateSizeParameter = new CmplParameter("privateSize");
+        //privateSizeParameter.setValues(privateSize / 2);
 
-        final File file = new File("both.cmpl");
+        final File file = new File("single.cmpl");
         try (FileWriter fileWriter = new FileWriter(file);) {
-          fileWriter.write(CMPLTemplate.BOTH);
+          fileWriter.write(CMPLTemplate.SINGLE);
         } catch (IOException e) {
           throw new IllegalStateException(e);
         }
-        Cmpl model = new Cmpl("both.cmpl");
+        Cmpl model = new Cmpl("single.cmpl");
         model.setSets(nodesSet);
         //model.setParameters(costParameter, coreParameter, largerOrEqual4CoresParameters, nodeSize,
         //    inLocationParameter);
-        model.setParameters(costParameter, nodeSize, publicSizeParameter, privateSizeParameter,
-            privateParameter, publicParameter);
+        //model.setParameters(costParameter, nodeSize, publicSizeParameter, privateSizeParameter,
+        //    privateParameter, publicParameter);
+        model.setParameters(costParameter, nodeSize);
 
         model.solve();
 
