@@ -1,6 +1,7 @@
 package org.cloudiator.matchmaking.domain;
 
 import cloudiator.Cloud;
+import cloudiator.CloudType;
 import cloudiator.CloudiatorFactory;
 import cloudiator.Environment;
 import cloudiator.Hardware;
@@ -32,7 +33,12 @@ public class NodeCandidate implements Comparable<NodeCandidate> {
 
   public NodeCandidate(Cloud cloud, Hardware hardware,
       Image image, Location location, @Nullable Double price) {
-    this.type = NodeType.IAAS;
+
+    if (cloud.getType().equals(CloudType.SIMULATION)) {
+      this.type = NodeType.SIMULATION;
+    } else {
+      this.type = NodeType.IAAS;
+    }
     this.cloud = cloud;
     this.hardware = hardware;
     this.image = image;
