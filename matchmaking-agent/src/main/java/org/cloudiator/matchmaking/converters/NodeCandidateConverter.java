@@ -4,10 +4,9 @@ import cloudiator.Environment;
 import cloudiator.NodeType;
 import cloudiator.Runtime;
 import de.uniulm.omi.cloudiator.util.OneWayConverter;
+import javax.annotation.Nullable;
 import org.cloudiator.matchmaking.domain.NodeCandidate;
 import org.cloudiator.messages.entities.MatchmakingEntities;
-
-import javax.annotation.Nullable;
 
 public class NodeCandidateConverter implements
     OneWayConverter<NodeCandidate, MatchmakingEntities.NodeCandidate> {
@@ -27,6 +26,7 @@ public class NodeCandidateConverter implements
   public MatchmakingEntities.NodeCandidate apply(@Nullable NodeCandidate nodeCandidate) {
     switch (nodeCandidate.getType()) {
       case IAAS:
+      case SIMULATION:
         return applyIaas(nodeCandidate);
       case FAAS:
         return applyFaas(nodeCandidate);
@@ -34,7 +34,8 @@ public class NodeCandidateConverter implements
         return applyByon(nodeCandidate);
       case PAAS:
       default:
-        throw new IllegalStateException("Unsupported node candidate type: " + nodeCandidate.getType());
+        throw new IllegalStateException(
+            "Unsupported node candidate type: " + nodeCandidate.getType());
     }
   }
 
@@ -84,6 +85,8 @@ public class NodeCandidateConverter implements
         return MatchmakingEntities.NodeCandidateType.NC_PAAS;
       case BYON:
         return MatchmakingEntities.NodeCandidateType.NC_BYON;
+      case SIMULATION:
+        return MatchmakingEntities.NodeCandidateType.NC_SIMULATION;
       default:
         throw new IllegalStateException();
 

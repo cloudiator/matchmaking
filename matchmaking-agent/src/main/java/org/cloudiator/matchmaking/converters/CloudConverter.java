@@ -32,7 +32,7 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
   public Cloud applyBack(IaasEntities.Cloud cloud) {
     final boolean checkByon = ByonCloudUtil.isByon(cloud.getId());
 
-    if(checkByon) {
+    if (checkByon) {
       throw new IllegalStateException("Cannot process Cloud contents corresponding to byon");
     }
 
@@ -65,8 +65,8 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
 
     if (!checkByon) {
       builder.setEndpoint(cloud.getEndpoint())
-      .setCloudType(TYPE_CONVERTER.apply(cloud.getType()))
-      .setState(CLOUD_STATE_CONVERTER.apply(cloud.getState()));
+          .setCloudType(TYPE_CONVERTER.apply(cloud.getType()))
+          .setState(CLOUD_STATE_CONVERTER.apply(cloud.getState()));
     }
 
     if (!Strings.isNullOrEmpty(cloud.getDiagnostic())) {
@@ -180,6 +180,8 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
           return CloudType.PRIVATE;
         case PUBLIC_CLOUD:
           return CloudType.PUBLIC;
+        case SIMULATION_CLOUD:
+          return CloudType.SIMULATION;
         case UNRECOGNIZED:
         default:
           throw new AssertionError(
@@ -194,6 +196,8 @@ public class CloudConverter implements TwoWayConverter<Cloud, IaasEntities.Cloud
           return IaasEntities.CloudType.PUBLIC_CLOUD;
         case PRIVATE:
           return IaasEntities.CloudType.PRIVATE_CLOUD;
+        case SIMULATION:
+          return IaasEntities.CloudType.SIMULATION_CLOUD;
         default:
           throw new AssertionError(String.format("CloudType %s is not known.", cloudType));
       }
